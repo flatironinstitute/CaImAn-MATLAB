@@ -2,8 +2,8 @@ clear;
 %% load file
 
 addpath(genpath('utilities'));
-nam = '/Users/epnevmatikakis/Desktop/packer7/20150304_L84_t-005_DFTreg.tif';
-Y = tiff_reader(nam,8100);
+nam = ''; % insert path to tiff stack here
+Y = tiff_reader(nam);
 [d1,d2,T] = size(Y);  
 d = d1*d2;
 
