@@ -1,19 +1,38 @@
 function [A,C,nr,merged_ROIs] = merge_ROIs(Y_res,A,b,C,f,P)
 
+% merging of spatially overlapping components that have highly correlated tmeporal activity
+% The correlation threshold for merging overlapping components is user specified in P.merge_thr (default value 0.85)
+% Inputs:
+% Y_res:        residual movie after subtracting all found components
+% A:            matrix of spatial components
+% b:            spatial background
+% C:            matrix of temporal components
+% f:            temporal background
+% P:            parameter struct
+
+% Outputs:
+% A:            matrix of new spatial components
+% C:            matrix of new temporal components
+% nr:           new number of components
+% merged_ROIs:  list of old components that were merged
+
+% Written by:
+% Eftychios A. Pnevmatikakis, Simons Foundation, 2015
+
 if ~isfield(P,'merge_thr'); thr = 0.85; else thr = P.merge_thr; end     % merging threshold
 if ~isfield(P,'max_merg'); mx = 50; else mx = P.max_merg; end           % maximum merging operations
 
 nr = size(A,2);
 [d,T] = size(Y_res);
 C_corr = corr(full(C(1:nr,:)'));
-FF1 = triu(C_corr)>= thr;
+FF1 = triu(C_corr)>= thr;                           % find graph of strongly correlated temporal components
 
-A_corr = triu(A(:,1:nr)'*A(:,1:nr));
+A_corr = triu(A(:,1:nr)'*A(:,1:nr));                
 A_corr(1:nr+1:nr^2) = 0;
-FF2 = A_corr > 0;
+FF2 = A_corr > 0;                                   % find graph of overlapping spatial components
 
-FF3 = and(FF1,FF2);
-[l,c] = graph_connected_comp(sparse(FF3+FF3'));
+FF3 = and(FF1,FF2);                                 % intersect the two graphs
+[l,c] = graph_connected_comp(sparse(FF3+FF3'));     % extract connected components
 MC = [];
 for i = 1:c
     if length(find(l==i))>1
