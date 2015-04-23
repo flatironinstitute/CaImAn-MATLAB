@@ -59,7 +59,7 @@ C_merged = zeros(nm,T);
 if strcmpi(P.method,'constrained_foopsi')
     P_merged.gn = cell(nm,1);
     P_merged.b = cell(nm,1);
-    P_merged.c1 = cell(nm,1);
+    P_merged_c1 = cell(nm,1);
     P_merged.neuron_sn = cell(nm,1);
 end
 for i = 1:nm
@@ -95,7 +95,7 @@ if strcmpi(P.method,'constrained_foopsi')
     P.gn(neur_id) = [];
     P.gn(nr - length(neur_id) + (1:nm)) = P_merged.gn;
     P.c1(neur_id) = [];
-    P.c1(nr - length(neur_id) + (1:nm)) = P_merged.c1;
+    P.c1b(nr - length(neur_id) + (1:nm)) = P_merged.c1;
     P.neuron_sn(neur_id) = [];
     P.neuron_sn(nr - length(neur_id) + (1:nm)) = P_merged.neuron_sn;
 end

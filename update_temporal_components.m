@@ -51,6 +51,7 @@ for iter = 1:ITER
                     C(ii,:) = full(cc');
                     YrA(:,ii) = YrA(:,ii) - nA(ii)*C(ii,:)';
                 case 'constrained_foopsi'
+                    options.p = 1;
                     YrA(:,ii) = YrA(:,ii) + nA(ii)*Cin(ii,:)';
                     if restimate_g
                         [cc,cb,c1,gn,sn,~] = constrained_foopsi(YrA(:,ii)/nA(ii),[],[],[],[],options);
