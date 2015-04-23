@@ -6,11 +6,11 @@ Pnevmatikakis, E. A., Gao, Y., Soudry, D., Pfau, D., Lacefield, C., Poskanzer, K
 
 function name                           | description 
 ----------------------------------------|-----------------------------------
-demo_script.m:                          | wrapper code <br />
-update_spatial_components.m:            | update spatial components given temporal components and data <br />
-update_temporal_components.m:           | update temporal components given spatial components and data <br />
-merge_ROIs.m:                           | merge spatially overlapping components that are temporally correlated <br />
-utilities/arpfit.m:                     | estimation of noise level for every pixel and global time constants <br />
+demo_script.m                           | wrapper code <br />
+update_spatial_components.m             | update spatial components given temporal components and data <br />
+update_temporal_components.m            | update temporal components given spatial components and data <br />
+merge_ROIs.m                            | merge spatially overlapping components that are temporally correlated <br />
+utilities/arpfit.m                      | estimation of noise level for every pixel and global time constants <br />
 utilities/com.m:                        | calculation of the center of mass of each component <br />
 utilities/graph_connected_comp.m        | finds the connected components in a graph <br />
 utilities/greedyROI2d.m                 | Greedy method for initializing the spatial and temporal components <br />
