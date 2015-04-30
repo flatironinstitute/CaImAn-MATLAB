@@ -14,6 +14,7 @@ update_temporal_components.m            | update temporal components given spati
 merge_ROIs.m                            | merge spatially overlapping components that are temporally correlated <br />
 utilities/arpfit.m                      | estimation of noise level for every pixel and global time constants <br />
 utilities/com.m:                        | calculation of the center of mass of each component <br />
+utilities/correlation_image.m           | calculates the correlation image of the movie <br />
 utilities/graph_connected_comp.m        | finds the connected components in a graph <br />
 utilities/greedyROI2d.m                 | Greedy method for initializing the spatial and temporal components <br />
 utilities/lars_regression_noise.m       | solve a basis pursuit denoising problem using the LARS algorithm <br />
