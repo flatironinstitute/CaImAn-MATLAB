@@ -17,6 +17,7 @@ utilities/com.m:                        | calculation of the center of mass of e
 utilities/correlation_image.m           | calculates the correlation image of the movie <br />
 utilities/graph_connected_comp.m        | finds the connected components in a graph <br />
 utilities/greedyROI2d.m                 | Greedy method for initializing the spatial and temporal components <br />
+utilities/interp_missing_data.m         | Filling in missing data using linear interpolation <br />
 utilities/lars_regression_noise.m       | solve a basis pursuit denoising problem using the LARS algorithm <br />
 utilities/make_G_matrix.m               | construct a convolution/deconvolution matrix <br />
 utilities/make_patch_video.m            | construct a video that displays the results of the algorithm <br />
