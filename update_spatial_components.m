@@ -10,6 +10,8 @@ if ~isfield(P,'min_size'); min_size = 8^2; else min_size = P.min_size; end
 if ~isfield(P,'max_size'); max_size = 3^2; else max_size = P.max_size; end
 if ~isfield(P,'med_filt'); med_filt = [3,3]; else med_filt = P.med_filt; end
 if ~isfield(P,'thres'); thres = 0.2; else thres = P.thres; end
+if ~isfield(P,'show_sum'); show_sum = P.show_sum; else show_sum = 0; end
+if ~isfield(P,'interp'); Y_interp = P.interp; else Y_interp = sparse(d,T); end
 
 Coor.x = kron(ones(d2,1),(1:d1)');
 Coor.y = kron((1:d2)',ones(d1,1));
@@ -35,24 +37,26 @@ Cf = [C;f];
     A = [zeros(d,nr),zeros(d,size(f,1))];
     sA = zeros(d1,d2);
     for px = 1:d   % estimate spatial components
+        fn = ~isnan(Y(px,:));       % identify missing data
         if dist == Inf
-            [~, ~, a, ~] = lars_regression_noise(Y(px,:)', Cf', 1, P.sn(px)^2*T);
+            [~, ~, a, ~] = lars_regression_noise(Y(px,fn)', Cf(:,fn)', 1, P.sn(px)^2*T);
             A(px,:) = a';
             sA(px) = sum(a);
         else
             ind = find(IND(px,:));
             if ~isempty(ind);
                 ind2 = [ind,nr+(1:size(f,1))];
-                [~, ~, a, ~] = lars_regression_noise(Y(px,:)', Cf(ind2,:)', 1, P.sn(px)^2*T);
+                [~, ~, a, ~] = lars_regression_noise(Y(px,fn)', Cf(ind2,fn)', 1, P.sn(px)^2*T);
                 A(px,ind2) = a';
                 sA(px) = sum(a);
             end
         end
-        
-%         if mod(px,d1) == 0;
-%            fprintf('%i done \n',px);
-%            figure(20); imagesc(sA); axis square; drawnow; 
-%         end
+        if show_sum
+            if mod(px,d1) == 0;
+               figure(20); imagesc(sA); axis square;  
+               title(sprintf('Sum of spatial components (%i out of %i columns done)',round(px/d1),d2)); drawnow;
+            end
+        end
     end
     A(isnan(A))=0;
 for i = 1:nr   % perform median filtering on extracted components
@@ -83,6 +87,11 @@ end
         nr = nr - length(ff);
         A(:,ff) = [];
         C(ff,:) = [];
+    end
+    
+    if nnz(Y_interp);
+        ff = find(Y_interp);
+        Y(ff) = Y_interp(ff);
     end
     
     Y_res = Y - A(:,1:nr)*C(1:nr,:);

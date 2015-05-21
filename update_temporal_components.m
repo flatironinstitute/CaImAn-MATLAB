@@ -1,12 +1,14 @@
 function [C,f,Y_res,P,LD] = update_temporal_components(Y,A,b,Cin,fin,P,LD)
 
 % update temporal components and background given spatial components
-% 
-
 
 if ~isfield(P,'method'); method = 'project'; else method = P.method; end
 if ~isfield(P,'restimate_g'); restimate_g = 1; else restimate_g = P.restimate_g; end % re-estimate time constant (only with constrained foopsi)
 if ~isfield(P,'temporal_iter'); ITER = 1; else ITER = P.temporal_iter; end
+if ~isfield(P,'interp'); Y_interp = P.interp; else Y_interp = sparse(d,T); end
+
+mis_data = find(Y_interp);
+Y(mis_data) = Y_interp(mis_data);
 
 [d,T] = size(Y);
 flag_G = 1;
