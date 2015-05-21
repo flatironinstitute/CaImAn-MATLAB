@@ -7,7 +7,11 @@ Y = tiff_reader(nam);
 [d1,d2,T] = size(Y);  
 d = d1*d2;
 
+Y_interp = interp_missing_data(Y);      % interpolate missing data (just for pre-processing)
+mis_data = find(Y_interp);
+Y(mis_data) = Y_inter(mis_data);        % introduce interpolated values for initialization
 %% fast initialization of spatial components using the greedyROI
+
 int = 1:4000;            % interval to be processed (due to memory issues)   
 
 nr = 350;                % number of components to be found
@@ -32,7 +36,13 @@ options.pixels = ff;
 Yr = reshape(Y(:,:,int),d,length(int));
 P = arpfit(Yr,p,options);
 [bin,fin] = nnmf(max(Yr-Ain*Cin,0),1);
+P.interp = Y_interp(:,int);
+% remove interpolated values
+miss_data_int = find(Y_interp(:,int));
+Yr(mis_data_int) = P.interp(mis_data_int);
+
 %% update spatial components
+
 [A,b] = update_spatial_components(Yr,Cin,fin,Ain,P);
 
 %% update temporal components
