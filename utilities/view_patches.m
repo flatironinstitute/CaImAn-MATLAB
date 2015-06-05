@@ -1,4 +1,4 @@
-function view_patches(Y,A,C,b,f,d1,d2,ind_neur)
+function view_patches(Y,A,C,b,f,d1,d2,sn,ind_neur)
 
 T = size(C,2);
 if ndims(Y) == 3
@@ -10,18 +10,21 @@ nA = full(sum(A.^2))';  % energy of each row
 Y_r = spdiags(nA,0,nr,nr)\(A'*(Y-full(b)*f)); 
     
 
-if nargin < 8
+if nargin < 9
     ind_neur = ones(nr,1);
 end
+if nargin < 8
+    sn = ones(size(A,1),1);
+end
 
-make_gif = 1;
+make_gif = 0;
 
 figure;
     set(gcf,'Position',[300,300,960,480]);
 for i = 1:nr+nb
     subplot(121);
     if i <= nr
-        imagesc(reshape(A(:,i),d1,d2)); axis equal; axis tight;
+        imagesc(reshape(A(:,i)./sn,d1,d2)); axis equal; axis tight;
         title({sprintf('Plane %i',ind_neur(i));sprintf('Component %i (press any key to continue)',i)},'fontsize',16,'fontweight','bold'); drawnow; %pause;
     else
         imagesc(reshape(b(:,i-nr),d1,d2)); axis equal; axis tight;

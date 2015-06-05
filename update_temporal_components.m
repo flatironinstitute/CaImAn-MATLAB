@@ -2,15 +2,15 @@ function [C,f,Y_res,P,LD] = update_temporal_components(Y,A,b,Cin,fin,P,LD)
 
 % update temporal components and background given spatial components
 
-if ~isfield(P,'method'); method = 'project'; else method = P.method; end
+[d,T] = size(Y);
+if ~isfield(P,'method'); method = 'constrained_foopsi'; else method = P.method; end
 if ~isfield(P,'restimate_g'); restimate_g = 1; else restimate_g = P.restimate_g; end % re-estimate time constant (only with constrained foopsi)
 if ~isfield(P,'temporal_iter'); ITER = 1; else ITER = P.temporal_iter; end
-if ~isfield(P,'interp'); Y_interp = P.interp; else Y_interp = sparse(d,T); end
+if isfield(P,'interp'); Y_interp = P.interp; else Y_interp = sparse(d,T); end
 
 mis_data = find(Y_interp);
 Y(mis_data) = Y_interp(mis_data);
 
-[d,T] = size(Y);
 flag_G = 1;
 if ~iscell(P.g)
     flag_G = 0;
@@ -49,8 +49,9 @@ for iter = 1:ITER
             switch method
                 case 'project'
                     YrA(:,ii) = YrA(:,ii) + nA(ii)*Cin(ii,:)';
-                    cc = plain_foopsi(YrA(:,ii)/nA(ii),G);
-                    C(ii,:) = full(cc');
+                    maxy = max(YrA(:,ii)/nA(ii));
+                    cc = plain_foopsi(YrA(:,ii)/nA(ii)/maxy,G);
+                    C(ii,:) = full(cc')*maxy;
                     YrA(:,ii) = YrA(:,ii) - nA(ii)*C(ii,:)';
                 case 'constrained_foopsi'
                     options.p = 1;

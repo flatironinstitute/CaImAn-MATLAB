@@ -9,12 +9,12 @@ d = d1*d2;
 
 Y_interp = interp_missing_data(Y);      % interpolate missing data (just for pre-processing)
 mis_data = find(Y_interp);
-Y(mis_data) = Y_inter(mis_data);        % introduce interpolated values for initialization
+Y(mis_data) = Y_interp(mis_data);        % introduce interpolated values for initialization
 %% fast initialization of spatial components using the greedyROI
 
-int = 1:4000;            % interval to be processed (due to memory issues)   
+int = 1:T;               % interval to be processed (may want to restrict this due to memory issues)   
 
-nr = 350;                % number of components to be found
+nr = 100;                % number of components to be found
 params.gSiz = 15;        % maximum size of neuron in pixels
 params.gSig = 8;         % std of gaussian (size of neuron)        
 [basis, Cin, center, ~] = greedyROI2d(Y(:,:,int), nr, params);  % reduce size for memory reasons
@@ -39,13 +39,14 @@ P = arpfit(Yr,p,options);
 P.interp = Y_interp(:,int);
 % remove interpolated values
 miss_data_int = find(Y_interp(:,int));
-Yr(mis_data_int) = P.interp(mis_data_int);
+Yr(miss_data_int) = P.interp(miss_data_int);
 
 %% update spatial components
-
+P.d1 = d1; P.d2 = d2; P.dist = 10;
 [A,b] = update_spatial_components(Yr,Cin,fin,Ain,P);
 
 %% update temporal components
+P.method = 'project';
 [C,f,Y_res] = update_temporal_components(Yr,A,b,Cin,fin,P);
 
 %% merge found components
@@ -68,7 +69,7 @@ end
 %[A,b] = update_spatial_components(Yr,C,f,A,P);
 
 P.method = 'constrained_foopsi';
-[C2,f2,Y_res] = update_temporal_components(Yr,A_or,b,C_or,f,P);
+[C2,f2,Y_res] = update_temporal_components(Yr,A_,b,C_,f,P);
 %% do some plotting
 
 [A_or,C_or] = order_ROIs(A,C2);
@@ -78,6 +79,6 @@ view_patches(Yr,A_or,C_or,b,f2,d1,d2)
 
 %%
 param.skip_frame = 3;
-param.ind = [5,8,10,11];
-param.make_avi = 1;
-make_patch_video(A_or,C2,b,f2,Yr,d1,d2,param)
+param.ind = [1:4];
+param.make_avi = 0;
+make_patch_video(A_or,C_or,b,f2,Yr,d1,d2,param)
