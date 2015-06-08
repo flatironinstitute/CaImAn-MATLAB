@@ -24,7 +24,7 @@ C = Cin;
 if strcmpi(method,'noise_constrained')
     Y_res = Y - A*Cin;
     mc = min(d,15);  % number of constraints to be considered
-    if nargin < 6
+    if nargin < 7
         LD = 10*ones(mc,nr);
     end
 else
