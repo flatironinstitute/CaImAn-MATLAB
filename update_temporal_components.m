@@ -30,7 +30,7 @@ if strcmpi(method,'noise_constrained')
 else
     nA = sum(A.^2);
     YrA = Y'*A - Cin'*(A'*A);
-    if strcmpi(method,'constrained_foopsi')
+    if strcmpi(method,'constrained_foopsi') || strcmpi(method,'MCEM_foopsi')
         P.gn = cell(nr,1);
         P.b = cell(nr,1);
         P.c1 = cell(nr,1);           
@@ -63,6 +63,17 @@ for iter = 1:ITER
                         [cc,cb,c1,gn,sn,~] = constrained_foopsi(YrA(:,ii)/nA(ii),[],[],g,[],options);
                     end
                     gd = max(roots([1,-gn']));  % decay time constant for initial concentration
+                    gd_vec = gd.^((0:T-1));
+                    C(ii,:) = full(cc(:)' + cb + c1*gd_vec);
+                    YrA(:,ii) = YrA(:,ii) - nA(ii)*C(ii,:)';
+                    P.b{ii} = cb;
+                    P.c1{ii} = c1;           
+                    P.neuron_sn{ii} = sn;
+                case 'MCEM_foopsi'
+                    options.p = length(P.g);
+                    YrA(:,ii) = YrA(:,ii) + nA(ii)*Cin(ii,:)';
+                    [cc,cb,c1,gn,sn,~] = MCEM_foopsi(YrA(:,ii)/nA(ii),[],[],P.g,[],options);
+                    gd = max(roots([1,-gn.g(:)']));
                     gd_vec = gd.^((0:T-1));
                     C(ii,:) = full(cc(:)' + cb + c1*gd_vec);
                     YrA(:,ii) = YrA(:,ii) - nA(ii)*C(ii,:)';
