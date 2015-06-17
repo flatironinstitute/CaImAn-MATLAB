@@ -1,4 +1,4 @@
-function [C,f,Y_res,P,LD] = update_temporal_components(Y,A,b,Cin,fin,P,LD)
+function [C,f,Y_res,P] = update_temporal_components(Y,A,b,Cin,fin,P,LD)
 
 % update temporal components and background given spatial components
 
@@ -80,6 +80,7 @@ for iter = 1:ITER
                     P.b{ii} = cb;
                     P.c1{ii} = c1;           
                     P.neuron_sn{ii} = sn;
+                    P.gn{ii} = gn.g;
                 case 'noise_constrained'
                     Y_res = Y_res + A(:,ii)*Cin(ii,:);
                     [~,srt] = sort(A(:,ii),'descend');

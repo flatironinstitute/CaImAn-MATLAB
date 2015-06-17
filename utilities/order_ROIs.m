@@ -1,4 +1,4 @@
-function [A_or,C_or] = order_ROIs(A,C)
+function [A_or,C_or,srt] = order_ROIs(A,C)
 
 % ordering of the found components based on their maximum temporal
 % activation and their size (through their l4 norm)
