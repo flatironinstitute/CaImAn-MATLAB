@@ -68,15 +68,12 @@ for i = 1:nm
     A_merged(:,i) = sum(A(:,merged_ROIs{i})*spdiags(nC,0,length(nC),length(nC)),2);    
     Y_res = Y_res + A(:,merged_ROIs{i})*C(merged_ROIs{i},:);
     [cc,~,~,Ptemp] = update_temporal_components(Y_res,A_merged(:,i),b,median(spdiags(nC,0,length(nC),length(nC))\C(merged_ROIs{i},:)),f,P);
-    if strcmpi(P.method,'constrained_foopsi')
+    if strcmpi(P.method,'constrained_foopsi') || strcmpi(P.method,'MCEM_foopsi')
         P_merged.gn{i} = Ptemp.gn{1};
         P_merged.b{i} = Ptemp.b{1};
         P_merged.c1{i} = Ptemp.c1{1};
         P_merged.neuron_sn{i} = Ptemp.neuron_sn{1};
     end
-%     [~,srt] = sort(A_merged(:,i),'descend');
-%     ff = srt(1:mc);
-%     [cc,~] = lagrangian_foopsi_temporal(Y_res(ff,:),A_merged(ff,i),T*P.sn(ff).^2,G);
     C_merged(i,:) = cc;
     if i < nm
         Y_res = Y_res - A_merged(:,i)*cc;
@@ -89,7 +86,7 @@ A = [A(:,1:nr),A_merged,A(:,nr+1:end)];
 C = [C(1:nr,:);C_merged;C(nr+1:end,:)];
 A(:,neur_id) = [];
 C(neur_id,:) = [];
-if strcmpi(P.method,'constrained_foopsi')
+if strcmpi(P.method,'constrained_foopsi') || strcmpi(P.method,'MCEM_foopsi')
     P.b(neur_id) = [];
     P.b(nr - length(neur_id) + (1:nm)) = P_merged.b;
     P.gn(neur_id) = [];
