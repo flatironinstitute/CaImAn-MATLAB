@@ -83,7 +83,7 @@ for iter = 1:ITER
                     P.gn{ii} = gn.g;
                 case 'MCMC'
                     params.B = 300;
-                    params.Nsamples = 500;
+                    params.Nsamples = 400;
                     params.p = length(P.g);
                     YrA(:,ii) = YrA(:,ii) + nA(ii)*Cin(ii,:)';
                     SAMPLES = cont_ca_sampler(YrA(:,ii)/nA(ii),params);
