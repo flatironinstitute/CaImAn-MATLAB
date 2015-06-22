@@ -106,7 +106,7 @@ end
             axis square; axis off;
 
         for i = 1:4        
-            subplot(4,6,14+i); imagesc(A_com(:,:,i)*C(ind(i),t),[0,up(i)/2]); axis square; 
+            subplot(4,6,14+i); imagesc(A_com(:,:,i)*C(ind(i),t),[0,up(i)/4]); axis square; 
             xlabel(sprintf('Component %i',ind(i)),'fontweight','bold','fontsize',14);
             set(gca,'XTick',[],'YTick',[]);
             if i == 2

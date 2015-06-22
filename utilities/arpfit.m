@@ -10,6 +10,7 @@ defoptions.block_size = [64,64];
 defoptions.lags = 5;                                 % number of extra lags when computing the AR coefficients
 defoptions.include_noise = 0;                        % include early lags when computing AR coefs
 defoptions.pixels = 1:numel(Y)/size(Y,ndims(Y));     % pixels to include when computing the AR coefs
+defoptions.use_parallel = 0;                         % split data into patches for memory reasons
 
 if nargin < 4
     sn = [];
@@ -24,6 +25,7 @@ if ~isfield(options,'block_size'); options.block_size = defoptions.block_size; e
 if ~isfield(options,'lags'); options.lags = defoptions.lags; end
 if ~isfield(options,'include_noise'); options.include_noise = defoptions.include_noise; end; include_noise = options.include_noise;
 if ~isfield(options,'pixels'); options.pixels = defoptions.pixels; end
+if ~isfield(options,'use_parallel'); use_parallel = defoptions.use_parallel; else use_parallel = options.use_parallel; end
 
 if isempty(sn)
     fprintf('Estimating the noise power for each pixel from a simple PSD estimate...');
@@ -44,13 +46,19 @@ fprintf('Estimating time constant through autocorrelation function.. \n');
 tt1 = tic;
 mp = max(p);
 lags = options.lags + mp;
-
-tic; Ycl = mat2cell(Y(ff,:),ones(np,1),size(Y,2)); toc
-XC = cell(np,1);
-parfor j = 1:np
-    XC{j} = xcov(Ycl{j},lags,'biased');
+if use_parallel 
+    Ycl = mat2cell(Y(ff,:),ones(np,1),size(Y,2));
+    XC = cell(np,1);
+    parfor j = 1:np
+        XC{j} = xcov(Ycl{j},lags,'biased');
+    end
+    XC = cell2mat(XC);   
+else
+    XC = zeros(np,2*lags+1);
+    for j = 1:np
+        XC(j,:) = xcov(Y(j,:),lags,'biased');
+    end
 end
-XC = cell2mat(XC);   
     
     gv = zeros(np*lags,1);
     if ~include_noise

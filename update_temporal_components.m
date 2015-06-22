@@ -81,6 +81,18 @@ for iter = 1:ITER
                     P.c1{ii} = c1;           
                     P.neuron_sn{ii} = sn;
                     P.gn{ii} = gn.g;
+                case 'MCMC'
+                    params.B = 300;
+                    params.Nsamples = 500;
+                    params.p = length(P.g);
+                    YrA(:,ii) = YrA(:,ii) + nA(ii)*Cin(ii,:)';
+                    SAMPLES = cont_ca_sampler(YrA(:,ii)/nA(ii),params);
+                    C(ii,:) = make_mean_sample(SAMPLES,YrA(:,ii)/nA(ii));
+                    YrA(:,ii) = YrA(:,ii) - nA(ii)*C(ii,:)';
+                    P.b{ii} = mean(SAMPLES.Cb);
+                    P.c1{ii} = mean(SAMPLES.Cin);
+                    P.neuron_sn{ii} = sqrt(mean(SAMPLES.sn2));
+                    P.gn{ii} = mean(exp(-1./SAMPLES.g));
                 case 'noise_constrained'
                     Y_res = Y_res + A(:,ii)*Cin(ii,:);
                     [~,srt] = sort(A(:,ii),'descend');

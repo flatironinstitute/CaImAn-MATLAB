@@ -42,7 +42,7 @@ miss_data_int = find(Y_interp(:,int));
 Yr(miss_data_int) = P.interp(miss_data_int);
 
 %% update spatial components
-P.d1 = d1; P.d2 = d2; P.dist = 10;
+P.d1 = d1; P.d2 = d2; P.dist = 8;
 [A,b] = update_spatial_components(Yr,Cin,fin,Ain,P);
 
 %% update temporal components
