@@ -39,7 +39,7 @@ else
     end
 end
 for iter = 1:ITER
-    perm = randperm(nr);
+    perm = randperm(nr+1);
     for jj = 1:nr
         ii = perm(jj);
         if ii<=nr
