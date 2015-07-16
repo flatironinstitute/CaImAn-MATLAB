@@ -36,6 +36,7 @@ else
         P.c1 = cell(nr,1);           
         P.neuron_sn = cell(nr,1);
         options.bas_nonneg = 0;
+        options.p = length(P.g);        
     end
 end
 for iter = 1:ITER
@@ -54,7 +55,6 @@ for iter = 1:ITER
                     C(ii,:) = full(cc')*maxy;
                     YrA(:,ii) = YrA(:,ii) - nA(ii)*C(ii,:)';
                 case 'constrained_foopsi'
-                    options.p = 1;
                     YrA(:,ii) = YrA(:,ii) + nA(ii)*Cin(ii,:)';
                     if restimate_g
                         [cc,cb,c1,gn,sn,~] = constrained_foopsi(YrA(:,ii)/nA(ii),[],[],[],[],options);

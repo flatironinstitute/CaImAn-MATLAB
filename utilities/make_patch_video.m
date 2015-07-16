@@ -98,7 +98,7 @@ end
             title('Denoised','fontweight','bold','fontsize',16);
             xlabel(sprintf('Timestep %i out of %i',t,T),'fontweight','bold','fontsize',16);
             axis square; set(gca,'XTick',[],'YTick',[]);
-        subplot(4,6,[5,6,11,12]); imagesc(Y(:,:,t)-C_rec(:,:,t),[-mC,mC]);
+        subplot(4,6,[5,6,11,12]); imagesc(Y(:,:,t)-C_rec(:,:,t),[-mC/2,mC/2]);
             title('Residual 2x','fontweight','bold','fontsize',16);
             axis square; axis off;
         subplot(4,6,[13,14,19,20]); imagesc(C_np(:,:,t),[0,mB]);
