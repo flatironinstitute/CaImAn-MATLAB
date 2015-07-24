@@ -1,5 +1,11 @@
 function Ath = threshold_components(A,options)
 
+% post processing of spatial components
+% for each component perform the following:
+%   (i)     perform median filtering 
+%   (ii)    keep only pixels that contibute up to a level of total energy
+%   (iii)   perform morphological closing
+
     defoptions.thr = 0.9999;
     defoptions.se = strel('disk',1);
     defoptions.medw = [3,3];
