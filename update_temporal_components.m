@@ -36,7 +36,8 @@ else
         P.c1 = cell(nr,1);           
         P.neuron_sn = cell(nr,1);
         options.bas_nonneg = 0;
-        options.p = length(P.g);        
+        if isfield(P,'p'); options.p = P.p; else options.p = length(P.g); end
+        if isfield(P,'fudge_factor'); options.fudge_factor = P.fudge_factor; end
     end
 end
 for iter = 1:ITER
