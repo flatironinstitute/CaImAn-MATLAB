@@ -2,47 +2,58 @@ clear;
 %% load file
 
 addpath(genpath('utilities'));
-nam = ''; % insert path to tiff stack here
-Y = tiff_reader(nam);
-[d1,d2,T] = size(Y);  
-d = d1*d2;
+nam = '';             % insert path to tiff stack here
+sframe=1;						% user input: first frame to read (optional, default 1)
+num2read=1000;					% user input: how many frames to read   (optional, default until the end)
 
-Y_interp = interp_missing_data(Y);      % interpolate missing data (just for pre-processing)
-mis_data = find(Y_interp);
-Y(mis_data) = Y_interp(mis_data);        % introduce interpolated values for initialization
+Y = bigread2(nam,sframe,num2read);
+if ~isa(Y,'double');    Y = double(Y);  end         % convert to double
+
+[d1,d2,T] = size(Y);                    % dimensions of dataset
+d = d1*d2;                              % total number of pixels
+
+
+%% Interpolate missing data (just for pre-processing)
+
+if any(isempty(Y))
+    Y_interp = interp_missing_data(Y);      % interpolate missing data
+    mis_data = find(Y_interp);
+    Y(mis_data) = Y_interp(mis_data);       % introduce interpolated values for initialization
+else
+    Y_interp = sparse(d,T);
+end
+
 %% fast initialization of spatial components using the greedyROI
+k_sub = 1;                                          % temporal interleaving factor (for possible memory issues)
 
-int = 1:T;               % interval to be processed (may want to restrict this due to memory issues)   
+nr = 200;                                           % number of components to be found
+params.gSiz = 15;                                   % maximum size of spatial footprint (box of size param.gSiz x param.gSiz)
+params.gSig = 8;                                    % std of gaussian (size of neuron)        
+[Ain, Cin, center, ~] = greedyROI2d(Y(:,:,1:k_sub:end), nr, params);  
+Ain = sparse(reshape(Ain,d,nr));                    % initial estimate of spatial footprints (size d x nr)
+Cin = Cin';                                         % 
 
-nr = 100;                % number of components to be found
-params.gSiz = 15;        % maximum size of neuron in pixels
-params.gSig = 8;         % std of gaussian (size of neuron)        
-[basis, Cin, center, ~] = greedyROI2d(Y(:,:,int), nr, params);  % reduce size for memory reasons
-Ain = sparse(reshape(basis,d,nr));  
-Cin = Cin';
-clear basis;
-    % display centers of found components
-Cn = mean(Y,3); %correlation_image(Y); %max(Y,[],3); % image statistic
+% display centers of found components
+Cn =  mean(Y,3); %correlation_image(Y); %max(Y,[],3); % image statistic (only for display purposes)
 figure;imagesc(Cn);
     axis equal; axis tight; hold all;
     scatter(center(:,2),center(:,1),'mo');
     title('Center of ROIs found from initialization algorithm');
     
 %% compute estimates of noise for every pixel and a global time constant
-
-ff = find(sum(Ain,2)); % pixels were greedy method found activity 
-p = 1;                 % order of AR system
-options.pixels = ff;
-Yr = reshape(Y(:,:,int),d,length(int));
+                          
+p = 1;                                              % order of autoregressive system (p=1 just decay, p = 2, both rise and decay)
+options.pixels = find(sum(Ain,2));                  % base estimates only on pixels where the greedy method found activity                
+Yr = reshape(Y,d,T);
 P = arpfit(Yr,p,options);
 [bin,fin] = nnmf(max(Yr-Ain*Cin,0),1);
-P.interp = Y_interp(:,int);
+P.interp = Y_interp;
 % remove interpolated values
 miss_data_int = find(Y_interp(:,int));
 Yr(miss_data_int) = P.interp(miss_data_int);
 
 %% update spatial components
-P.d1 = d1; P.d2 = d2; P.dist = 8;
+P.d1 = d1; P.d2 = d2; P.dist = 3;
 [A,b] = update_spatial_components(Yr,Cin,fin,Ain,P);
 
 %% update temporal components
