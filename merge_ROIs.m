@@ -62,6 +62,7 @@ if strcmpi(P.method,'constrained_foopsi')
     P_merged.c1 = cell(nm,1);
     P_merged.neuron_sn = cell(nm,1);
 end
+Y_res = Y_res + b*f;
 for i = 1:nm
     merged_ROIs{i} = find(MC(:,ind(i)));
     nC = sqrt(sum(C(merged_ROIs{i},:).^2,2));

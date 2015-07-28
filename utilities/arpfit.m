@@ -82,31 +82,10 @@ end
     ph = A\gv(:);
     disp(ph);
     fprintf('Done after %2.2f seconds. \n',toc(tt1));
-% 
-% 
-% 
-% if find_bas
-%     mg = sum(ph);
-%     G = spdiags(ones(T,1)*[-ph(end:-1:1)',1],[-length(ph):0],T,T); %foopsi_matrix(T,P.g);
-%     Sp = Y*G';
-%     Sp = Sp(:,p+1:end);
-%     Cb = max(quantile(Sp,0.3,2),0)/(1-mg);
-% else
-%     Cb = zeros(d,1);
-% end
+
 
 P.sn = sn(:);
-% P.Cb = Cb;
 P.g = ph(:);
-% 
-% ind = find(abs(imag(P.sn)>0));
-% if ~isempty(ind);
-%     fprintf('Correcting complex number estimates. \n');
-%     %ind2 = setdiff(1:d,ind);
-%     P.sn(ind) = std(Y(ind,:),[],2); %mean(P.sn(ind2));
-%     P.Cb(ind) = quantile(Y(ind,:),0.1,2); %mean(P.Cb(ind2));
-%     fprintf('done. \n');
-% end
 
 
     function [sn,psdx,ff] = get_noise_fft(Y,range_ff,method,block_size)

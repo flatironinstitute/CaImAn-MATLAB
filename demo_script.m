@@ -2,18 +2,18 @@ clear;
 %% load file
 
 addpath(genpath('utilities'));
-nam = '';             % insert path to tiff stack here
+nam = 'demoMovie.tif';             
+                                % insert path to tiff stack here
 sframe=1;						% user input: first frame to read (optional, default 1)
-num2read=1000;					% user input: how many frames to read   (optional, default until the end)
+num2read=2000;					% user input: how many frames to read   (optional, default until the end)
 
 Y = bigread2(nam,sframe,num2read);
 if ~isa(Y,'double');    Y = double(Y);  end         % convert to double
 
-[d1,d2,T] = size(Y);                    % dimensions of dataset
-d = d1*d2;                              % total number of pixels
+[d1,d2,T] = size(Y);                                % dimensions of dataset
+d = d1*d2;                                          % total number of pixels
 
-
-%% Interpolate missing data (just for pre-processing)
+%% Interpolate any missing data (just for pre-processing)
 
 if any(isempty(Y))
     Y_interp = interp_missing_data(Y);      % interpolate missing data
@@ -26,15 +26,15 @@ end
 %% fast initialization of spatial components using the greedyROI
 k_sub = 1;                                          % temporal interleaving factor (for possible memory issues)
 
-nr = 200;                                           % number of components to be found
-params.gSiz = 15;                                   % maximum size of spatial footprint (box of size param.gSiz x param.gSiz)
-params.gSig = 8;                                    % std of gaussian (size of neuron)        
+nr = 30;                                           % number of components to be found
+params.gSiz = 9;                                   % maximum size of spatial footprint (box of size param.gSiz x param.gSiz)
+params.gSig = 4;                                   % std of gaussian (size of neuron)        
 [Ain, Cin, center, ~] = greedyROI2d(Y(:,:,1:k_sub:end), nr, params);  
 Ain = sparse(reshape(Ain,d,nr));                    % initial estimate of spatial footprints (size d x nr)
 Cin = Cin';                                         % 
 
 % display centers of found components
-Cn =  mean(Y,3); %correlation_image(Y); %max(Y,[],3); % image statistic (only for display purposes)
+Cn =  mean(Y,3); %correlation_image(Y); %max(Y,[],3); %std(Y,[],3); % image statistic (only for display purposes)
 figure;imagesc(Cn);
     axis equal; axis tight; hold all;
     scatter(center(:,2),center(:,1),'mo');
@@ -42,23 +42,27 @@ figure;imagesc(Cn);
     
 %% compute estimates of noise for every pixel and a global time constant
                           
-p = 1;                                              % order of autoregressive system (p=1 just decay, p = 2, both rise and decay)
+p = 2;                                              % order of autoregressive system (p=1 just decay, p = 2, both rise and decay)
 options.pixels = find(sum(Ain,2));                  % base estimates only on pixels where the greedy method found activity                
 Yr = reshape(Y,d,T);
+clear Y;
 P = arpfit(Yr,p,options);
 [bin,fin] = nnmf(max(Yr-Ain*Cin,0),1);
 P.interp = Y_interp;
 % remove interpolated values
-miss_data_int = find(Y_interp(:,int));
+miss_data_int = find(Y_interp);
 Yr(miss_data_int) = P.interp(miss_data_int);
 
 %% update spatial components
-P.d1 = d1; P.d2 = d2; P.dist = 3;
+P.d1 = d1;                  % dimensions of image
+P.d2 = d2; 
+P.dist = 3;                 % ellipse expansion factor for local search of spatial components
 [A,b] = update_spatial_components(Yr,Cin,fin,Ain,P);
 
 %% update temporal components
-P.method = 'project';
-[C,f,Y_res] = update_temporal_components(Yr,A,b,Cin,fin,P);
+P.method = 'constrained_foopsi';            % choice of method for deconvolution
+P.temporal_iter = 2;                        % number of iterations for block coordinate descent
+[C,f,Y_res,P] = update_temporal_components(Yr,A,b,Cin,fin,P);
 
 %% merge found components
 A_in = A;
@@ -66,10 +70,9 @@ C_in = C;
 repeat = 1;
 A_ = A;
 C_ = C;
-P.method = 'project';
 P.merge_thr = 0.8;
 while repeat
-    [A,C,nr,merged_ROIs] = merge_ROIs(Y_res,A_,b,C_,f,P);
+    [A,C,nr,merged_ROIs,P] = merge_ROIs(Y_res,A_,b,C_,f,P);
     repeat = ~isempty(merged_ROIs);
     disp(nr)
     A_ = A;
@@ -80,16 +83,20 @@ end
 %[A,b] = update_spatial_components(Yr,C,f,A,P);
 
 P.method = 'constrained_foopsi';
-[C2,f2,Y_res] = update_temporal_components(Yr,A_,b,C_,f,P);
+[C2,f2,Y_res,P] = update_temporal_components(Yr,A,b,C,f,P);
+[A2,b2] = update_spatial_components(Yr,C2,f2,A,P);
+
+
 %% do some plotting
 
-[A_or,C_or] = order_ROIs(A,C2);
+[A_or,C_or] = order_ROIs(A2,C2);
 [Coor,json_file] = plot_contours(A_or,reshape(P.sn,d1,d2),[],1);
-view_patches(Yr,A_or,C_or,b,f2,d1,d2)
+view_patches(Yr,A_or,C_or,b2,f2,d1,d2)
 %savejson('jmesh',json_file,'json-005');
 
 %%
-param.skip_frame = 3;
-param.ind = [1:4];
+param.skip_frame = 2;
+param.ind = [1,2,3,5];
+param.sx = 16;
 param.make_avi = 0;
-make_patch_video(A_or,C_or,b,f2,Yr,d1,d2,param)
+make_patch_video(A_or,C_or,b2,f2,Yr,d1,d2,param)
