@@ -62,6 +62,7 @@ P.dist = 3;                 % ellipse expansion factor for local search of spati
 %% update temporal components
 P.method = 'constrained_foopsi';            % choice of method for deconvolution
 P.temporal_iter = 2;                        % number of iterations for block coordinate descent
+P.fudge_factor = 0.98;                      % fudge factor to reduce time constant estimation bias
 [C,f,Y_res,P] = update_temporal_components(Yr,A,b,Cin,fin,P);
 
 %% merge found components
@@ -80,21 +81,19 @@ while repeat
 end
 
 %% repeat
-%[A,b] = update_spatial_components(Yr,C,f,A,P);
-
-P.method = 'constrained_foopsi';
-[C2,f2,Y_res,P] = update_temporal_components(Yr,A,b,C,f,P);
-[A2,b2] = update_spatial_components(Yr,C2,f2,A,P);
-
+[A2,b2] = update_spatial_components(Yr,C,f,A,P);
+[C2,f2,Y_res,P] = update_temporal_components(Yr,A2,b2,C,f,P);
+C_df = extract_DF_F(Yr,[A2,b2],[C2;f2],nr+1);
 
 %% do some plotting
 
-[A_or,C_or] = order_ROIs(A2,C2);
-[Coor,json_file] = plot_contours(A_or,reshape(P.sn,d1,d2),[],1);
-view_patches(Yr,A_or,C_or,b2,f2,d1,d2)
-%savejson('jmesh',json_file,'json-005');
+[A_or,C_or] = order_ROIs(A2,C2);      % order 
+contour_threshold = 0.95;             % amount of energy used for each component to construct contour plot
+[Coor,json_file] = plot_contours(A_or,reshape(P.sn,d1,d2),contour_threshold,1); % contour plot of spatial footprints
+%savejson('jmesh',json_file,'filename');        % optional save json file with component coordinates (requires matlab json library)
+view_patches(Yr,A_or,C_or,b2,f2,d1,d2);                                         % display all components
 
-%%
+%% make movie
 param.skip_frame = 2;
 param.ind = [1,2,3,5];
 param.sx = 16;
