@@ -2,6 +2,7 @@ clear;
 %% load file
 
 addpath(genpath('utilities'));
+addpath(genpath('../constrained-foopsi'));
 nam = 'demoMovie.tif';             
                                 % insert path to tiff stack here
 sframe=1;						% user input: first frame to read (optional, default 1)
@@ -83,17 +84,19 @@ end
 %% repeat
 [A2,b2] = update_spatial_components(Yr,C,f,A,P);
 [C2,f2,Y_res,P] = update_temporal_components(Yr,A2,b2,C,f,P);
-C_df = extract_DF_F(Yr,[A2,b2],[C2;f2],nr+1);
+C_df = extract_DF_F(Yr,[A2,b2],[C2;f2],nr+1); % extract DF/F values (optional)
 
 %% do some plotting
 
-[A_or,C_or] = order_ROIs(A2,C2);      % order 
+[A_or,C_or] = order_ROIs(A2,C2);      % order components
 contour_threshold = 0.95;             % amount of energy used for each component to construct contour plot
 [Coor,json_file] = plot_contours(A_or,reshape(P.sn,d1,d2),contour_threshold,1); % contour plot of spatial footprints
+pause; 
 %savejson('jmesh',json_file,'filename');        % optional save json file with component coordinates (requires matlab json library)
 view_patches(Yr,A_or,C_or,b2,f2,d1,d2);                                         % display all components
 
 %% make movie
+
 param.skip_frame = 2;
 param.ind = [1,2,3,5];
 param.sx = 16;

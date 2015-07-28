@@ -12,7 +12,7 @@ if ~isfield(P,'med_filt'); med_filt = [3,3]; else med_filt = P.med_filt; end
 if ~isfield(P,'thres'); thres = 0.2; else thres = P.thres; end
 if ~isfield(P,'show_sum'); show_sum = 0; else show_sum = P.show_sum; end
 if ~isfield(P,'interp'); Y_interp = sparse(d,T); else Y_interp = P.interp; end
-if ~isfield(P,'use_parallel'); use_parallel = 1; else use_parallel = P.use_parallel; end
+if ~isfield(P,'use_parallel'); use_parallel = ~isempty(which('parpool')); else use_parallel = P.use_parallel; end
 
 Coor.x = kron(ones(d2,1),(1:d1)');
 Coor.y = kron((1:d2)',ones(d1,1));

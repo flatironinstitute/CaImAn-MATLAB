@@ -54,8 +54,13 @@ for i = 1:nr+nb
     subplot(122);
     if i <= nr
         plot(1:T,Y_r(i,:)/Df(i),1:T,C(i,:)/Df(i)); 
-        title(sprintf('Component %i (calcium)',i),'fontsize',16,'fontweight','bold');
+        if plot_df
+            title(sprintf('Component %i (calcium DF/F value)',i),'fontsize',16,'fontweight','bold');
+        else
+            title(sprintf('Component %i (calcium raw value)',i),'fontsize',16,'fontweight','bold');
+        end
         legend('Raw trace (filtered)','Inferred');
+        xlabel('Timestep','fontsize',16,'fontweight','bold');
         drawnow; 
         if make_gif
             frame = getframe(1);
