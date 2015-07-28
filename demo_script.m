@@ -40,7 +40,7 @@ figure;imagesc(Cn);
     axis equal; axis tight; hold all;
     scatter(center(:,2),center(:,1),'mo');
     title('Center of ROIs found from initialization algorithm');
-    
+    drawnow;
 %% compute estimates of noise for every pixel and a global time constant
                           
 p = 2;                                              % order of autoregressive system (p=1 just decay, p = 2, both rise and decay)
@@ -67,29 +67,39 @@ P.fudge_factor = 0.98;                      % fudge factor to reduce time consta
 [C,f,Y_res,P] = update_temporal_components(Yr,A,b,Cin,fin,P);
 
 %% merge found components
-A_in = A;
-C_in = C;
-repeat = 1;
-A_ = A;
-C_ = C;
-P.merge_thr = 0.8;
-while repeat
-    [A,C,nr,merged_ROIs,P] = merge_ROIs(Y_res,A_,b,C_,f,P);
-    repeat = ~isempty(merged_ROIs);
-    disp(nr)
-    A_ = A;
-    C_ = C;
+
+P.merge_thr = 0.8;                          % merging threshold
+[Am,Cm,nr_m,merged_ROIs,P] = merge_ROIs(Y_res,A,b,C,f,P);
+
+display_merging = 1; % flag for displaying merging example
+if display_merging
+    i = 1; randi(length(merged_ROIs));
+    ln = length(merged_ROIs{i});
+    figure;
+        set(gcf,'Position',[300,300,(ln+2)*300,300]);
+        for j = 1:ln
+            subplot(1,ln+2,j); imagesc(reshape(A(:,merged_ROIs{i}(j)),d1,d2)); 
+                title(sprintf('Component %i',j),'fontsize',16,'fontweight','bold'); axis equal; axis tight;
+        end
+        subplot(1,ln+2,ln+1); imagesc(reshape(Am(:,nr_m-length(merged_ROIs)+i),d1,d2));
+                title('Merged Component','fontsize',16,'fontweight','bold');axis equal; axis tight; 
+        subplot(1,ln+2,ln+2);
+            plot(1:T,(diag(max(C(merged_ROIs{i},:),[],2))\C(merged_ROIs{i},:))'); 
+            hold all; plot(1:T,Cm(nr_m-length(merged_ROIs)+i,:)/max(Cm(nr_m-length(merged_ROIs)+i,:)),'--k')
+            title('Temporal Components','fontsize',16,'fontweight','bold')
+        drawnow;
 end
 
 %% repeat
-[A2,b2] = update_spatial_components(Yr,C,f,A,P);
-[C2,f2,Y_res,P] = update_temporal_components(Yr,A2,b2,C,f,P);
-C_df = extract_DF_F(Yr,[A2,b2],[C2;f2],nr+1); % extract DF/F values (optional)
+[A2,b2] = update_spatial_components(Yr,Cm,f,Am,P);
+[C2,f2,Y_res,P] = update_temporal_components(Yr,A2,b2,Cm,f,P);
+C_df = extract_DF_F(Yr,[A2,b2],[C2;f2],nr_m+1); % extract DF/F values (optional)
 
 %% do some plotting
 
 [A_or,C_or] = order_ROIs(A2,C2);      % order components
 contour_threshold = 0.95;             % amount of energy used for each component to construct contour plot
+figure;
 [Coor,json_file] = plot_contours(A_or,reshape(P.sn,d1,d2),contour_threshold,1); % contour plot of spatial footprints
 pause; 
 %savejson('jmesh',json_file,'filename');        % optional save json file with component coordinates (requires matlab json library)
