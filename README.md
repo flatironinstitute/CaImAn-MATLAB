@@ -9,6 +9,7 @@ Pnevmatikakis, E. A., Gao, Y., Soudry, D., Pfau, D., Lacefield, C., Poskanzer, K
 function name                           | description 
 ----------------------------------------|-----------------------------------
 demo_script.m                           | wrapper code <br />
+demoMovie.tif                           | Sample dataset for running the code (by W. Yang and D. Peterka) <br />
 update_spatial_components.m             | update spatial components given temporal components and data <br />
 update_temporal_components.m            | update temporal components given spatial components and data <br />
 merge_ROIs.m                            | merge spatially overlapping components that are temporally correlated <br />
