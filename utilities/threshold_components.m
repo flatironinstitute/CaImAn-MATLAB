@@ -6,9 +6,12 @@ function Ath = threshold_components(A,options)
 %   (ii)    keep only pixels that contibute up to a level of total energy
 %   (iii)   perform morphological closing
 
-    defoptions.thr = 0.9999;
-    defoptions.se = strel('disk',1);
-    defoptions.medw = [3,3];
+% Written by:
+% Eftychios A. Pnevmatikakis, Simons Foundation, 2015
+
+    defoptions.thr = 0.9999;          % energy threshold
+    defoptions.se = strel('disk',1);  % morphological operator for closing
+    defoptions.medw = [3,3];          % size of median filter
 
     if nargin == 1; options = defoptions; end
     if ~isfield(options,'nrgthr'); options.thr = defoptions.thr; end
@@ -37,6 +40,5 @@ function Ath = threshold_components(A,options)
         ff = find(L==indm);
         Ath(ff,i) = A(ff,i);
     end
-    
-    
+        
 end
