@@ -35,7 +35,7 @@ Ain = sparse(reshape(Ain,d,nr));                    % initial estimate of spatia
 Cin = Cin';                                         % 
 
 % display centers of found components
-Cn =  mean(Y,3); %correlation_image(Y); %max(Y,[],3); %std(Y,[],3); % image statistic (only for display purposes)
+Cn =  correlation_image(Y); %max(Y,[],3); %std(Y,[],3); % image statistic (only for display purposes)
 figure;imagesc(Cn);
     axis equal; axis tight; hold all;
     scatter(center(:,2),center(:,1),'mo');
