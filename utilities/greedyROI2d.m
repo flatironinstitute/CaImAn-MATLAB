@@ -13,6 +13,7 @@ function [basis, trace, center, data] = greedyROI2d(data, K, params)
 %           params.save_memory: flag for processing data in chunks to save memory (default 0)
 %           params.windowSiz: size of spatial window when computing the median (default 32 x 32)
 %           params.chunkSiz: number of timesteps to be processed simultaneously if on save_memory mode (default: 100)
+%           params.med_app: number of timesteps to be interleaved for fast (approximate) median calculation (default: 1, no approximation)
 
 %
 %Output:
@@ -21,7 +22,7 @@ function [basis, trace, center, data] = greedyROI2d(data, K, params)
 %center     K x 2 matrix, inferred center of each neuron
 %res        M x N x T movie, residual
 %
-%Authur: Yuanjun Gao
+%Author: Yuanjun Gao with modifications from Eftychios A. Pnevmatikakis
 
 [M, N, T] = size(data);
 
@@ -50,21 +51,24 @@ else chunkSiz = params.chunkSiz; end
 if ~isfield(params, 'windowSiz'), windowSiz = 32;
 else windowSiz = params.windowSiz; end
 
+if ~isfield(params, 'med_app'), med_app = 1;
+else med_app = params.med_app; end
+
+Tint = 1:med_app:T;
 if save_memory
     med = zeros(M,N);
     for ii = 1:ceil(M/windowSiz)
         intx = (ii-1)*windowSiz+1:min(ii*windowSiz,M);
         for jj = 1:ceil(N/windowSiz)
             inty = (jj-1)*windowSiz+1:min(jj*windowSiz,N);
-            med(intx,inty) = median(data(intx,inty,:),3);
+            med(intx,inty) = median(data(intx,inty,Tint),3);
         end
     end 
 else
-    med = median(data, 3);
+    med = median(data(:,:,Tint), 3);
 end
 
 data = bsxfun(@minus, data, med);
-
 gHalf = floor(gSiz / 2); %half size of the kernel, used to calculate margin
 gSiz = 2 * gHalf + 1; %actual size
 
@@ -74,9 +78,8 @@ trace = zeros(T, K);
 center = zeros(K, 2);
 
 
-
 %scan the whole image (only need to do this at the first iteration)
-tic; rho = imblur(data, gSig, gSiz, ndims(data)-1, save_memory, chunkSiz); toc%covariance of data and basis
+rho = imblur(data, gSig, gSiz, ndims(data)-1, save_memory, chunkSiz); %covariance of data and basis
 v = sum(rho.^2, 3); %variance explained
 
 for k = 1:K,    
@@ -155,8 +158,6 @@ for iter = 1:nIter,
 end
 end
 
-
-
 function data = imblur(data, sig, siz, nDimBlur, save_memory, chunkSiz)
 %Gaussian blur for high dimensional data
 %Input:
@@ -199,7 +200,4 @@ for i = 1:nDimBlur,
 end
 end
 
-
 end
-
-
