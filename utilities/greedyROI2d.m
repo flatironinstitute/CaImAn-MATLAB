@@ -10,6 +10,10 @@ function [basis, trace, center, data] = greedyROI2d(data, K, params)
 %           params.nIter: number of iterations for shape tuning (default 5)
 %           params.gSig: variance of Gaussian kernel to use (default 5)
 %           params.gSiz: size of kernel (default 41)
+%           params.save_memory: flag for processing data in chunks to save memory (default 0)
+%           params.windowSiz: size of spatial window when computing the median (default 32 x 32)
+%           params.chunkSiz: number of timesteps to be processed simultaneously if on save_memory mode (default: 100)
+
 %
 %Output:
 %basis      M x N x K matrix, location of each neuron
@@ -20,9 +24,6 @@ function [basis, trace, center, data] = greedyROI2d(data, K, params)
 %Authur: Yuanjun Gao
 
 [M, N, T] = size(data);
-
-med = median(data, 3);
-data = bsxfun(@minus, data, med);
 
 if ~exist('K', 'var'),  %find K neurons
     K = 30;  
@@ -40,15 +41,42 @@ elseif length(params.gSiz) == 1, gSiz = params.gSiz + zeros(1,2); end
 if ~isfield(params, 'nIter'), nIter = 5; 
 else nIter = params.nIter; end
 
-basis = zeros(M, N, K);
-trace = zeros(T, K);
-center = zeros(K, 2);
+if ~isfield(params, 'save_memory'), save_memory = 0;
+else save_memory = params.save_memory; end
+    
+if ~isfield(params, 'chunkSiz'), chunkSiz = 100;
+else chunkSiz = params.chunkSiz; end
+
+if ~isfield(params, 'windowSiz'), windowSiz = 32;
+else windowSiz = params.windowSiz; end
+
+if save_memory
+    med = zeros(M,N);
+    for ii = 1:ceil(M/windowSiz)
+        intx = (ii-1)*windowSiz+1:min(ii*windowSiz,M);
+        for jj = 1:ceil(N/windowSiz)
+            inty = (jj-1)*windowSiz+1:min(jj*windowSiz,N);
+            med(intx,inty) = median(data(intx,inty,:),3);
+        end
+    end 
+else
+    med = median(data, 3);
+end
+
+data = bsxfun(@minus, data, med);
 
 gHalf = floor(gSiz / 2); %half size of the kernel, used to calculate margin
 gSiz = 2 * gHalf + 1; %actual size
 
+%basis = zeros(M, N, K);
+basis = spalloc(M*N,K,K*prod(gSiz));
+trace = zeros(T, K);
+center = zeros(K, 2);
+
+
+
 %scan the whole image (only need to do this at the first iteration)
-rho = imblur(data, gSig, gSiz); %covariance of data and basis
+tic; rho = imblur(data, gSig, gSiz, ndims(data)-1, save_memory, chunkSiz); toc%covariance of data and basis
 v = sum(rho.^2, 3); %variance explained
 
 for k = 1:K,    
@@ -65,7 +93,9 @@ for k = 1:K,
     [coef, score] = finetune2d(dataTemp, traceTemp, nIter);        
     
     dataSig = bsxfun(@times, coef, reshape(score, [1,1,T]));
-    basis(iSig(1):iSig(2), jSig(1):jSig(2), k) = coef;
+    [xSig,ySig] = meshgrid(iSig(1):iSig(2),jSig(1):jSig(2));
+    %basis(iSig(1):iSig(2), jSig(1):jSig(2), k) = coef;
+    basis(sub2ind([M,N],xSig(:),ySig(:)),k) = coef(:);
     trace(:, k) = score';
             
     data(iSig(1):iSig(2), jSig(1):jSig(2), :) = data(iSig(1):iSig(2), jSig(1):jSig(2), :) - dataSig; %update residual
@@ -79,7 +109,7 @@ for k = 1:K,
         jLag = jSig - jMod(1) + 1;
         dataTemp = zeros(iModLen, jModLen);
         dataTemp(iLag(1):iLag(2), jLag(1):jLag(2)) = reshape(coef, [iSigLen, jSigLen]);
-        dataTemp = imblur(dataTemp, gSig, gSiz, 2);
+        dataTemp = imblur(dataTemp, gSig, gSiz, 2, 0, chunkSiz);
         rhoTemp = bsxfun(@times, dataTemp, reshape(score, [1,1,T]));
         rhoTemp = rho(iMod(1):iMod(2), jMod(1):jMod(2), :) - rhoTemp;
         rho(iMod(1):iMod(2), jMod(1):jMod(2), :) = rhoTemp;
@@ -127,7 +157,7 @@ end
 
 
 
-function data = imblur(data, sig, siz, nDimBlur)
+function data = imblur(data, sig, siz, nDimBlur, save_memory, chunkSiz)
 %Gaussian blur for high dimensional data
 %Input:
 %data       original data
@@ -156,7 +186,15 @@ for i = 1:nDimBlur,
             indH = 1:nDimBlur; indH(i) = 1; indH(1) = i;
             H = permute(H, indH);
         end
-        data = imfilter(data, H, 'same', 0);
+        if save_memory
+            L = size(data,ndims(data));
+            for ci = 1:ceil(L/chunkSiz)
+                int = (ci-1)*chunkSiz+1:min(ci*chunkSiz,L);
+                data(:,:,int) = imfilter(data(:,:,int), H, 'same', 0);
+            end
+        else
+            data = imfilter(data, H, 'same', 0);
+        end
     end
 end
 end
