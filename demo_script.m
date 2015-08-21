@@ -55,6 +55,7 @@ miss_data_int = find(Y_interp);
 Yr(miss_data_int) = P.interp(miss_data_int);
 
 %% update spatial components
+P.search_method = 'ellipse';
 P.d1 = d1;                  % dimensions of image
 P.d2 = d2; 
 P.dist = 3;                 % ellipse expansion factor for local search of spatial components

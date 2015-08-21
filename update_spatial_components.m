@@ -31,27 +31,12 @@ if ~isfield(P,'dist'); dist = 3; else dist = P.dist; end                    % ex
 if ~isfield(P,'show_sum'); show_sum = 0; else show_sum = P.show_sum; end            % do some plotting while calculating footprints
 if ~isfield(P,'interp'); Y_interp = sparse(d,T); else Y_interp = P.interp; end      % identify missing data
 if ~isfield(P,'use_parallel'); use_parallel = ~isempty(which('parpool')); else use_parallel = P.use_parallel; end % use parallel toolbox if present
+if ~isfield(P,'search_method'); method = []; else method = P.search_method; end     % search method for determining footprint of spatial components
 
 nr = size(C,1);       % number of neurons
 
-Coor.x = kron(ones(d2,1),(1:d1)'); 
-Coor.y = kron((1:d2)',ones(d1,1));
+IND = determine_search_location(A_(:,1:nr),method,P);
 
-if ~(dist==Inf)             % determine search area for each neuron
-   cm = zeros(nr,2);        % vector for center of mass
-   Vr = cell(nr,1);
-   IND = zeros(d,nr);       % indicator for distance								   
-    cm(:,1) = Coor.x'*A_(:,1:nr)./sum(A_(:,1:nr)); 
-    cm(:,2) = Coor.y'*A_(:,1:nr)./sum(A_(:,1:nr));          % center of mass for each components
-    for i = 1:nr            % calculation of variance for each component and construction of ellipses
-        Vr{i} = ([Coor.x - cm(i,1), Coor.y - cm(i,2)]'*spdiags(A_(:,i),0,d,d)*[Coor.x - cm(i,1), Coor.y - cm(i,2)])/sum(A_(:,i));
-        [V,D] = eig(Vr{i});
-        cor = [Coor.x - cm(i,1),Coor.y - cm(i,2)];
-        d11 = min(min_size^2,max(max_size^2,D(1,1)));
-        d22 = min(min_size^2,max(max_size^2,D(2,2)));
-        IND(:,i) = sqrt((cor*V(:,1)).^2/d11 + (cor*V(:,2)).^2/d22)<=dist;       % search indeces for each component
-    end
-end
 Cf = [C;f];
 
 if use_parallel         % solve BPDN problem for each pixel
@@ -65,16 +50,11 @@ if use_parallel         % solve BPDN problem for each pixel
         Acell{nthr} = zeros(siz_row(nthr),size(Cf,1));
         for px = 1:siz_row(nthr)
             fn = ~isnan(Ycell{nthr}(px,:));       % identify missing data
-            if dist == Inf
-                [~, ~, a, ~] = lars_regression_noise(Ycell{nthr}(px,fn)', Cf(:,fn)', 1, Psnc{nthr}(px)^2*T);
-                Acell{nthr}(px,:) = a';
-            else
-                ind = find(INDc{nthr}(px,:));
-                if ~isempty(ind);
-                    ind2 = [ind,nr+(1:size(f,1))];
-                    [~, ~, a, ~] = lars_regression_noise(Ycell{nthr}(px,fn)', Cf(ind2,fn)', 1, Psnc{nthr}(px)^2*T);
-                    Acell{nthr}(px,ind2) = a';
-                end
+            ind = find(INDc{nthr}(px,:));
+            if ~isempty(ind);
+                ind2 = [ind,nr+(1:size(f,1))];
+                [~, ~, a, ~] = lars_regression_noise(Ycell{nthr}(px,fn)', Cf(ind2,fn)', 1, Psnc{nthr}(px)^2*T);
+                Acell{nthr}(px,ind2) = a';
             end
         end
     end
@@ -84,18 +64,12 @@ else
     sA = zeros(d1,d2);
     for px = 1:d   % estimate spatial components
         fn = ~isnan(Y(px,:));       % identify missing data
-        if dist == Inf
-            [~, ~, a, ~] = lars_regression_noise(Y(px,fn)', Cf(:,fn)', 1, P.sn(px)^2*T);
-            A(px,:) = a';
+        ind = find(IND(px,:));
+        if ~isempty(ind);
+            ind2 = [ind,nr+(1:size(f,1))];
+            [~, ~, a, ~] = lars_regression_noise(Y(px,fn)', Cf(ind2,fn)', 1, P.sn(px)^2*T);
+            A(px,ind2) = a';
             sA(px) = sum(a);
-        else
-            ind = find(IND(px,:));
-            if ~isempty(ind);
-                ind2 = [ind,nr+(1:size(f,1))];
-                [~, ~, a, ~] = lars_regression_noise(Y(px,fn)', Cf(ind2,fn)', 1, P.sn(px)^2*T);
-                A(px,ind2) = a';
-                sA(px) = sum(a);
-            end
         end
         if show_sum
             if mod(px,d1) == 0;
