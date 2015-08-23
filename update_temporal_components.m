@@ -7,9 +7,19 @@ if ~isfield(P,'method'); method = 'constrained_foopsi'; else method = P.method; 
 if ~isfield(P,'restimate_g'); restimate_g = 1; else restimate_g = P.restimate_g; end % re-estimate time constant (only with constrained foopsi)
 if ~isfield(P,'temporal_iter'); ITER = 1; else ITER = P.temporal_iter; end
 if isfield(P,'interp'); Y_interp = P.interp; else Y_interp = sparse(d,T); end
+if isfield(P,'unsaturatedPix'); unsaturatedPix = P.unsaturatedPix; else unsaturatedPix = 1:d; end
 
 mis_data = find(Y_interp);
 Y(mis_data) = Y_interp(mis_data);
+
+saturatedPix = setdiff(1:d,unsaturatedPix);
+Ysat = Y(saturatedPix,:);
+Asat = A(saturatedPix,:);
+bsat = b(saturatedPix,:);
+Y = Y(unsaturatedPix,:);
+A = A(unsaturatedPix,:);
+b = b(unsaturatedPix,:);
+d = length(unsaturatedPix);
 
 flag_G = 1;
 if ~iscell(P.g)
@@ -98,7 +108,7 @@ for iter = 1:ITER
                     Y_res = Y_res + A(:,ii)*Cin(ii,:);
                     [~,srt] = sort(A(:,ii),'descend');
                     ff = srt(1:mc);
-                    [cc,LD(:,ii)] = lagrangian_foopsi_temporal(Y_res(ff,:),A(ff,ii),T*P.sn(ff).^2,G,LD(:,ii));        
+                    [cc,LD(:,ii)] = lagrangian_foopsi_temporal(Y_res(ff,:),A(ff,ii),T*P.sn(unsaturatedPix(ff)).^2,G,LD(:,ii));        
                     C(ii,:) = full(cc');
                     Y_res = Y_res - A(:,ii)*cc';
             end
@@ -127,3 +137,5 @@ end
 
 f = C(nr+1:end,:);
 C = C(1:nr,:);
+Y_res(unsaturatedPix,:) = Y_res;
+Y_res(saturatedPix,:) = Ysat - Asat*C - bsat*f;
