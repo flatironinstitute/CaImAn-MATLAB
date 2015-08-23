@@ -1,18 +1,54 @@
 function [C,f,Y_res,P] = update_temporal_components(Y,A,b,Cin,fin,P,LD)
 
 % update temporal components and background given spatial components
+% A variety of different methods can be used and are separated into 2 classes:
+
+% 1-d approaches, where for each component a 1-d trace is computed by removing
+% the effect of all the other components and then averaging with the corresponding 
+% spatial footprint. Then each trace is denoised. This corresponds to a block-coordinate approach
+% 4 different 1-d approaches are included, and any custom method
+% can be easily incorporated:
+% 'project':                The trace is projected to satisfy the constraints by the (known) calcium indicator dynamics
+% 'constrained_foopsi':     The noise constrained deconvolution approach is used. Time constants can be re-estimated (default)
+% 'MCEM_foopsi':            Alternating between constrained_foopsi and a MH approach for re-estimating the time constants
+% 'MCMC':                   A fully Bayesian method (slowest, but usually most accurate)
+
+% multi-dimensional approaches: (slowest)
+% 'noise_constrained': 
+% C(j,:) = argmin_{c_j} sum(G*c_j), 
+%           subject to:   G*c_j >= 0
+%                         ||Y(i,:) - A*C - b*f|| <= sn(i)*sqrt(T)
+
+% INPUTS:
+% Y:        raw data ( d X T matrix)
+% A:        spatial footprints  (d x nr matrix)
+% b:        spatial background  (d x 1 vector)
+% Cin:      current estimate of temporal components (nr X T matrix)
+% fin:      current estimate of temporal background (1 x T vector)
+% P:        parameter struct
+% LD:       Lagrange multipliers (needed only for 'noise_constrained' method).
+% 
+% OUTPUTS:
+% C:        temporal components (nr X T matrix)
+% f:        temporal background (1 x T vector)
+% Y_res:    residual signal (d X T matrix). Y_res = Y - A*C - b*f
+% P:        parameter struct
+
+% Written by: 
+% Eftychios A. Pnevmatikakis, Simons Foundation, 2015
+
 
 [d,T] = size(Y);
-if ~isfield(P,'method'); method = 'constrained_foopsi'; else method = P.method; end
+if ~isfield(P,'method'); method = 'constrained_foopsi'; else method = P.method; end  % choose method
 if ~isfield(P,'restimate_g'); restimate_g = 1; else restimate_g = P.restimate_g; end % re-estimate time constant (only with constrained foopsi)
-if ~isfield(P,'temporal_iter'); ITER = 1; else ITER = P.temporal_iter; end
-if isfield(P,'interp'); Y_interp = P.interp; else Y_interp = sparse(d,T); end
-if isfield(P,'unsaturatedPix'); unsaturatedPix = P.unsaturatedPix; else unsaturatedPix = 1:d; end
+if ~isfield(P,'temporal_iter'); ITER = 1; else ITER = P.temporal_iter; end           % number of block-coordinate descent iterations
+if isfield(P,'interp'); Y_interp = P.interp; else Y_interp = sparse(d,T); end        % missing data
+if isfield(P,'unsaturatedPix'); unsaturatedPix = P.unsaturatedPix; else unsaturatedPix = 1:d; end   % saturated pixels
 
-mis_data = find(Y_interp);
+mis_data = find(Y_interp);              % interpolate any missing data before deconvolution
 Y(mis_data) = Y_interp(mis_data);
 
-saturatedPix = setdiff(1:d,unsaturatedPix);
+saturatedPix = setdiff(1:d,unsaturatedPix);     % remove any saturated pixels
 Ysat = Y(saturatedPix,:);
 Asat = A(saturatedPix,:);
 bsat = b(saturatedPix,:);
