@@ -14,7 +14,7 @@ function IND = determine_search_location(A,method,params)
 % params:   hyper-parameter struct for the various methods (see default settings below for description)
 %
 % OUTPUT:
-% IND:      binary d x nr matrix. IND(i,j) = 1 if pixel j is included in the search location of component i
+% IND:      binary d x nr matrix. IND(i,j) = 1 if pixel i is included in the search location of component j
 %
 % Written by Eftychios A. Pnevmatikakis, Simons Foundation 
 %   with input from Weijian Yang, Columbia University
