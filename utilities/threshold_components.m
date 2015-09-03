@@ -5,6 +5,7 @@ function Ath = threshold_components(A,options)
 %   (i)     perform median filtering 
 %   (ii)    keep only pixels that contibute up to a level of total energy
 %   (iii)   perform morphological closing
+%   (iv)    extract largest connected component
 
 % Written by:
 % Eftychios A. Pnevmatikakis, Simons Foundation, 2015
