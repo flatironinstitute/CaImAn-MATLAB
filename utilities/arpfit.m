@@ -56,7 +56,7 @@ if use_parallel
 else
     XC = zeros(np,2*lags+1);
     for j = 1:np
-        XC(j,:) = xcov(Y(j,:),lags,'biased');
+        XC(j,:) = xcov(Y(ff(j),:),lags,'biased');
     end
 end
     
