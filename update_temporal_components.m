@@ -5,7 +5,7 @@ function [C,f,Y_res,P] = update_temporal_components(Y,A,b,Cin,fin,P,LD)
 [d,T] = size(Y);
 if ~isfield(P,'method'); method = 'constrained_foopsi'; else method = P.method; end
 if ~isfield(P,'restimate_g'); restimate_g = 1; else restimate_g = P.restimate_g; end % re-estimate time constant (only with constrained foopsi)
-if ~isfield(P,'temporal_iter'); ITER = 1; else ITER = P.temporal_iter; end
+if ~isfield(P,'temporal_iter'); ITER = 2; else ITER = P.temporal_iter; end
 if isfield(P,'interp'); Y_interp = P.interp; else Y_interp = sparse(d,T); end
 
 mis_data = find(Y_interp);
@@ -61,7 +61,7 @@ for iter = 1:ITER
                         [cc,cb,c1,gn,sn,~] = constrained_foopsi(YrA(:,ii)/nA(ii),[],[],[],[],options);
                         P.gn{ii} = gn;
                     else
-                        [cc,cb,c1,gn,sn,~] = constrained_foopsi(YrA(:,ii)/nA(ii),[],[],g,[],options);
+                        [cc,cb,c1,gn,sn,~] = constrained_foopsi(YrA(:,ii)/nA(ii),[],[],P.g,[],options);
                     end
                     gd = max(roots([1,-gn']));  % decay time constant for initial concentration
                     gd_vec = gd.^((0:T-1));
