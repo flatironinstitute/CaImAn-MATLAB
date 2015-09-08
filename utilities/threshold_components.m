@@ -10,7 +10,7 @@ function Ath = threshold_components(A,options)
 % Eftychios A. Pnevmatikakis, Simons Foundation, 2015
 
     defoptions.thr = 0.9999;          % energy threshold
-    defoptions.se = strel('disk',1);  % morphological operator for closing
+    defoptions.se = strel('square',3);  % morphological operator for closing
     defoptions.medw = [3,3];          % size of median filter
 
     if nargin == 1; options = defoptions; end
@@ -30,7 +30,7 @@ function Ath = threshold_components(A,options)
         BW = zeros(options.d1,options.d2);
         BW(ind(ff:d)) = 1;
         BW = imclose(BW,options.se);
-        [L,NUM] = bwlabel(BW,4);
+        [L,NUM] = bwlabel(BW,8);
         nrg = zeros(NUM,1);
         for l = 1:NUM
             ff = find(L==l);
