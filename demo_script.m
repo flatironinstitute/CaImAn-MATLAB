@@ -42,14 +42,18 @@ figure;imagesc(Cn);
     title('Center of ROIs found from initialization algorithm');
     drawnow;
 %% compute estimates of noise for every pixel and a global time constant
-                          
-p = 2;                                              % order of autoregressive system (p=1 just decay, p = 2, both rise and decay)
-options.pixels = find(sum(Ain,2));                  % base estimates only on pixels where the greedy method found activity                
+
 Yr = reshape(Y,d,T);
 clear Y;
+p = 2;                                                          % order of autoregressive system (p=1 just decay, p = 2, both rise and decay)
+active_pixels = find(sum(Ain,2));                               % pixels where the greedy method found activity
+unsaturated_pixels = find_unsaturatedPixels(Yr);                % pixels that do not exhibit saturation
+options.pixels = intersect(active_pixels,unsaturated_pixels);   % base estimates only on                 
+
 P = arpfit(Yr,p,options);
 [bin,fin] = nnmf(max(Yr-Ain*Cin,0),1);
 P.interp = Y_interp;
+P.unsaturatedPix = unsaturated_pixels;
 % remove interpolated values
 miss_data_int = find(Y_interp);
 Yr(miss_data_int) = P.interp(miss_data_int);
