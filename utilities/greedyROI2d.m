@@ -34,10 +34,14 @@ end
 if ~exist('params', 'var') params = []; end
 
 if ~isfield(params, 'gSig'), gSig = [5, 5]; 
-elseif length(params.gSig) == 1, gSig = params.gSig + zeros(1,2); end
+    elseif length(params.gSig) == 1, gSig = params.gSig + zeros(1,2); 
+    else gSig = params.gSig; 
+end
 
 if ~isfield(params, 'gSiz'), gSiz = [11, 11];
-elseif length(params.gSiz) == 1, gSiz = params.gSiz + zeros(1,2); end
+    elseif length(params.gSiz) == 1, gSiz = params.gSiz + zeros(1,2); 
+    else gSiz = params.gSiz; 
+end
 
 if ~isfield(params, 'nIter'), nIter = 5; 
 else nIter = params.nIter; end
@@ -72,8 +76,8 @@ data = bsxfun(@minus, data, med);
 gHalf = floor(gSiz / 2); %half size of the kernel, used to calculate margin
 gSiz = 2 * gHalf + 1; %actual size
 
-%basis = zeros(M, N, K);
-basis = spalloc(M*N,K,K*prod(gSiz));
+basis = zeros(M, N, K);
+%basis = spalloc(M*N,K,K*prod(gSiz));
 trace = zeros(T, K);
 center = zeros(K, 2);
 
@@ -96,9 +100,9 @@ for k = 1:K,
     [coef, score] = finetune2d(dataTemp, traceTemp, nIter);        
     
     dataSig = bsxfun(@times, coef, reshape(score, [1,1,T]));
-    [xSig,ySig] = meshgrid(iSig(1):iSig(2),jSig(1):jSig(2));
-    %basis(iSig(1):iSig(2), jSig(1):jSig(2), k) = coef;
-    basis(sub2ind([M,N],xSig(:),ySig(:)),k) = coef(:);
+    %[xSig,ySig] = meshgrid(iSig(1):iSig(2),jSig(1):jSig(2));
+    basis(iSig(1):iSig(2), jSig(1):jSig(2), k) = coef;
+    %basis(sub2ind([M,N],xSig(:),ySig(:)),k) = coef(:);
     trace(:, k) = score';
             
     data(iSig(1):iSig(2), jSig(1):jSig(2), :) = data(iSig(1):iSig(2), jSig(1):jSig(2), :) - dataSig; %update residual
@@ -117,6 +121,9 @@ for k = 1:K,
         rhoTemp = rho(iMod(1):iMod(2), jMod(1):jMod(2), :) - rhoTemp;
         rho(iMod(1):iMod(2), jMod(1):jMod(2), :) = rhoTemp;
         v(iMod(1):iMod(2), jMod(1):jMod(2)) = sum(rhoTemp.^2, 3);
+        if k == 1
+            aa = 0;
+        end
     end
 end
 
