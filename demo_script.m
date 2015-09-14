@@ -1,8 +1,9 @@
 clear;
 %% load file
 
-addpath(genpath('utilities'));
 addpath(genpath('../constrained-foopsi'));
+addpath(genpath('utilities'));
+
 nam = 'demoMovie.tif';             
                                 % insert path to tiff stack here
 sframe=1;						% user input: first frame to read (optional, default 1)
