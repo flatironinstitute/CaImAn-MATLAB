@@ -103,8 +103,8 @@ C_df = extract_DF_F(Yr,[A2,b2],[C2;f2],nr_m+1); % extract DF/F values (optional)
 
 %% do some plotting
 
-[A_or,C_or] = order_ROIs(A2,C2);      % order components
-contour_threshold = 0.95;             % amount of energy used for each component to construct contour plot
+[A_or,C_or,P] = order_ROIs(A2,C2,P);      % order components
+contour_threshold = 0.95;                 % amount of energy used for each component to construct contour plot
 figure;
 [Coor,json_file] = plot_contours(A_or,reshape(P.sn,d1,d2),contour_threshold,1); % contour plot of spatial footprints
 pause; 
