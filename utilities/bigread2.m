@@ -97,30 +97,30 @@ he_w=info.Width;
 he_h=info.Height;
 % mul is set to > 1 for debugging only
 mul=1;
-if (form=='uint16')
+if strcmpi(form,'uint16') || strcmpi(form,'uint8')
     if(bo)
         for cnt = sframe:lastframe
             %cnt;
             fseek(fp,ofds(cnt),'bof');
             tmp1 = fread(fp, [he_w he_h*mul], form, 0, 'ieee-be')';
-            imData{cnt-sframe+1}=cast(tmp1,'uint16');
+            imData{cnt-sframe+1}=cast(tmp1,form);
         end
     else
         for cnt=sframe:lastframe
             % cnt;
             fseek(fp,ofds(cnt),'bof');
             tmp1 = fread(fp, [he_w he_h*mul], form, 0, 'ieee-le')';
-            imData{cnt-sframe+1}=cast(tmp1,'uint16');
+            imData{cnt-sframe+1}=cast(tmp1,form);
         end
     end
-elseif (form=='single')
+elseif strcmpi(form,'single')
     for cnt = sframe:lastframe
         %cnt;
         fseek(fp,ofds(cnt),'bof');
         tmp1 = fread(fp, [he_w he_h*mul], form, 0, 'ieee-be')';
         imData{cnt-sframe+1}=cast(tmp1,'single');
     end
-elseif (form=='double')
+elseif strcmpi(form,'double')
     for cnt = sframe:lastframe
         %cnt;
         fseek(fp,ofds(cnt),'bof');
