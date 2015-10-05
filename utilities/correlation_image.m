@@ -5,80 +5,47 @@ function Cn = correlation_image(Y,sz,d1,d2)
 % sz: size of neighborhood (sz either 4 or 8, default 4)
 % d1,d2: spatial dimensions
 
+% Author: Eftychios A. Pnevmatikakis, Simons Foundation, 2015
+
 if nargin == 1 || isempty(sz)
     sz = 4;
 end
 
-if ndims(Y) == 3
-    [d1,d2,~] = size(Y);
-    Y = reshape(Y,d1*d2,size(Y,3));
+if ismatrix(Y)
+    Y = reshape(Y,d1,d2,size(Y,2));
 end
 
-d = d1*d2;
-Cn = zeros(d1,d2);
+[d1,d2,T] = size(Y);
+
+mY = mean(Y,3);
+sY = std(Y,[],3);
+
+Y = bsxfun(@minus,Y,mY);
+
+Ycor = zeros(d1,d2,sz);
+MASK = zeros(d1,d2);
+Yx = sum(Y(1:end-1,:,:).*Y(2:end,:,:),3)./((T-1).*sY(1:end-1,:).*sY(2:end,:));
+Ycor(1:end-1,:,1) = Yx;
+MASK(1:end-1,:) = MASK(1:end-1,:) + 1;
+Ycor(2:end,:,2) = Yx;
+MASK(2:end,:) = MASK(2:end,:) + 1;
+Yy = sum(Y(:,1:end-1,:).*Y(:,2:end,:),3)./((T-1).*sY(:,1:end-1).*sY(:,2:end));
+Ycor(:,1:end-1,3) = Yy;
+MASK(:,1:end-1) = MASK(:,1:end-1) + 1;
+Ycor(:,2:end,4) = Yy;
+MASK(:,2:end) = MASK(:,2:end) + 1;
 
 if sz == 8
-    NB = [ 1 0; -1 0; 1 1; 0 1; -1 1; 1 -1; 0 -1; -1 -1];
-else
-    NB = [ 1 0; -1 0; 0 1; 0 -1];
+    Yxpyp = sum(Y(1:end-1,1:end-1,:).*Y(2:end,2:end,:),3)./((T-1).*sY(1:end-1,1:end-1).*sY(2:end,2:end));
+    Ycor(1:end-1,1:end-1,5) = Yxpyp;
+    MASK(1:end-1,1:end-1) = MASK(1:end-1,1:end-1) + 1;
+    Ycor(2:end,2:end,6) = Yxpyp;
+    MASK(2:end,2:end) = MASK(2:end,2:end) + 1;
+    Yxpym = sum(Y(1:end-1,2:end,:).*Y(2:end,1:end-1,:),3)./((T-1).*sY(1:end-1,2:end).*sY(2:end,1:end-1));
+    Ycor(1:end-1,2:end,7) = Yxpym;
+    MASK(1:end-1,2:end) = MASK(1:end-1,2:end) + 1;
+    Ycor(2:end,1:end-1,8) = Yxpym;    
+    MASK(2:end,1:end-1) = MASK(2:end,1:end-1) + 1;
 end
 
-if sz == 4
-    if mod(d1,2)
-        A = false(d1,d2);
-        A(1:2:end) = 1;
-    else
-        A = false(d1+1,d2);
-        A(1:2:end) = 1;
-        A = A(1:d1,:);
-    end
-else
-    temp = zeros(d1,1);
-    temp(2:2:end) = 1;
-    A = repmat([ones(d1,1),temp],1,floor(d2/2));
-    if mod(d2,2)
-        A = [A,ones(d1,1)];
-    end
-end
-
-ff = find(A);
-%CM = cell(length(ff),1);
-CM = cell(d,1);
-for k = 1:length(ff)
-    i = ff(k);
-    loc = [i - d1*(ceil(i/d1)-1), ceil(i/d1)];
-    nb_loc = NB + repmat(loc,[sz 1]);
-        nb_loc(nb_loc(:,1)>d1,:) = [];
-        nb_loc(nb_loc(:,1)<1,:) = [];
-        nb_loc(nb_loc(:,2)>d2,:) = [];
-        nb_loc(nb_loc(:,2)<1,:) = [];
-        nb_loc = nb_loc(:,1) + d1*(nb_loc(:,2)-1);
-    temp_corr = corr(Y(i,:)',Y(nb_loc,:)');
-    %CM{k} = [nb_loc(:),temp_corr(:)];
-    CM{i} = [nb_loc(:),temp_corr(:)];
-    Cn(loc(1),loc(2)) = mean(temp_corr);
-end
-
-cc = setdiff(1:d,ff);
-for k = 1:length(cc)
-    i = cc(k);
-    loc = [i - d1*(ceil(i/d1)-1), ceil(i/d1)];
-    nb_loc = nb_location(loc);
-    temp = zeros(size(nb_loc));
-    for j = 1:length(nb_loc)
-        %temp(j) = CM{ff==nb_loc(j)}(CM{ff==nb_loc(j)}(:,1)==i,2);
-        temp(j) = CM{nb_loc(j)}(CM{nb_loc(j)}(:,1)==i,2);
-    end
-    Cn(loc(1),loc(2)) = mean(temp);
-end
-
-    function nb_loc = nb_location(loc)
-        nb_loc = NB + repmat(loc,[sz 1]);
-        nb_loc(nb_loc(:,1)>d1,:) = [];
-        nb_loc(nb_loc(:,1)<1,:) = [];
-        nb_loc(nb_loc(:,2)>d2,:) = [];
-        nb_loc(nb_loc(:,2)<1,:) = [];
-        nb_loc = nb_loc(:,1) + d1*(nb_loc(:,2)-1);
-    end
-
-end
+Cn = sum(Ycor,3)./MASK;
