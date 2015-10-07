@@ -35,7 +35,7 @@ if nargin < 8 || isempty(sn)
 end
 
 if plot_df
-    [~,Df] = extract_DF_F(Y,[A,b],[C;f],size(A,2)+1);
+    [~,Df] = extract_DF_F(Y,[A,b],[C;f],[],size(A,2)+1);
 else
     Df = ones(size(A,2)+1,1);
 end

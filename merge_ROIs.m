@@ -1,4 +1,4 @@
-function [A,C,nr,merged_ROIs,P] = merge_ROIs(Y_res,A,b,C,f,P)
+function [A,C,nr,merged_ROIs,P,S] = merge_ROIs(Y_res,A,b,C,f,P,S)
 
 % merging of spatially overlapping components that have highly correlated tmeporal activity
 % The correlation threshold for merging overlapping components is user specified in P.merge_thr (default value 0.85)
@@ -9,12 +9,15 @@ function [A,C,nr,merged_ROIs,P] = merge_ROIs(Y_res,A,b,C,f,P)
 % C:            matrix of temporal components
 % f:            temporal background
 % P:            parameter struct
+% S:            deconvolved activity/spikes (optional)
 
 % Outputs:
 % A:            matrix of new spatial components
 % C:            matrix of new temporal components
 % nr:           new number of components
 % merged_ROIs:  list of old components that were merged
+% P:            new parameter struct
+% S:            matrix of new deconvolved/activity spikes
 
 % Written by:
 % Eftychios A. Pnevmatikakis, Simons Foundation, 2015
@@ -53,9 +56,9 @@ end
 [~,ind] = sort(cor,'descend');
 nm = min(length(ind),mx);   % number of merging operations
 merged_ROIs = cell(nm,1);
-mc = 30;
 A_merged = zeros(d,nm);
 C_merged = zeros(nm,T);
+S_merged = zeros(nm,T);
 if strcmpi(P.method,'constrained_foopsi')
     P_merged.gn = cell(nm,1);
     P_merged.b = cell(nm,1);
@@ -71,7 +74,7 @@ for i = 1:nm
     [cc,~,~,Ptemp] = update_temporal_components(Y_res,A_merged(:,i),b,median(spdiags(nC,0,length(nC),length(nC))\C(merged_ROIs{i},:)),f,P);
     [aa,bb] = update_spatial_components(Y_res,cc,f,A_merged(:,i),P);
     A_merged(:,i) = aa;
-    [cc,~,~,Ptemp] = update_temporal_components(Y_res,A_merged(:,i),bb,cc,f,P);
+    [cc,~,~,Ptemp,ss] = update_temporal_components(Y_res,A_merged(:,i),bb,cc,f,P);
     if strcmpi(P.method,'constrained_foopsi') || strcmpi(P.method,'MCEM_foopsi')
         P_merged.gn{i} = Ptemp.gn{1};
         P_merged.b{i} = Ptemp.b{1};
@@ -80,6 +83,7 @@ for i = 1:nm
     end
     
     C_merged(i,:) = cc;
+    S_merged(i,:) = ss;
     if i < nm
         Y_res = Y_res - A_merged(:,i)*cc;
     end
@@ -91,6 +95,17 @@ A = [A(:,1:nr),A_merged,A(:,nr+1:end)];
 C = [C(1:nr,:);C_merged;C(nr+1:end,:)];
 A(:,neur_id) = [];
 C(neur_id,:) = [];
+
+if nargin < 7
+    S = [];
+    if nargout == 6
+        warning('Merged spikes matrix is returned as empty because the original matrix was not provided.');
+    end
+else
+    S = [S(1:nr,:);S_merged];
+    S(neur_id,:) = [];
+end
+
 if strcmpi(P.method,'constrained_foopsi') || strcmpi(P.method,'MCEM_foopsi')
     P.b(neur_id) = [];
     P.b(nr - length(neur_id) + (1:nm)) = P_merged.b;

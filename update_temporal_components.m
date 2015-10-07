@@ -1,4 +1,4 @@
-function [C,f,Y_res,P] = update_temporal_components(Y,A,b,Cin,fin,P,LD)
+function [C,f,Y_res,P,S] = update_temporal_components(Y,A,b,Cin,fin,P,LD)
 
 % update temporal components and background given spatial components
 % A variety of different methods can be used and are separated into 2 classes:
@@ -33,6 +33,7 @@ function [C,f,Y_res,P] = update_temporal_components(Y,A,b,Cin,fin,P,LD)
 % f:        temporal background (1 x T vector)
 % Y_res:    residual signal (d X T matrix). Y_res = Y - A*C - b*f
 % P:        parameter struct
+% S:        deconvolved activity
 
 % Written by: 
 % Eftychios A. Pnevmatikakis, Simons Foundation, 2015
@@ -64,6 +65,7 @@ if ~iscell(P.g)
 end
 nr = size(A,2);
 A = [A,b];
+S = zeros(size(Cin));
 Cin = [Cin;fin];
 C = Cin;
 
@@ -101,17 +103,19 @@ for iter = 1:ITER
                     cc = plain_foopsi(YrA(:,ii)/nA(ii)/maxy,G);
                     C(ii,:) = full(cc')*maxy;
                     YrA(:,ii) = YrA(:,ii) - nA(ii)*C(ii,:)';
+                    S(ii,:) = C(ii,:)*G';
                 case 'constrained_foopsi'
                     YrA(:,ii) = YrA(:,ii) + nA(ii)*Cin(ii,:)';
                     if restimate_g
-                        [cc,cb,c1,gn,sn,~] = constrained_foopsi(YrA(:,ii)/nA(ii),[],[],[],[],options);
+                        [cc,cb,c1,gn,sn,spk] = constrained_foopsi(YrA(:,ii)/nA(ii),[],[],[],[],options);
                         P.gn{ii} = gn;
                     else
-                        [cc,cb,c1,gn,sn,~] = constrained_foopsi(YrA(:,ii)/nA(ii),[],[],P.g,[],options);
+                        [cc,cb,c1,gn,sn,spk] = constrained_foopsi(YrA(:,ii)/nA(ii),[],[],P.g,[],options);
                     end
                     gd = max(roots([1,-gn']));  % decay time constant for initial concentration
                     gd_vec = gd.^((0:T-1));
                     C(ii,:) = full(cc(:)' + cb + c1*gd_vec);
+                    S(ii,:) = spk(:)';
                     YrA(:,ii) = YrA(:,ii) - nA(ii)*C(ii,:)';
                     P.b{ii} = cb;
                     P.c1{ii} = c1;           
@@ -119,10 +123,11 @@ for iter = 1:ITER
                 case 'MCEM_foopsi'
                     options.p = length(P.g);
                     YrA(:,ii) = YrA(:,ii) + nA(ii)*Cin(ii,:)';
-                    [cc,cb,c1,gn,sn,~] = MCEM_foopsi(YrA(:,ii)/nA(ii),[],[],P.g,[],options);
+                    [cc,cb,c1,gn,sn,spk] = MCEM_foopsi(YrA(:,ii)/nA(ii),[],[],P.g,[],options);
                     gd = max(roots([1,-gn.g(:)']));
                     gd_vec = gd.^((0:T-1));
                     C(ii,:) = full(cc(:)' + cb + c1*gd_vec);
+                    S(ii,:) = spk(:)';
                     YrA(:,ii) = YrA(:,ii) - nA(ii)*C(ii,:)';
                     P.b{ii} = cb;
                     P.c1{ii} = c1;           
@@ -135,6 +140,7 @@ for iter = 1:ITER
                     YrA(:,ii) = YrA(:,ii) + nA(ii)*Cin(ii,:)';
                     SAMPLES = cont_ca_sampler(YrA(:,ii)/nA(ii),params);
                     C(ii,:) = make_mean_sample(SAMPLES,YrA(:,ii)/nA(ii));
+                    S(ii,:) = mean(samples_cell2mat(SAMPLES.ss,T));
                     YrA(:,ii) = YrA(:,ii) - nA(ii)*C(ii,:)';
                     P.b{ii} = mean(SAMPLES.Cb);
                     P.c1{ii} = mean(SAMPLES.Cin);
@@ -147,6 +153,7 @@ for iter = 1:ITER
                     [cc,LD(:,ii)] = lagrangian_foopsi_temporal(Y_res(ff,:),A(ff,ii),T*P.sn(unsaturatedPix(ff)).^2,G,LD(:,ii));        
                     C(ii,:) = full(cc');
                     Y_res = Y_res - A(:,ii)*cc';
+                    S(ii,:) = C(ii,:)*G';
             end
         else
             YrA(:,ii) = YrA(:,ii) + nA(ii)*Cin(ii,:)';

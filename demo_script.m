@@ -70,12 +70,12 @@ P.dist = 3;                 % ellipse expansion factor for local search of spati
 P.method = 'constrained_foopsi';            % choice of method for deconvolution
 P.temporal_iter = 2;                        % number of iterations for block coordinate descent
 P.fudge_factor = 0.98;                      % fudge factor to reduce time constant estimation bias
-[C,f,Y_res,P] = update_temporal_components(Yr,A,b,Cin,fin,P);
+[C,f,Y_res,P,S] = update_temporal_components(Yr,A,b,Cin,fin,P);
 
 %% merge found components
 
 P.merge_thr = 0.8;                          % merging threshold
-[Am,Cm,nr_m,merged_ROIs,P] = merge_ROIs(Y_res,A,b,C,f,P);
+[Am,Cm,nr_m,merged_ROIs,P,Sm] = merge_ROIs(Y_res,A,b,C,f,P,S);
 
 display_merging = 1; % flag for displaying merging example
 if display_merging
@@ -98,13 +98,13 @@ end
 
 %% repeat
 [A2,b2] = update_spatial_components(Yr,Cm,f,Am,P);
-[C2,f2,Y_res,P] = update_temporal_components(Yr,A2,b2,Cm,f,P);
-C_df = extract_DF_F(Yr,[A2,b2],[C2;f2],nr_m+1); % extract DF/F values (optional)
+[C2,f2,Y_res,P,S2] = update_temporal_components(Yr,A2,b2,Cm,f,P);
+[C_df,~,S_df] = extract_DF_F(Yr,[A2,b2],[C2;f2],S2,nr_m+1); % extract DF/F values (optional)
 
 %% do some plotting
 
-[A_or,C_or,P] = order_ROIs(A2,C2,P);      % order components
-contour_threshold = 0.95;                 % amount of energy used for each component to construct contour plot
+[A_or,C_or,S_or,P] = order_ROIs(A2,C2,S2,P);    % order components
+contour_threshold = 0.95;                       % amount of energy used for each component to construct contour plot
 figure;
 [Coor,json_file] = plot_contours(A_or,reshape(P.sn,d1,d2),contour_threshold,1); % contour plot of spatial footprints
 pause; 
