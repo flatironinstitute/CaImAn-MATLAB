@@ -22,7 +22,7 @@ end
 nr = size(A,2);     % number of ROIs
 nb = size(f,1);     % number of background components
 nA = full(sum(A.^2))';  % energy of each row
-Y_r = spdiags(nA,0,nr,nr)\(A'*(Y-full(b)*f)); 
+Y_r = spdiags(nA,0,nr,nr)\(A'*(Y- A*C - full(b)*f)) + C; 
     
 if nargin < 10 || isempty(make_gif)
     make_gif = 0;
