@@ -38,8 +38,14 @@ function [C,f,Y_res,P,S] = update_temporal_components(Y,A,b,Cin,fin,P,LD)
 % Written by: 
 % Eftychios A. Pnevmatikakis, Simons Foundation, 2015
 
-
 [d,T] = size(Y);
+if isempty(P) || nargin < 6
+    active_pixels = find(sum(A,2));                                 % pixels where the greedy method found activity
+    unsaturated_pixels = find_unsaturatedPixels(Y);                 % pixels that do not exhibit saturation
+    options.pixels = intersect(active_pixels,unsaturated_pixels);   % base estimates only on                 
+    P = arpfit(Yr,2,options);
+end
+
 if ~isfield(P,'method'); method = 'constrained_foopsi'; else method = P.method; end  % choose method
 if ~isfield(P,'restimate_g'); restimate_g = 1; else restimate_g = P.restimate_g; end % re-estimate time constant (only with constrained foopsi)
 if ~isfield(P,'temporal_iter'); ITER = 2; else ITER = P.temporal_iter; end           % number of block-coordinate descent iterations
@@ -48,6 +54,25 @@ if isfield(P,'unsaturatedPix'); unsaturatedPix = P.unsaturatedPix; else unsatura
 
 mis_data = find(Y_interp);              % interpolate any missing data before deconvolution
 Y(mis_data) = Y_interp(mis_data);
+
+flag_G = 1;
+if ~iscell(P.g)
+    flag_G = 0;
+    G = make_G_matrix(T,P.g);
+end
+
+if isempty(Cin) || nargin < 4
+    Cin = (A'*A)\(A'*Y);
+    Cin = max(Cin*G',0)/G';
+end
+
+if  isempty(b) || isempty(fin) || nargin < 5
+    if isempty(b) || nargin < 3
+        [b,fin] = nnmf(max(Y - A*Cin,0),1);
+    else
+        fin = max(b'*Y/norm(b)^2,0);
+    end
+end
 
 saturatedPix = setdiff(1:d,unsaturatedPix);     % remove any saturated pixels
 Ysat = Y(saturatedPix,:);
@@ -58,11 +83,10 @@ A = A(unsaturatedPix,:);
 b = b(unsaturatedPix,:);
 d = length(unsaturatedPix);
 
-flag_G = 1;
-if ~iscell(P.g)
-    flag_G = 0;
-    G = make_G_matrix(T,P.g);
+if isempty(Cin)
+    
 end
+
 nr = size(A,2);
 A = [A,b];
 S = zeros(size(Cin));
