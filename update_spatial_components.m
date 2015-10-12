@@ -86,12 +86,12 @@ A = threshold_components(A,P);  % post-processing of components
 
 fprintf('Updated spatial components \n');
 
-ff = find(sum(A)==0);           % remove empty components
-if ~isempty(ff)
-    nr = nr - length(ff);
-    A(:,ff) = [];
-    C(ff,:) = [];
-end
+% ff = find(sum(A)==0);           % remove empty components
+% if ~isempty(ff)
+%     nr = nr - length(ff);
+%     A(:,ff) = [];
+%     C(ff,:) = [];
+% end
 
 if nnz(Y_interp);
     ff = find(Y_interp);

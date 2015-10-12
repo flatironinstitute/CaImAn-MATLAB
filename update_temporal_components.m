@@ -52,6 +52,7 @@ if ~isfield(P,'temporal_iter'); ITER = 2; else ITER = P.temporal_iter; end      
 if isfield(P,'interp'); Y_interp = P.interp; else Y_interp = sparse(d,T); end        % missing data
 if isfield(P,'unsaturatedPix'); unsaturatedPix = P.unsaturatedPix; else unsaturatedPix = 1:d; end   % saturated pixels
 
+
 mis_data = find(Y_interp);              % interpolate any missing data before deconvolution
 Y(mis_data) = Y_interp(mis_data);
 
@@ -59,6 +60,16 @@ flag_G = 1;
 if ~iscell(P.g)
     flag_G = 0;
     G = make_G_matrix(T,P.g);
+end
+
+ff = find(sum(A)==0);
+if ~isempty(ff)
+    A(:,ff) = [];
+    if exist('Cin','var')
+        if ~isempty(Cin)
+            Cin(ff,:) = [];
+        end
+    end
 end
 
 if isempty(Cin) || nargin < 4
