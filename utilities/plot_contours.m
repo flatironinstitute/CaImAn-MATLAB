@@ -25,7 +25,7 @@ fontname = 'helvetica';
 %     set(gcf, 'Position',3*[5, 5, 12, 12])
     [d1,d2] = size(Cn);
     imagesc(Cn,[min(Cn(:)),max(Cn(:))]);
-    axis square; 
+    axis tight; axis equal; 
     %set(gca,'XTick',[],'YTick',[]);
     posA = get(gca,'position');
     set(gca,'position',posA);
