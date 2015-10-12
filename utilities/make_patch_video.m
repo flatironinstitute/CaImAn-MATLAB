@@ -34,6 +34,12 @@ end
         name = ['video_',datestr(now,30),'.avi'];  
     end
 
+    if isfield(param,'show_background');
+        sb = param.show_background;
+    else
+        sb = 1;
+    end
+    
     T = size(C,2);
 
     if ismatrix(Y)
@@ -82,8 +88,8 @@ end
         A_com(:,:,i) = A_temp(int_x(i,:),int_y(i,:));
     end
     mY = 0.7*max(Y(:));
-    mC = 0.9*max(C_rec(:))/2;
-    mB = 0.95*max(C_np(:))/2;
+    mC = 0.7*max(C_rec(:));
+    mB = 0.95*max(C_np(:));
 
     up = zeros(1,4);
     for i = 1:4
@@ -94,7 +100,7 @@ end
         subplot(4,6,[1,2,7,8]); imagesc(Y(:,:,t),[0,mY]); 
         title('Raw data','fontweight','bold','fontsize',16);
         axis square; axis off;
-        subplot(4,6,[3,4,9,10]); imagesc(C_rec(:,:,t),[0,mC]); %title(sprintf('%i',t));
+        subplot(4,6,[3,4,9,10]); imagesc(C_rec(:,:,t) - (1-sb)*C_np(:,:,t),[0,mC]); %title(sprintf('%i',t));
             title('Denoised','fontweight','bold','fontsize',16);
             xlabel(sprintf('Timestep %i out of %i',t,T),'fontweight','bold','fontsize',16);
             axis square; set(gca,'XTick',[],'YTick',[]);
@@ -106,7 +112,7 @@ end
             axis square; axis off;
 
         for i = 1:4        
-            subplot(4,6,14+i); imagesc(A_com(:,:,i)*C(ind(i),t),[0,up(i)/4]); axis square; 
+            subplot(4,6,14+i); imagesc(A_com(:,:,i)*C(ind(i),t),[0,up(i)/1.2]); axis square; 
             xlabel(sprintf('Component %i',ind(i)),'fontweight','bold','fontsize',14);
             set(gca,'XTick',[],'YTick',[]);
             if i == 2
