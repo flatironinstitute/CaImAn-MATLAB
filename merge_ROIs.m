@@ -66,15 +66,17 @@ if strcmpi(P.method,'constrained_foopsi')
     P_merged.neuron_sn = cell(nm,1);
 end
 Y_res = Y_res + b*f;
+bb = b;
 for i = 1:nm
     merged_ROIs{i} = find(MC(:,ind(i)));
     nC = sqrt(sum(C(merged_ROIs{i},:).^2,2));
     A_merged(:,i) = sum(A(:,merged_ROIs{i})*spdiags(nC,0,length(nC),length(nC)),2);    
     Y_res = Y_res + A(:,merged_ROIs{i})*C(merged_ROIs{i},:);
-    [cc,~,~,Ptemp] = update_temporal_components(Y_res,A_merged(:,i),b,median(spdiags(nC,0,length(nC),length(nC))\C(merged_ROIs{i},:)),f,P);
+    ff = find(A_merged(:,i));
+    cc = update_temporal_components(Y_res(ff,:),A_merged(ff,i),b(ff),median(spdiags(nC,0,length(nC),length(nC))\C(merged_ROIs{i},:)),f,P);
     [aa,bb] = update_spatial_components(Y_res,cc,f,A_merged(:,i),P);
     A_merged(:,i) = aa;
-    [cc,~,~,Ptemp,ss] = update_temporal_components(Y_res,A_merged(:,i),bb,cc,f,P);
+    [cc,~,~,Ptemp,ss] = update_temporal_components(Y_res(ff,:),aa(ff),bb(ff),cc,f,P);
     if strcmpi(P.method,'constrained_foopsi') || strcmpi(P.method,'MCEM_foopsi')
         P_merged.gn{i} = Ptemp.gn{1};
         P_merged.b{i} = Ptemp.b{1};
@@ -85,7 +87,8 @@ for i = 1:nm
     C_merged(i,:) = cc;
     S_merged(i,:) = ss;
     if i < nm
-        Y_res = Y_res - A_merged(:,i)*cc;
+        %Y_res = Y_res - A_merged(:,i)*cc;
+        Y_res(ff,:) = Y_res(ff,:) - aa(ff)*cc;
     end
 end
 
