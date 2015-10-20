@@ -73,9 +73,9 @@ P.fudge_factor = 0.98;                      % fudge factor to reduce time consta
 [C,f,Y_res,P,S] = update_temporal_components(Yr,A,b,Cin,fin,P);
 
 %% merge found components
-
-P.merge_thr = 0.8;                          % merging threshold
-[Am,Cm,nr_m,merged_ROIs,P,Sm] = merge_ROIs(Y_res,A,b,C,f,P,S);
+Pm = rmfield(P,'unsaturatedPix');
+Pm.merge_thr = 0.8;                          % merging threshold
+[Am,Cm,nr_m,merged_ROIs,P,Sm] = merge_ROIs(Y_res,A,b,C,f,Pm,S);
 
 display_merging = 1; % flag for displaying merging example
 if display_merging
@@ -114,7 +114,7 @@ view_patches(Yr,A_or,C_or,b2,f2,d1,d2);                                         
 %% make movie
 
 param.skip_frame = 2;
-param.ind = [1,2,3,5];
+param.ind = [1,2,3,4];
 param.sx = 16;
 param.make_avi = 0;
 make_patch_video(A_or,C_or,b2,f2,Yr,d1,d2,param)
