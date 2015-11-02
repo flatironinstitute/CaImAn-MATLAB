@@ -1,6 +1,11 @@
 # ca_source_extraction
 
-The code implements a method for simultaneous source extraction and spike inference from large scale calcium imaging movies. The code is suitable for the analysis of somatic imaging data. Implementation for the analysis of dendritic/axonal imaging data will be added in the future. Depending of the chosen method the algorithm may need the constrained deconvolution method maintained separately in https://github.com/epnev/constrained-foopsi 
+The code implements a method for simultaneous source extraction and spike inference from large scale calcium imaging movies. The code is suitable for the analysis of somatic imaging data. Implementation for the analysis of dendritic/axonal imaging data will be added in the future. 
+
+The default options for the algorithm require the following packages:
+
+1. The constrained deconvolution package maintained separately in https://github.com/epnev/constrained-foopsi 
+2. The CVX library which can be downloaded from http://cvxr.com/cvx/download/ (follow the installation instructions provided there) 
 
 The algorithm is presented in more detail in
 
