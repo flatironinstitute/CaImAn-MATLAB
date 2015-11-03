@@ -73,11 +73,11 @@ P.fudge_factor = 0.98;                      % fudge factor to reduce time consta
 [C,f,Y_res,P,S] = update_temporal_components(Yr,A,b,Cin,fin,P);
 
 %% merge found components
-Pm = rmfield(P,'unsaturatedPix');
-Pm.merge_thr = 0.8;                          % merging threshold
-[Am,Cm,nr_m,merged_ROIs,P,Sm] = merge_ROIs(Y_res,A,b,C,f,Pm,S);
 
-display_merging = 1; % flag for displaying merging example
+P.merge_thr = 0.8;                          % merging threshold
+[Am,Cm,nr_m,merged_ROIs,P,Sm] = merge_ROIs(Y_res,A,b,C,f,P,S);
+
+display_merging = 0; % flag for displaying merging example
 if display_merging
     i = 1; randi(length(merged_ROIs));
     ln = length(merged_ROIs{i});
