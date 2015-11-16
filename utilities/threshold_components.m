@@ -32,14 +32,16 @@ function Ath = threshold_components(A,options)
         BW(ind(ff:d)) = 1;
         BW = imclose(BW,options.se);
         [L,NUM] = bwlabel(BW,8);
-        nrg = zeros(NUM,1);
-        for l = 1:NUM
-            ff = find(L==l);
-            nrg(l) = sum(A(ff,i).^2);
+        if NUM > 0
+            nrg = zeros(NUM,1);
+            for l = 1:NUM
+                ff = find(L==l);
+                nrg(l) = sum(A(ff,i).^2);
+            end
+            [~,indm] = max(nrg);
+            ff = find(L==indm);
+            Ath(ff,i) = A(ff,i);
         end
-        [~,indm] = max(nrg);
-        ff = find(L==indm);
-        Ath(ff,i) = A(ff,i);
     end
         
 end
