@@ -1,4 +1,4 @@
-function [A,b] = update_spatial_components(Y,C,f,A_,P)
+function [A,b,C] = update_spatial_components(Y,C,f,A_,P)
 
 % update spatial footprints and background through Basis Pursuit Denoising
 % for each pixel i solve the problem 
@@ -86,12 +86,12 @@ A = threshold_components(A,P);  % post-processing of components
 
 fprintf('Updated spatial components \n');
 
-% ff = find(sum(A)==0);           % remove empty components
-% if ~isempty(ff)
-%     nr = nr - length(ff);
-%     A(:,ff) = [];
-%     C(ff,:) = [];
-% end
+ff = find(sum(A)==0);           % remove empty components
+if ~isempty(ff)
+    nr = nr - length(ff);
+    A(:,ff) = [];
+    C(ff,:) = [];
+end
 
 if nnz(Y_interp);
     ff = find(Y_interp);
