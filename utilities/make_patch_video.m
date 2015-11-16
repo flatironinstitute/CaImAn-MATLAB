@@ -40,6 +40,24 @@ end
         sb = 1;
     end
     
+    if isfield(param,'show_contours');
+        sc = param.show_contours;
+    else
+        sc = 1;
+    end
+    
+    if isfield(param,'contours');
+        cont = param.contours;
+    else
+        sc = 0;
+    end
+    
+    if isfield(param,'cmap');
+        cmap = param.cmap;
+    else
+        cmap = 'default';
+    end
+    
     T = size(C,2);
 
     if ismatrix(Y)
@@ -65,7 +83,7 @@ end
         set(gcf, 'PaperPositionMode', 'manual')
         set(gcf, 'PaperPosition',1.5*[0,0, 14, 10.5]/1.5)
         set(gcf, 'Position',1.5*[2,2, 14, 10.5]/1.5)%Yr = reshape(Y,d1,d2,T);
-        colormap('bone');
+        colormap(cmap);
     int_x = zeros(4,2*sx);
     int_y = zeros(4,2*sx);
     A_com = zeros(2*sx,2*sx,4);
@@ -98,12 +116,27 @@ end
 
     for t = 1:skp:T
         subplot(4,6,[1,2,7,8]); imagesc(Y(:,:,t),[0,mY]); 
-        title('Raw data','fontweight','bold','fontsize',16);
-        axis square; axis off;
+            title('Raw data','fontweight','bold','fontsize',16);
+            axis square; axis off;
+            if sc
+                hold on;
+                for i = 1:4
+                    plot(cont{ind(i)}(1,2:end),cont{ind(i)}(2,2:end),'w'); hold on;
+                    text(min(cont{ind(i)}(1,2:end))-4,min(cont{ind(i)}(2,2:end))-4,num2str(ind(i)),'color','w','fontsize',14,'fontweight','bold'); hold on;
+                end
+                hold off;
+            end
         subplot(4,6,[3,4,9,10]); imagesc(C_rec(:,:,t) - (1-sb)*C_np(:,:,t),[0,mC]); %title(sprintf('%i',t));
             title('Denoised','fontweight','bold','fontsize',16);
             xlabel(sprintf('Timestep %i out of %i',t,T),'fontweight','bold','fontsize',16);
             axis square; set(gca,'XTick',[],'YTick',[]);
+            if sc
+                hold on;
+                for i = 1:4
+                    plot(cont{ind(i)}(1,2:end),cont{ind(i)}(2,2:end),'w'); hold on;
+                end
+                hold off;            
+            end
         subplot(4,6,[5,6,11,12]); imagesc(Y(:,:,t)-C_rec(:,:,t),[-mC/2,mC/2]);
             title('Residual 2x','fontweight','bold','fontsize',16);
             axis square; axis off;
@@ -113,6 +146,11 @@ end
 
         for i = 1:4        
             subplot(4,6,14+i); imagesc(A_com(:,:,i)*C(ind(i),t),[0,up(i)/1.2]); axis square; 
+            if sc
+                hold on;
+                plot(cont{ind(i)}(1,2:end)-int_y(i,1)+1  ,cont{ind(i)}(2,2:end)-int_x(i,1)+1,'w');
+                hold off;            
+            end
             xlabel(sprintf('Component %i',ind(i)),'fontweight','bold','fontsize',14);
             set(gca,'XTick',[],'YTick',[]);
             if i == 2
@@ -120,6 +158,11 @@ end
                 set(handle,'position',get(handle,'position')./[0.43,1,1])
             end
             subplot(4,6,20+i); imagesc(Y(int_x(i,:),int_y(i,:),t),[0,up(i)+mB/2]); axis square; axis off;
+            if sc
+                hold on;
+                plot(cont{ind(i)}(1,2:end)-int_y(i,1)+1  ,cont{ind(i)}(2,2:end)-int_x(i,1)+1,'w');
+                hold off;            
+            end
             if i == 2
                 handle = title('Raw data patches','fontweight','bold','fontsize',16);
                 set(handle,'position',get(handle,'position')./[0.43,1,1])
