@@ -1,4 +1,4 @@
-function [Ain, Cin, bin, fin, center, res] = greedyROI2d(data, K, params)
+function [basis, trace, center, data] = greedyROI2d(data, K, params)
 %greedyROI2d using greedy algorithm to identify neurons in 2d calcium movie
 %
 %Usage:     [basis, trace, center, res] = greedyROI2d(data, K, params)
@@ -10,7 +10,6 @@ function [Ain, Cin, bin, fin, center, res] = greedyROI2d(data, K, params)
 %           params.nIter: number of iterations for shape tuning (default 5)
 %           params.gSig: variance of Gaussian kernel to use (default 5)
 %           params.gSiz: size of kernel (default 11)
-%           params.nb: rank of background component (default 1)
 %           params.save_memory: flag for processing data in chunks to save memory (default 0)
 %           params.windowSiz: size of spatial window when computing the median (default 32 x 32)
 %           params.chunkSiz: number of timesteps to be processed simultaneously if on save_memory mode (default: 100)
@@ -18,11 +17,9 @@ function [Ain, Cin, bin, fin, center, res] = greedyROI2d(data, K, params)
 
 %
 %Output:
-%Ain        (MN) x K matrix, location of each neuron
-%Cin        T x K matrix, calcium activity of each neuron
+%basis      M x N x K matrix, location of each neuron
+%trace      T x K matrix, calcium activity of each neuron
 %center     K x 2 matrix, inferred center of each neuron
-%bin        (MN) X nb matrix, initialization of spatial background
-%fin        nb X T matrix, initalization of temporal background
 %res        M x N x T movie, residual
 %
 %Author: Yuanjun Gao with modifications from Eftychios A. Pnevmatikakis
@@ -45,8 +42,6 @@ if ~isfield(params, 'gSiz'), gSiz = [11, 11];
     elseif length(params.gSiz) == 1, gSiz = params.gSiz + zeros(1,2); 
     else gSiz = params.gSiz; 
 end
-
-if ~isfield(params,'nb'), nb = 1; else nb = params.nb; end
 
 if ~isfield(params, 'nIter'), nIter = 5; 
 else nIter = params.nIter; end
@@ -114,7 +109,7 @@ for k = 1:K,
     fprintf('found %i out of %i neurons..\n', k,K);
     
     %get next basis;
-    if k < K
+    if k < K,
         iMod = [max(iHat - 2 * gHalf(1), 1), min(iHat + 2 * gHalf(1), M)]; iModLen = iMod(2) - iMod(1) + 1;%patches to modify
         jMod = [max(jHat - 2 * gHalf(2), 1), min(jHat + 2 * gHalf(2), N)]; jModLen = jMod(2) - jMod(1) + 1;
         iLag = iSig - iMod(1) + 1; %relative location of iSig in the small patch
@@ -126,12 +121,13 @@ for k = 1:K,
         rhoTemp = rho(iMod(1):iMod(2), jMod(1):jMod(2), :) - rhoTemp;
         rho(iMod(1):iMod(2), jMod(1):jMod(2), :) = rhoTemp;
         v(iMod(1):iMod(2), jMod(1):jMod(2)) = sum(rhoTemp.^2, 3);
+        if k == 1
+            aa = 0;
+        end
     end
 end
-Ain = sparse(reshape(basis,M*N,K));  
-Cin = trace';
-res = reshape(data,M*N,T) + repmat(med(:),1,T);
-[bin,fin] = nnmf(max(res,0),nb);
+
+%basis = reshape(basis, [M * N, K]);
 
 
 function [basis, trace] = finetune2d(data, trace, nIter)
