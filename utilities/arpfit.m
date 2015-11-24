@@ -7,6 +7,7 @@ function P = arpfit(Y,p,options,sn)
 defoptions.noise_range = [0.25,0.5];            % frequency range over which to estimate the noise
 defoptions.noise_method = 'logmexp';            % method for which to estimate the noise level
 defoptions.block_size = [64,64];
+defoptions.flag_g = false;                          % compute global AR coefficients
 defoptions.lags = 5;                                 % number of extra lags when computing the AR coefficients
 defoptions.include_noise = 0;                        % include early lags when computing AR coefs
 defoptions.pixels = 1:numel(Y)/size(Y,ndims(Y));     % pixels to include when computing the AR coefs
@@ -22,6 +23,7 @@ end
 if ~isfield(options,'noise_range'); options.noise_range = defoptions.noise_range; end
 if ~isfield(options,'noise_method'); options.noise_method = defoptions.noise_method; end
 if ~isfield(options,'block_size'); options.block_size = defoptions.block_size; end
+if ~isfield(options,'flag_g'); options.flag_g = defoptions.flag_g; end
 if ~isfield(options,'lags'); options.lags = defoptions.lags; end
 if ~isfield(options,'include_noise'); options.include_noise = defoptions.include_noise; end; include_noise = options.include_noise;
 if ~isfield(options,'pixels'); options.pixels = defoptions.pixels; end
@@ -30,35 +32,35 @@ if ~isfield(options,'use_parallel'); use_parallel = defoptions.use_parallel; els
 if isempty(sn)
     fprintf('Estimating the noise power for each pixel from a simple PSD estimate...');
     sn = get_noise_fft(Y,options.noise_range,options.noise_method,options.block_size);
+    P.sn = sn(:);
     fprintf('  done \n');
 end
 
-find_bas = 0;   % estimate baseline from quantiles
-
-if ndims(Y) == 3
-    Y = reshape(Y,size(Y,1)*size(Y,2),size(Y,3));
-end
-
-ff = options.pixels;
-np = length(ff);
-
-fprintf('Estimating time constant through autocorrelation function.. \n');
-tt1 = tic;
-mp = max(p);
-lags = options.lags + mp;
-if use_parallel 
-    Ycl = mat2cell(Y(ff,:),ones(np,1),size(Y,2));
-    XC = cell(np,1);
-    parfor j = 1:np
-        XC{j} = xcov(Ycl{j},lags,'biased');
+if options.flag_g
+    if ndims(Y) == 3
+        Y = reshape(Y,size(Y,1)*size(Y,2),size(Y,3));
     end
-    XC = cell2mat(XC);   
-else
-    XC = zeros(np,2*lags+1);
-    for j = 1:np
-        XC(j,:) = xcov(Y(ff(j),:),lags,'biased');
+
+    ff = options.pixels;
+    np = length(ff);
+
+    fprintf('Estimating time constant through autocorrelation function.. \n');
+    tt1 = tic;
+    mp = max(p);
+    lags = options.lags + mp;
+    if use_parallel 
+        Ycl = mat2cell(Y(ff,:),ones(np,1),size(Y,2));
+        XC = cell(np,1);
+        parfor j = 1:np
+            XC{j} = xcov(Ycl{j},lags,'biased');
+        end
+        XC = cell2mat(XC);   
+    else
+        XC = zeros(np,2*lags+1);
+        for j = 1:np
+            XC(j,:) = xcov(Y(ff(j),:),lags,'biased');
+        end
     end
-end
     
     gv = zeros(np*lags,1);
     if ~include_noise
@@ -82,10 +84,8 @@ end
     ph = A\gv(:);
     disp(ph);
     fprintf('Done after %2.2f seconds. \n',toc(tt1));
-
-
-P.sn = sn(:);
-P.g = ph(:);
+    P.g = ph(:);
+end
 
 
     function [sn,psdx,ff] = get_noise_fft(Y,range_ff,method,block_size)
