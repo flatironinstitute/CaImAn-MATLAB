@@ -81,10 +81,10 @@ for i = 1:nm
             Pmr.unsaturatedPix(pxi) = find(ff == px(pxi));
         end
     end
-    cc = update_temporal_components(Y_res(ff,:),A_merged(ff,i),b(ff),median(spdiags(nC,0,length(nC),length(nC))\C(merged_ROIs{i},:)),f,Pmr);
+    cc = update_temporal_components(Y_res(ff,:),A_merged(ff,i),b(ff,:),median(spdiags(nC,0,length(nC),length(nC))\C(merged_ROIs{i},:)),f,Pmr);
     [aa,bb] = update_spatial_components(Y_res,cc,f,A_merged(:,i),P);
     A_merged(:,i) = aa;
-    [cc,~,~,Ptemp,ss] = update_temporal_components(Y_res(ff,:),aa(ff),bb(ff),cc,f,Pmr);
+    [cc,~,~,Ptemp,ss] = update_temporal_components(Y_res(ff,:),aa(ff),bb(ff,:),cc,f,Pmr);
     if strcmpi(P.method,'constrained_foopsi') || strcmpi(P.method,'MCEM_foopsi')
         P_merged.gn{i} = Ptemp.gn{1};
         P_merged.b{i} = Ptemp.b{1};

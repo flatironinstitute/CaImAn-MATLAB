@@ -55,11 +55,15 @@ if isfield(P,'unsaturatedPix'); unsaturatedPix = P.unsaturatedPix; else unsatura
 
 mis_data = find(Y_interp);              % interpolate any missing data before deconvolution
 Y(mis_data) = Y_interp(mis_data);
-
 flag_G = 1;
-if ~iscell(P.g)
-    flag_G = 0;
-    G = make_G_matrix(T,P.g);
+
+if (strcmpi(method,'noise_constrained') || strcmpi(method,'project')) && ~isfield(P,'g')
+    options.flag_g = 1;
+    P = arpfit(Yr,2,options,P.sn);
+    if ~iscell(P.g)
+        flag_G = 0;
+        G = make_G_matrix(T,P.g);
+    end
 end
 
 ff = find(sum(A)==0);
@@ -118,19 +122,19 @@ else
         P.b = cell(nr,1);
         P.c1 = cell(nr,1);           
         P.neuron_sn = cell(nr,1);
-        options.bas_nonneg = 0;
-        if isfield(P,'p'); options.p = P.p; else options.p = length(P.g); end
+        if isfield(P,'bas_nonneg'); options.bas_nonneg = P.bas_nonneg; end
+        if isfield(P,'p'); options.p = P.p; elseif isfield(P,'g'); options.p = length(P.g); else options.p = 2; end
         if isfield(P,'fudge_factor'); options.fudge_factor = P.fudge_factor; end
     end
 end
 for iter = 1:ITER
-    perm = randperm(nr+1);
+    perm = randperm(nr+size(b,2));
     for jj = 1:nr
         ii = perm(jj);
         if ii<=nr
-            if flag_G
-                G = make_G_matrix(T,P.g{ii});
-            end
+%             if flag_G
+%                 G = make_G_matrix(T,P.g{ii});
+%             end
             switch method
                 case 'project'
                     YrA(:,ii) = YrA(:,ii) + nA(ii)*Cin(ii,:)';

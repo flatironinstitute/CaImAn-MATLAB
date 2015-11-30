@@ -99,6 +99,6 @@ if nnz(Y_interp);
 end
 
 Y_res = Y - A(:,1:nr)*C(1:nr,:);
-A_bas = max(Y_res*f'/norm(f)^2,0); % update baseline based on residual
+A_bas = max(Y_res*f'/(f*f'),0); % update baseline based on residual
 b = A_bas;
 A = A(:,1:nr);
