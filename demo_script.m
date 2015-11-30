@@ -29,11 +29,8 @@ end
 k_sub = 1;                                          % temporal interleaving factor (for possible memory issues)
 
 nr = 30;                                           % number of components to be found
-params.gSiz = 9;                                   % maximum size of spatial footprint (box of size param.gSiz x param.gSiz)
 params.gSig = 4;                                   % std of gaussian (size of neuron)        
-[Ain, Cin, center, ~] = greedyROI2d(Y(:,:,1:k_sub:end), nr, params);  
-Ain = sparse(reshape(Ain,d,nr));                    % initial estimate of spatial footprints (size d x nr)
-Cin = Cin';                                         % 
+[Ain,Cin,bin,fin,center] = initialize_components(Y,nr,params);  % initialize
 
 % display centers of found components
 Cn =  correlation_image(Y); %max(Y,[],3); %std(Y,[],3); % image statistic (only for display purposes)
@@ -52,7 +49,6 @@ unsaturated_pixels = find_unsaturatedPixels(Yr);                % pixels that do
 options.pixels = intersect(active_pixels,unsaturated_pixels);   % base estimates only on                 
 
 P = arpfit(Yr,p,options);
-[bin,fin] = nnmf(max(Yr-Ain*Cin,0),1);
 P.interp = Y_interp;
 P.unsaturatedPix = unsaturated_pixels;
 % remove interpolated values
@@ -77,7 +73,7 @@ P.fudge_factor = 0.98;                      % fudge factor to reduce time consta
 P.merge_thr = 0.8;                          % merging threshold
 [Am,Cm,nr_m,merged_ROIs,P,Sm] = merge_ROIs(Y_res,A,b,C,f,P,S);
 
-display_merging = 0; % flag for displaying merging example
+display_merging = 1; % flag for displaying merging example
 if display_merging
     i = 1; randi(length(merged_ROIs));
     ln = length(merged_ROIs{i});
@@ -117,4 +113,6 @@ param.skip_frame = 2;
 param.ind = [1,2,3,4];
 param.sx = 16;
 param.make_avi = 0;
+param.sc = 1;
+param.contours = Coor(param.ind);
 make_patch_video(A_or,C_or,b2,f2,Yr,d1,d2,param)
