@@ -135,6 +135,14 @@ for iter = 1:ITER
 %             if flag_G
 %                 G = make_G_matrix(T,P.g{ii});
 %             end
+            if options.p == 0
+                YrA(:,ii) = YrA(:,ii) + nA(ii)*Cin(ii,:)';
+                maxy = max(YrA(:,ii)/nA(ii));
+                cc = max(YrA(:,ii)/nA(ii)/maxy,0);
+                C(ii,:) = full(cc')*maxy;
+                YrA(:,ii) = YrA(:,ii) - nA(ii)*C(ii,:)';
+                S(ii,:) = C(ii,:);
+            else
             switch method
                 case 'project'
                     YrA(:,ii) = YrA(:,ii) + nA(ii)*Cin(ii,:)';
@@ -193,6 +201,7 @@ for iter = 1:ITER
                     C(ii,:) = full(cc');
                     Y_res = Y_res - A(:,ii)*cc';
                     S(ii,:) = C(ii,:)*G';
+            end
             end
         else
             YrA(:,ii) = YrA(:,ii) + nA(ii)*Cin(ii,:)';
