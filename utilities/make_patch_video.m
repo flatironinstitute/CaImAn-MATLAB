@@ -21,7 +21,7 @@ end
     else
         sx = 32;        
     end
-
+    
     if isfield(param,'make_avi');  % save an avi video
         make_avi = param.make_avi;
     else
@@ -63,7 +63,8 @@ end
     if ismatrix(Y)
         Y = reshape(Y,d1,d2,T);
     end
-
+    sx = min(sx,floor(min(d1,d2)/2));
+    
     Coor.x = kron(ones(d2,1),(1:d1)');
     Coor.y = kron((1:d2)',ones(d1,1));
     nr = size(A,2);
@@ -117,7 +118,7 @@ end
     for t = 1:skp:T
         subplot(4,6,[1,2,7,8]); imagesc(Y(:,:,t),[0,mY]); 
             title('Raw data','fontweight','bold','fontsize',16);
-            axis square; axis off;
+            axis equal; axis tight; axis off;
             if sc
                 hold on;
                 for i = 1:4
@@ -129,7 +130,7 @@ end
         subplot(4,6,[3,4,9,10]); imagesc(C_rec(:,:,t) - (1-sb)*C_np(:,:,t),[0,mC]); %title(sprintf('%i',t));
             title('Denoised','fontweight','bold','fontsize',16);
             xlabel(sprintf('Timestep %i out of %i',t,T),'fontweight','bold','fontsize',16);
-            axis square; set(gca,'XTick',[],'YTick',[]);
+            axis equal; axis tight; set(gca,'XTick',[],'YTick',[]);
             if sc
                 hold on;
                 for i = 1:4
@@ -139,10 +140,10 @@ end
             end
         subplot(4,6,[5,6,11,12]); imagesc(Y(:,:,t)-C_rec(:,:,t),[-mC/2,mC/2]);
             title('Residual 2x','fontweight','bold','fontsize',16);
-            axis square; axis off;
+            axis equal; axis tight; axis off;
         subplot(4,6,[13,14,19,20]); imagesc(C_np(:,:,t),[0,mB]);
             title({'Background'; 'synchronized activity'},'fontweight','bold','fontsize',16);
-            axis square; axis off;
+            axis equal; axis tight; axis off;
 
         for i = 1:4        
             subplot(4,6,14+i); imagesc(A_com(:,:,i)*C(ind(i),t),[0,up(i)/1.2]); axis square; 

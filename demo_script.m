@@ -26,7 +26,6 @@ else
 end
 
 %% fast initialization of spatial components using the greedyROI
-k_sub = 1;                                          % temporal interleaving factor (for possible memory issues)
 
 nr = 30;                                           % number of components to be found
 params.gSig = 4;                                   % std of gaussian (size of neuron)        
@@ -113,6 +112,6 @@ param.skip_frame = 2;
 param.ind = [1,2,3,4];
 param.sx = 16;
 param.make_avi = 0;
-param.sc = 1;
-param.contours = Coor(param.ind);
+param.show_contours = 1;
+param.contours = Coor;
 make_patch_video(A_or,C_or,b2,f2,Yr,d1,d2,param)
