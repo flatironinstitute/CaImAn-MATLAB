@@ -11,14 +11,12 @@ defoptions.flag_g = false;                          % compute global AR coeffici
 defoptions.lags = 5;                                 % number of extra lags when computing the AR coefficients
 defoptions.include_noise = 0;                        % include early lags when computing AR coefs
 defoptions.pixels = 1:numel(Y)/size(Y,ndims(Y));     % pixels to include when computing the AR coefs
-defoptions.use_parallel = 0;                         % split data into patches for memory reasons
+defoptions.split_data = 0;                         % split data into patches for memory reasons
 
-if nargin < 4
-    sn = [];
-    if nargin < 3 || isempty(options)
-        options = defoptions;
-    end
-end
+if nargin < 4; sn = []; end
+if nargin < 3 || isempty(options); options = defoptions; end
+if nargin < 2 || isempty(p); p = 2; end
+P.p = p;
 
 if ~isfield(options,'noise_range'); options.noise_range = defoptions.noise_range; end
 if ~isfield(options,'noise_method'); options.noise_method = defoptions.noise_method; end
@@ -27,7 +25,7 @@ if ~isfield(options,'flag_g'); options.flag_g = defoptions.flag_g; end
 if ~isfield(options,'lags'); options.lags = defoptions.lags; end
 if ~isfield(options,'include_noise'); options.include_noise = defoptions.include_noise; end; include_noise = options.include_noise;
 if ~isfield(options,'pixels'); options.pixels = defoptions.pixels; end
-if ~isfield(options,'use_parallel'); use_parallel = defoptions.use_parallel; else use_parallel = options.use_parallel; end
+if ~isfield(options,'split_data'); split_data = defoptions.split_data; else split_data = options.split_data; end
 
 if isempty(sn)
     fprintf('Estimating the noise power for each pixel from a simple PSD estimate...');
@@ -48,7 +46,7 @@ if options.flag_g
     tt1 = tic;
     mp = max(p);
     lags = options.lags + mp;
-    if use_parallel 
+    if split_data 
         Ycl = mat2cell(Y(ff,:),ones(np,1),size(Y,2));
         XC = cell(np,1);
         parfor j = 1:np

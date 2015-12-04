@@ -30,10 +30,10 @@ end
 [d,nr] = size(A);
 if ~isfield(params,'d1'); d1 = sqrt(d); params.d1 = d1; else d1 = params.d1; end          % # of rows
 if ~isfield(params,'d2'); d2 = sqrt(d); params.d2 = d2; else d2 = params.d2; end          % # of columns
-if ~isfield(params,'min_size'); min_size = 3; else min_size = params.min_size; end    % minimum size of ellipse axis 
-if ~isfield(params,'max_size'); max_size = 8; else max_size = params.max_size; end    % maximum size of ellipse axis
-if ~isfield(params,'dist'); dist = 3; else dist = params.dist; end                              % expansion factor of ellipse
-if ~isfield(params,'se'); expandCore = strel('disk',4,0); else expandCore = params.se; end      % morphological element (for 'dilate')
+if ~isfield(params,'min_size') || isempty(params.min_size); min_size = 3; else min_size = params.min_size; end    % minimum size of ellipse axis 
+if ~isfield(params,'max_size') || isempty(params.max_size); max_size = 8; else max_size = params.max_size; end    % maximum size of ellipse axis
+if ~isfield(params,'dist')  || isempty(params.dist); dist = 3; else dist = params.dist; end                              % expansion factor of ellipse
+if ~isfield(params,'se')  || isempty(params.se); expandCore = strel('disk',4,0); else expandCore = params.se; end      % morphological element (for 'dilate')
 
 if strcmpi(method,'ellipse'); method = 'ellipse';
 elseif strcmpi(method,'dilate'); method = 'dilate';

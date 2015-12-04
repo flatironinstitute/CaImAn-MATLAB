@@ -1,4 +1,4 @@
-function [A,C,nr,merged_ROIs,P,S] = merge_ROIs(Y_res,A,b,C,f,P,S)
+function [A,C,nr,merged_ROIs,P,S] = merge_components(Y_res,A,b,C,f,P,S,options)
 
 % merging of spatially overlapping components that have highly correlated tmeporal activity
 % The correlation threshold for merging overlapping components is user specified in P.merge_thr (default value 0.85)
@@ -8,8 +8,9 @@ function [A,C,nr,merged_ROIs,P,S] = merge_ROIs(Y_res,A,b,C,f,P,S)
 % b:            spatial background
 % C:            matrix of temporal components
 % f:            temporal background
-% P:            parameter struct
+% P:            struct for neuron parameters
 % S:            deconvolved activity/spikes (optional)
+% options:      struct for algorithm parameteres
 
 % Outputs:
 % A:            matrix of new spatial components
@@ -22,8 +23,13 @@ function [A,C,nr,merged_ROIs,P,S] = merge_ROIs(Y_res,A,b,C,f,P,S)
 % Written by:
 % Eftychios A. Pnevmatikakis, Simons Foundation, 2015
 
-if ~isfield(P,'merge_thr'); thr = 0.85; else thr = P.merge_thr; end     % merging threshold
-if ~isfield(P,'max_merg'); mx = 50; else mx = P.max_merg; end           % maximum merging operations
+defoptions = CNMFSetParms;
+if nargin < 8; options = []; end
+if ~isfield(options,'d1') || isempty(options.d1); d1 = input('What is the total number of rows? \n'); else d1 = options.d1; end          % # of rows
+if ~isfield(options,'d2') || isempty(options.d2); d2 = input('What is the total number of columns? \n'); else d2 = options.d2; end       % # of columns
+if ~isfield(options,'merge_thr') || isempty(options.merge_thr); thr = defoptions.merge_thr; else thr = options.merge_thr; end     % merging threshold
+if ~isfield(options,'max_merg'); mx = 50; else mx = options.max_merg; end           % maximum merging operations
+if ~isfield(options,'deconv_method') || isempty(options.deconv_method); options.deconv_method = defoptions.deconv_method; end
 
 nr = size(A,2);
 [d,T] = size(Y_res);
@@ -59,7 +65,7 @@ merged_ROIs = cell(nm,1);
 A_merged = zeros(d,nm);
 C_merged = zeros(nm,T);
 S_merged = zeros(nm,T);
-if strcmpi(P.method,'constrained_foopsi')
+if strcmpi(options.deconv_method,'constrained_foopsi')
     P_merged.gn = cell(nm,1);
     P_merged.b = cell(nm,1);
     P_merged.c1 = cell(nm,1);
@@ -81,11 +87,11 @@ for i = 1:nm
             Pmr.unsaturatedPix(pxi) = find(ff == px(pxi));
         end
     end
-    cc = update_temporal_components(Y_res(ff,:),A_merged(ff,i),b(ff,:),median(spdiags(nC,0,length(nC),length(nC))\C(merged_ROIs{i},:)),f,Pmr);
-    [aa,bb] = update_spatial_components(Y_res,cc,f,A_merged(:,i),P);
+    cc = update_temporal_components(Y_res(ff,:),A_merged(ff,i),b(ff,:),median(spdiags(nC,0,length(nC),length(nC))\C(merged_ROIs{i},:)),f,Pmr,options);
+    [aa,bb] = update_spatial_components(Y_res,cc,f,A_merged(:,i),P.sn,options);
     A_merged(:,i) = aa;
-    [cc,~,~,Ptemp,ss] = update_temporal_components(Y_res(ff,:),aa(ff),bb(ff,:),cc,f,Pmr);
-    if strcmpi(P.method,'constrained_foopsi') || strcmpi(P.method,'MCEM_foopsi')
+    [cc,~,~,Ptemp,ss] = update_temporal_components(Y_res(ff,:),aa(ff),bb(ff,:),cc,f,Pmr,options);
+    if strcmpi(options.method,'constrained_foopsi') || strcmpi(options.method,'MCEM_foopsi')
         P_merged.gn{i} = Ptemp.gn{1};
         P_merged.b{i} = Ptemp.b{1};
         P_merged.c1{i} = Ptemp.c1{1};
@@ -117,7 +123,7 @@ else
     S(neur_id,:) = [];
 end
 
-if strcmpi(P.method,'constrained_foopsi') || strcmpi(P.method,'MCEM_foopsi')
+if strcmpi(options.method,'constrained_foopsi') || strcmpi(options.method,'MCEM_foopsi')
     P.b(neur_id) = [];
     P.b(nr - length(neur_id) + (1:nm)) = P_merged.b;
     P.gn(neur_id) = [];

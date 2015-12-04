@@ -37,12 +37,12 @@ end
 
 if ~exist('params', 'var') params = []; end
 
-if ~isfield(params, 'gSig'), params.gSig = [5, 5]; 
+if ~isfield(params, 'gSig') || isempty(params.gSig); params.gSig = [5, 5]; 
 elseif length(params.gSig) == 1, params.gSig = params.gSig + zeros(1,2); 
     %else gSig = params.gSig; 
 end
 
-if ~isfield(params, 'gSiz'), params.gSiz = 2*params.gSig + 1;
+if ~isfield(params, 'gSiz') || isempty(params.gSiz); params.gSiz = 2*params.gSig + 1;
 elseif length(params.gSiz) == 1, params.gSiz = params.gSiz + zeros(1,2); 
     %else gSiz = params.gSiz; 
 end

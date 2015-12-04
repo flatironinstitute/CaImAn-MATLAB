@@ -10,14 +10,13 @@ function Ath = threshold_components(A,options)
 % Written by:
 % Eftychios A. Pnevmatikakis, Simons Foundation, 2015
 
-    defoptions.thr = 0.9999;          % energy threshold
-    defoptions.se = strel('square',3);  % morphological operator for closing
-    defoptions.medw = [3,3];          % size of median filter
-
-    if nargin == 1; options = defoptions; end
-    if ~isfield(options,'nrgthr'); options.thr = defoptions.thr; end
-    if ~isfield(options,'clos_op'); options.se = defoptions.se; end
-    if ~isfield(options,'medw'); options.medw = defoptions.medw; end
+    defoptions.nrgthr = 0.9999;            % energy threshold
+    defoptions.clos_op = strel('square',3);  % morphological operator for closing
+    defoptions.medw = [3,3];            % size of median filter
+    
+    if ~isfield(options,'nrgthr') || isempty(options.nrgthr); options.nrgthr = defoptions.nrgthr; end
+    if ~isfield(options,'clos_op') || isempty(options.clos_op); options.clos_op = defoptions.clos_op; end
+    if ~isfield(options,'medw') || isempty(options.medw); options.medw = defoptions.medw; end
 
     [d,nr] = size(A);
     Ath = spalloc(d,nr,nnz(A));
@@ -27,10 +26,10 @@ function Ath = threshold_components(A,options)
         A_temp = A_temp(:);
         [temp,ind] = sort(A_temp(:).^2,'ascend'); 
         temp =  cumsum(temp);
-        ff = find(temp > (1-options.thr)*temp(end),1,'first');
+        ff = find(temp > (1-options.nrgthr)*temp(end),1,'first');
         BW = zeros(options.d1,options.d2);
         BW(ind(ff:d)) = 1;
-        BW = imclose(BW,options.se);
+        BW = imclose(BW,options.clos_op);
         [L,NUM] = bwlabel(BW,8);
         if NUM > 0
             nrg = zeros(NUM,1);
@@ -42,6 +41,5 @@ function Ath = threshold_components(A,options)
             ff = find(L==indm);
             Ath(ff,i) = A(ff,i);
         end
-    end
-        
+    end        
 end

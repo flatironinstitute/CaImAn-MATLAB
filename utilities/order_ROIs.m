@@ -3,14 +3,14 @@ function [A_or,C_or,S_or,P_or,srt] = order_ROIs(A,C,S,P)
 % ordering of the found components based on their maximum temporal
 % activation and their size (through their l_inf norm)
 
-%nA = sqrt(sum(A.^2));
-%nr = length(nA);
-%A = A/spdiags(nA(:),0,nr,nr);
-%C = spdiags(nA(:),0,nr,nr)*C;
-mA = max(A); %sum(A.^4).^(1/4);
-sA = sum(A);
+nA = sqrt(sum(A.^2));
+nr = length(nA);
+A = A/spdiags(nA(:),0,nr,nr);
+C = spdiags(nA(:),0,nr,nr)*C;
+mA = sum(A.^4).^(1/4);
+%sA = sum(A);
 mC = max(C,[],2);
-[~,srt] = sort(mC.*mA'.*sA','descend');
+[~,srt] = sort(mC.*mA','descend');
 A_or = A(:,srt);
 C_or = C(srt,:);
 
