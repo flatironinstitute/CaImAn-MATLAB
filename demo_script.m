@@ -3,9 +3,8 @@ clear;
 
 addpath(genpath('../constrained-foopsi'));
 addpath(genpath('utilities'));
-
-nam = 'demoMovie.tif';             
-                                % insert path to tiff stack here
+             
+nam = 'demoMovie.tif';          % insert path to tiff stack here
 sframe=1;						% user input: first frame to read (optional, default 1)
 num2read=2000;					% user input: how many frames to read   (optional, default until the end)
 
@@ -15,6 +14,21 @@ if ~isa(Y,'double');    Y = double(Y);  end         % convert to double
 [d1,d2,T] = size(Y);                                % dimensions of dataset
 d = d1*d2;                                          % total number of pixels
 
+%% Set parameters
+
+K = 30;                                           % number of components to be found
+tau = 4;                                          % std of gaussian kernel (size of neuron) 
+p = 2;                                            % order of autoregressive system (p = 0 no dynamics, p=1 just decay, p = 2, both rise and decay)
+merge_thr = 0.8;                                  % merging threshold
+
+options = CNMFSetParms(...                      
+    'd1',d1,'d2',d2,...                         % dimensions of datasets
+    'search_method','ellipse','dist',3,...      % search locations when updating spatial components
+    'deconv_method','constrained_foopsi',...    % activity deconvolution method
+    'temporal_iter',2,...                       % number of block-coordinate descent steps 
+    'fudge_factor',0.98,...                      % bias correction for AR coefficients
+    'merge_thr',merge_thr...                    % merging threshold
+    );
 %% Interpolate any missing data (just for pre-processing)
 
 if any(isempty(Y))
@@ -25,11 +39,11 @@ else
     Y_interp = sparse(d,T);
 end
 
+P.p = p;
+
 %% fast initialization of spatial components using the greedyROI
 
-nr = 30;                                           % number of components to be found
-params.gSig = 4;                                   % std of gaussian (size of neuron)        
-[Ain,Cin,bin,fin,center] = initialize_components(Y,nr,params);  % initialize
+[Ain,Cin,bin,fin,center] = initialize_components(Y,K,tau);  % initialize
 
 % display centers of found components
 Cn =  correlation_image(Y); %max(Y,[],3); %std(Y,[],3); % image statistic (only for display purposes)
@@ -42,12 +56,11 @@ figure;imagesc(Cn);
 
 Yr = reshape(Y,d,T);
 clear Y;
-p = 2;                                                          % order of autoregressive system (p=1 just decay, p = 2, both rise and decay)
 active_pixels = find(sum(Ain,2));                               % pixels where the greedy method found activity
 unsaturated_pixels = find_unsaturatedPixels(Yr);                % pixels that do not exhibit saturation
 options.pixels = intersect(active_pixels,unsaturated_pixels);   % base estimates only on                 
 
-P = arpfit(Yr,p,options);
+P.sn = get_noise_fft(Yr);                                       % estimate noise level for each pixel
 P.interp = Y_interp;
 P.unsaturatedPix = unsaturated_pixels;
 % remove interpolated values
@@ -55,22 +68,15 @@ miss_data_int = find(Y_interp);
 Yr(miss_data_int) = P.interp(miss_data_int);
 
 %% update spatial components
-P.search_method = 'ellipse';
-P.d1 = d1;                  % dimensions of image
-P.d2 = d2; 
-P.dist = 3;                 % ellipse expansion factor for local search of spatial components
-[A,b] = update_spatial_components(Yr,Cin,fin,Ain,P);
+[A,b] = update_spatial_components(Yr,Cin,fin,Ain,P.sn,options);   % update temporal components
 
 %% update temporal components
-P.method = 'constrained_foopsi';            % choice of method for deconvolution
-P.temporal_iter = 2;                        % number of iterations for block coordinate descent
-P.fudge_factor = 0.98;                      % fudge factor to reduce time constant estimation bias
-[C,f,Y_res,P,S] = update_temporal_components(Yr,A,b,Cin,fin,P);
+
+[C,f,Y_res,P,S] = update_temporal_components(Yr,A,b,Cin,fin,P,options);
 
 %% merge found components
 
-P.merge_thr = 0.8;                          % merging threshold
-[Am,Cm,nr_m,merged_ROIs,P,Sm] = merge_ROIs(Y_res,A,b,C,f,P,S);
+[Am,Cm,nr_m,merged_ROIs,P,Sm] = merge_components(Y_res,A,b,C,f,P,S,options);
 
 display_merging = 1; % flag for displaying merging example
 if display_merging
@@ -92,8 +98,8 @@ if display_merging
 end
 
 %% repeat
-[A2,b2] = update_spatial_components(Yr,Cm,f,Am,P);
-[C2,f2,Y_res,P,S2] = update_temporal_components(Yr,A2,b2,Cm,f,P);
+[A2,b2] = update_spatial_components(Yr,Cm,f,Am,P.sn,options);
+[C2,f2,Y_res,P,S2] = update_temporal_components(Yr,A2,b2,Cm,f,P,options);
 [C_df,~,S_df] = extract_DF_F(Yr,[A2,b2],[C2;f2],S2,nr_m+1); % extract DF/F values (optional)
 
 %% do some plotting
@@ -104,14 +110,8 @@ figure;
 [Coor,json_file] = plot_contours(A_or,reshape(P.sn,d1,d2),contour_threshold,1); % contour plot of spatial footprints
 pause; 
 %savejson('jmesh',json_file,'filename');        % optional save json file with component coordinates (requires matlab json library)
-view_patches(Yr,A_or,C_or,b2,f2,d1,d2);                                         % display all components
+view_components(Yr,A_or,C_or,b2,f2,Cn,options);         % display all components
 
 %% make movie
 
-param.skip_frame = 2;
-param.ind = [1,2,3,4];
-param.sx = 16;
-param.make_avi = 0;
-param.show_contours = 1;
-param.contours = Coor;
-make_patch_video(A_or,C_or,b2,f2,Yr,d1,d2,param)
+make_patch_video(A_or,C_or,b2,f2,Yr,Coor,options)
