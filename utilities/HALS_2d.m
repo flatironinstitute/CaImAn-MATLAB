@@ -16,7 +16,9 @@ function [A, C, b, f] = HALS_2d(Y, A, C, b, f, params)
 %       forced to be 0. 
 %       maxIter: maximum iteration of iterating HALS. 
 
-% Pengcheng Zhou, zhoupc1988@gmail.com 
+% Author: Pengcheng Zhou, Columbia University, based on a python
+% implementation from Johannes Friedrich, Columbia University, 2015.
+
 [d1, d2, ~] = size(Y);
 
 if isfield(params, 'bSiz'), bSiz = params.bSiz; else bSiz=3; end
@@ -36,6 +38,7 @@ K = size(A, 2);         %number of neurons
 
 %% update spatial and temporal components neuron by neurons
 Yres = reshape(Y, d1*d2, []) - A*C - b*f;
+
 for miter=1:maxIter
     for mcell = 1:K
         ind_pixels = ind_A(:, mcell);
@@ -66,6 +69,5 @@ for miter=1:maxIter
     b = max(0, b0 + Yres*f'/norm_f2);
     Yres = Yres + (b0-b)*f;
     
-    fprintf('Iteration %d, the norm of  residual is %.4f\n', ...
-        miter, norm(Yres, 'fro'));
+    %fprintf('Iteration %d, the norm of  residual is %.4f\n', miter, norm(Yres, 'fro'));
 end
