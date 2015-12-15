@@ -94,4 +94,4 @@ view_components(Yr,A_or,C_or,b2,f2,Cn,options);         % display all components
 
 %% make movie
 
-make_patch_video(A_or,C_or,b2,f2,Yr,obj.Coor,obj.options)
+make_patch_video(A_or,C_or,b2,f2,Yr,Coor,options)
