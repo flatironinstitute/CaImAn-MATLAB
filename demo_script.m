@@ -29,19 +29,11 @@ options = CNMFSetParms(...
     'fudge_factor',0.98,...                      % bias correction for AR coefficients
     'merge_thr',merge_thr...                    % merging threshold
     );
-%% Interpolate any missing data (just for pre-processing)
+%% Data pre-processing
 
-if any(isempty(Y))
-    Y_interp = interp_missing_data(Y);      % interpolate missing data
-    mis_data = find(Y_interp);
-    Y(mis_data) = Y_interp(mis_data);       % introduce interpolated values for initialization
-else
-    Y_interp = sparse(d,T);
-end
+[P,Y] = preprocess_data(Y,p);
 
-P.p = p;
-
-%% fast initialization of spatial components using the greedyROI
+%% fast initialization of spatial components using greedyROI and HALS
 
 [Ain,Cin,bin,fin,center] = initialize_components(Y,K,tau);  % initialize
 
@@ -52,23 +44,11 @@ figure;imagesc(Cn);
     scatter(center(:,2),center(:,1),'mo');
     title('Center of ROIs found from initialization algorithm');
     drawnow;
-%% compute estimates of noise for every pixel and a global time constant
-
-Yr = reshape(Y,d,T);
-clear Y;
-active_pixels = find(sum(Ain,2));                               % pixels where the greedy method found activity
-unsaturated_pixels = find_unsaturatedPixels(Yr);                % pixels that do not exhibit saturation
-options.pixels = intersect(active_pixels,unsaturated_pixels);   % base estimates only on                 
-
-P.sn = get_noise_fft(Yr);                                       % estimate noise level for each pixel
-P.interp = Y_interp;
-P.unsaturatedPix = unsaturated_pixels;
-% remove interpolated values
-miss_data_int = find(Y_interp);
-Yr(miss_data_int) = P.interp(miss_data_int);
 
 %% update spatial components
-[A,b] = update_spatial_components(Yr,Cin,fin,Ain,P.sn,options);   % update temporal components
+Yr = reshape(Y,d,T);
+clear Y;
+[A,b] = update_spatial_components(Yr,Cin,fin,Ain,P,options);
 
 %% update temporal components
 
@@ -76,7 +56,7 @@ Yr(miss_data_int) = P.interp(miss_data_int);
 
 %% merge found components
 
-[Am,Cm,nr_m,merged_ROIs,P,Sm] = merge_components(Y_res,A,b,C,f,P,S,options);
+[Am,Cm,K_m,merged_ROIs,P,Sm] = merge_components(Y_res,A,b,C,f,P,S,options);
 
 display_merging = 1; % flag for displaying merging example
 if display_merging
@@ -88,19 +68,19 @@ if display_merging
             subplot(1,ln+2,j); imagesc(reshape(A(:,merged_ROIs{i}(j)),d1,d2)); 
                 title(sprintf('Component %i',j),'fontsize',16,'fontweight','bold'); axis equal; axis tight;
         end
-        subplot(1,ln+2,ln+1); imagesc(reshape(Am(:,nr_m-length(merged_ROIs)+i),d1,d2));
+        subplot(1,ln+2,ln+1); imagesc(reshape(Am(:,K_m-length(merged_ROIs)+i),d1,d2));
                 title('Merged Component','fontsize',16,'fontweight','bold');axis equal; axis tight; 
         subplot(1,ln+2,ln+2);
             plot(1:T,(diag(max(C(merged_ROIs{i},:),[],2))\C(merged_ROIs{i},:))'); 
-            hold all; plot(1:T,Cm(nr_m-length(merged_ROIs)+i,:)/max(Cm(nr_m-length(merged_ROIs)+i,:)),'--k')
+            hold all; plot(1:T,Cm(K_m-length(merged_ROIs)+i,:)/max(Cm(K_m-length(merged_ROIs)+i,:)),'--k')
             title('Temporal Components','fontsize',16,'fontweight','bold')
         drawnow;
 end
 
 %% repeat
-[A2,b2] = update_spatial_components(Yr,Cm,f,Am,P.sn,options);
+[A2,b2] = update_spatial_components(Yr,Cm,f,Am,P,options);
 [C2,f2,Y_res,P,S2] = update_temporal_components(Yr,A2,b2,Cm,f,P,options);
-[C_df,~,S_df] = extract_DF_F(Yr,[A2,b2],[C2;f2],S2,nr_m+1); % extract DF/F values (optional)
+[C_df,~,S_df] = extract_DF_F(Yr,[A2,b2],[C2;f2],S2,K_m+1); % extract DF/F values (optional)
 
 %% do some plotting
 
@@ -114,4 +94,4 @@ view_components(Yr,A_or,C_or,b2,f2,Cn,options);         % display all components
 
 %% make movie
 
-make_patch_video(A_or,C_or,b2,f2,Yr,Coor,options)
+make_patch_video(A_or,C_or,b2,f2,Yr,obj.Coor,obj.options)
