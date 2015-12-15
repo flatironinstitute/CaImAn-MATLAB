@@ -18,7 +18,7 @@ function name                           | description
 demo_script.m                           | wrapper code <br />
 demoMovie.tif                           | Sample dataset for running the code (by W. Yang and D. Peterka) <br />
 update_spatial_components.m             | update spatial components given temporal components and data <br />
-[//]: #  (update_temporal_components.m            | update temporal components given spatial components and data <br />)
+[//]: #  (update_temporal_components.m            | update temporal components given spatial components and data <br />
 merge_ROIs.m                            | merge spatially overlapping components that are temporally correlated <br />
 utilities/arpfit.m                      | estimation of noise level for every pixel and global time constants <br />
 utilities/bigread2.m                    | read (parts of) large tiff stacks
@@ -36,7 +36,7 @@ utilities/plain_foopsi.m                | projection of fluorescence onto the co
 utilities/plot_contours.m               | contour plot of found components and creation of a json file <br />
 utilities/tiff_reader.m                 | loading a tiff stack into matlab <br />
 utilities/threshold_components.m        | mild post-processing of spatial components <br />
-utilities/view_patches.m                | plotting of each found component and its temporal activation <br />
+utilities/view_patches.m                | plotting of each found component and its temporal activation <br />)
 
 
 License
