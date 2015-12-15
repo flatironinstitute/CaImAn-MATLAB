@@ -18,7 +18,7 @@ function name                           | description
 demo_script.m                           | wrapper code <br />
 demoMovie.tif                           | Sample dataset for running the code (by W. Yang and D. Peterka) <br />
 update_spatial_components.m             | update spatial components given temporal components and data <br />
-[//]: #  update_temporal_components.m            | update temporal components given spatial components and data <br />
+[//]: #  (update_temporal_components.m            | update temporal components given spatial components and data <br />)
 merge_ROIs.m                            | merge spatially overlapping components that are temporally correlated <br />
 utilities/arpfit.m                      | estimation of noise level for every pixel and global time constants <br />
 utilities/bigread2.m                    | read (parts of) large tiff stacks
