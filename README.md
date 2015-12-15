@@ -4,15 +4,38 @@
 
 The code implements a method for simultaneous source extraction and spike inference from large scale calcium imaging movies. The code is suitable for the analysis of somatic imaging data. Implementation for the analysis of dendritic/axonal imaging data will be added in the future. 
 
+The algorithm is presented in more detail in
+
+Pnevmatikakis, E. A., Gao, Y., Soudry, D., Pfau, D., Lacefield, C., Poskanzer, K., ... & Paninski, L. (2014). A structured matrix factorization framework for large scale calcium imaging data analysis. arXiv preprint arXiv:1409.2903. http://arxiv.org/abs/1409.2903
+
+Usage and Documentation
+=======
+Check the demo scripts and documentation.pdf to get started.
+
+Dependencies
+============
+
+The following matlab toolboxes are needed for the default parameter settings:
+- Statistics and Machine Learning Toolbox
+- Image processing toolbox
+
+Depending on the settings the following toolboxes may also be required
+- Signal processing toolbox (recommended but not required)
+- Parallel computing toolbox (recommended for large datasets but not required)
+- Optimization toolbox (not required)
+
 The default options for the algorithm require the following packages:
 
 1. The constrained deconvolution package maintained separately in https://github.com/epnev/constrained-foopsi 
 2. The CVX library which can be downloaded from http://cvxr.com/cvx/download/ (follow the installation instructions provided there) 
 
-The algorithm is presented in more detail in
+Depending on the settings the following packages may also be required
+- SPGL1 package from https://github.com/mpf/spgl1 (for solving constrained_foopsi using SPGL1)
+- Bayesian spike inference package from https://github.com/epnev/continuous_time_ca_sampler (for using the 'MCMC" deconvolution method).
 
-Pnevmatikakis, E. A., Gao, Y., Soudry, D., Pfau, D., Lacefield, C., Poskanzer, K., ... & Paninski, L. (2014). A structured matrix factorization framework for large scale calcium imaging data analysis. arXiv preprint arXiv:1409.2903. http://arxiv.org/abs/1409.2903
-
+Questions, comments, issues
+=======
+Please use the gitter chat room (use the button above) for questions and comments and create an issue for any bugs you might encounter.
 
 License
 =======
