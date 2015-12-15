@@ -8,11 +8,6 @@ function normalPixels = find_unsaturatedPixels(Y, saturationValue, saturationThr
 % Written by Weijian Yang and Eftychios A. Pnevmatikakis, based on an idea
 % from Weijian Yang and Darcy Peterka
 
-T = size(Y,ndims(Y));
-if ndims(Y) > 2
-    Y = reshape(Y,numel(Y)/T,T);
-end
-
 if nargin < 4 || isempty(saturationTime)
     saturationTime = 0.005;
 end
@@ -26,4 +21,4 @@ if nargin < 2 || isempty(saturationValue)
 end
 
 Ysat = (Y >= saturationThreshold*saturationValue);
-normalPixels = find(mean(Ysat,2)<saturationTime);
+normalPixels = find(mean(Ysat,ndims(Y))<saturationTime);
