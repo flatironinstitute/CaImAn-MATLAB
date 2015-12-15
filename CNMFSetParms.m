@@ -13,6 +13,7 @@ Names = [
     % INITIALIZATION  (initialize_components.m)
     'ssub           ' % spatial downsampling factor (default: 1)
     'tsub           ' % temporal downsampling factor (default: 1)
+    'init_method    ' % initialization method ('greedy','sparse_NMF') (default: 'greedy')
     % greedyROI parameters (greedyROI2d.m)
     'gSig           ' % half size of neurons to be found (default: [5,5])
     'gSiz           ' % half size of bounding box for each neuron (default: 2*gSig+1)
@@ -22,6 +23,11 @@ Names = [
     'save_memory    ' % process data sequentially to save memory (default: 0)
     'chunkSiz       ' % filter this number of timesteps each time (default: 100)
     'windowSiz      ' % size of window over which is computed sequentially (default: 32 x 32)
+    % sparse_NMF parameters (sparse_NMF_initialization.m)
+    'snmf_max_iter  ' % max # of sparse NMF iterations
+    'err_thr        ' % relative change threshold for stopping sparse_NMF
+    'eta            ' % frobenious norm factor *max(Y(:))^2
+    'beta           ' % sparsity factor
     % HALS parameters (HALS_2d.m)
     'bSiz           ' % expand kernel for HALS growing (default: 3)
     'maxIter        ' % maximum number of HALS iterations (default: 5)
@@ -157,6 +163,7 @@ Values = [
     % INITIALIZATION  (initialize_components.m)    
     {1}
     {1}
+    {'greedy'}
     % greedyROI parameters (greedyROI2d.m)    
     {[]}
     {[]}
@@ -166,6 +173,11 @@ Values = [
     {0}
     {100}
     {[32,32]}
+    % sparse_NMF parameters (sparse_NMF_initialization.m)
+    {100}
+    {1e-4}
+    {1}
+    {.5}
     % HALS parameters (HALS_2d.m)    
     {3}
     {5}
@@ -187,7 +199,7 @@ Values = [
     {3}
     {strel('disk',4,0)}
     % threshold_components.m    
-    {0.999}
+    {0.99}
     {strel('square',3)}
     {[3,3]}
     % UPDATING TEMPORAL COMPONENTS (update_temporal_components.m)    

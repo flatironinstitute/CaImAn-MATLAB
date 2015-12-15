@@ -10,6 +10,7 @@ function [Ain, Cin, bin, fin, center] = initialize_components(Y, K, tau, options
 %tau        standard deviation of neuron size (default value: 5)
 
 %options    fine-tuning parameters (optional)
+%           options.init_method: method of initialization ('greedy','sparse_NMF','both')
 %           options.nIter: number of iterations for shape tuning (default 5)
 %           options.gSiz: size of kernel (default 2*tau + 1)
 %           options.ssub: spatial downsampling factor (default 1)
@@ -31,7 +32,7 @@ function [Ain, Cin, bin, fin, center] = initialize_components(Y, K, tau, options
 %
 %Authors: Eftychios A. Pnevmatikakis and Pengchen Zhou
 
-if nargin < 4 || isempty(options); options = []; end
+if nargin < 4 || isempty(options); options = CNMFSetParms; end
 if nargin < 2 || isempty(K)
     K = 30;
     fprintf('Number of components to be detected not specified. Using the default value 30. \n');
@@ -41,6 +42,8 @@ if nargin < 3 || isempty(tau)
     fprintf('Standard deviation for neuron not specified. Using the default value 5. \n'); 
 else options.gSig = tau;
 end
+
+if ~isfield(options,'init_method'); options.init_method = 'greedy'; end
 % downsample the data
 
 if ~isfield(options, 'ssub'); options.ssub = 1; end; ssub = options.ssub;
@@ -59,9 +62,17 @@ if tsub~=1
     Y_ds = squeeze(mean(reshape(Y_ds(:, :, 1:(Ts*tsub)),d1s, d2s, tsub, Ts), 3));
 end
 
-% run greedy method
-fprintf('Initializing components with greedy method \n');
-[Ain, Cin, bin, fin] = greedyROI2d(Y_ds, K, options);
+if strcmpi(options.init_method,'greedy')
+    % run greedy method
+    fprintf('Initializing components with greedy method \n');
+    [Ain, Cin, bin, fin] = greedyROI2d(Y_ds, K, options);
+elseif strcmpi(options.init_method,'sparse_NMF')
+    % run sparse_NMF method
+    fprintf('Initializing components with sparse NMF \n');
+    [Ain,Cin,bin,fin] = sparse_NMF_initialization(Y_ds,K,options);
+else
+    error('Unknown initialization method')
+end
 
 % refine with HALS
 fprintf('Refining initial estimates with HALS \n');
