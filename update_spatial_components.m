@@ -1,4 +1,4 @@
-function [A,b,C] = update_spatial_components(Y,C,f,A_,sn,options)
+function [A,b,C] = update_spatial_components(Y,C,f,A_,P,options)
 
 % update spatial footprints and background through Basis Pursuit Denoising
 % for each pixel i solve the problem 
@@ -11,7 +11,7 @@ function [A,b,C] = update_spatial_components(Y,C,f,A_,sn,options)
 % C:    temporal components
 % f:    temporal background
 % A_:   current estimate of spatial footprints (used for determining search locations only) 
-% sn:   standard deviation for each pixel
+% P:    dataset parameters (used for noise values and interpolated entries)
 
 % options    parameter struct (for noise values and other parameters)
 
@@ -34,14 +34,16 @@ if ~isfield(options,'interp'); Y_interp = sparse(d,T); else Y_interp = options.i
 if ~isfield(options,'use_parallel'); use_parallel = ~isempty(which('parpool')); else use_parallel = options.use_parallel; end % use parallel toolbox if present
 if ~isfield(options,'search_method'); method = []; else method = options.search_method; end     % search method for determining footprint of spatial components
 
-if nargin < 5 || isempty(sn); P = arpfit(Y,1); sn = P.sn; end
-options.sn = sn;
+if nargin < 5 || isempty(P); P = preprocess_data(Y,1); end
+options.sn = P.sn;
+Y(P.mis_entries) = NaN; % remove interpolated values
 
 K = size(C,1);       % number of neurons
 
 IND = determine_search_location(A_(:,1:K),method,options);
 
 Cf = [C;f];
+
 
 if use_parallel         % solve BPDN problem for each pixel
     Nthr = 2*maxNumCompThreads;
