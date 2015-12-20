@@ -16,14 +16,13 @@ Code description and related packages
 This repository contains a MATLAB implementation of the spatio-temporal demixing, i.e., (source extraction) code for large scale calcium imaging data. Related code can be found in the following links:
 
 ## Matlab 
-- [Constrained deconvolution for neural activity (spike) extraction](https://github.com/epnev/constrained-foopsi)
-- [Source extraction (this package)](https://github.com/epnev/ca_source_extraction)
+- [Constrained deconvolution and source extraction with CNMF (this package)](https://github.com/epnev/ca_source_extraction)
 - [MCMC spike inference](https://github.com/epnev/continuous_time_ca_sampler)
 - [Group LASSO initialization](https://github.com/danielso/ROI_detect)
 
 ## Python
 - [Constrained deconvolution for neural activity (spike) extraction](https://github.com/epnev/constrained_foopsi_python)
-- [Source extraction](https://github.com/agiovann/SOURCE_EXTRACTION_PYTHON)
+- [Source extraction with CNMF](https://github.com/agiovann/SOURCE_EXTRACTION_PYTHON)
 - [Group LASSO initialization](https://github.com/danielso/ROI_detect)
 
 ## Integration with other libraries
@@ -49,8 +48,7 @@ Depending on the settings the following toolboxes may also be required
 
 The default options for the algorithm require the following packages:
 
-1. The constrained deconvolution package maintained separately in https://github.com/epnev/constrained-foopsi 
-2. The CVX library which can be downloaded from http://cvxr.com/cvx/download/ (follow the installation instructions provided there) 
+1. The CVX library which can be downloaded from http://cvxr.com/cvx/download/ (follow the installation instructions provided there) 
 
 Depending on the settings the following packages may also be required
 - SPGL1 package from https://github.com/mpf/spgl1 (for solving constrained_foopsi using SPGL1)
