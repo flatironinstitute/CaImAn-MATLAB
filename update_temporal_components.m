@@ -63,12 +63,8 @@ Y(mis_data) = Y_interp(mis_data);
 
 if (strcmpi(method,'noise_constrained') || strcmpi(method,'project')) && ~isfield(P,'g')
     options.flag_g = 1;
-    if ~isfield(P,'p') || isempty(P.p); P.p = 2; end; 
-    p = P.p;
-    P = arpfit(Yr,p,options,P.sn);
-    if ~iscell(P.g)
-        G = make_G_matrix(T,P.g);
-    end
+    if ~isfield(P,'p') || isempty(P.p); p = 2; end; 
+    [P,Y] = preprocess_data(Y,p,options);
 end
 
 ff = find(sum(A)==0);
