@@ -32,7 +32,7 @@
     <div id="main_content_wrap" class="outer">
       <section id="main_content" class="inner">
         <h1>
-<a id="ca_source_extraction" class="anchor" href="#ca_source_extraction" aria-hidden="true"><span class="octicon octicon-link"></span></a>ca_source_extraction</h1>
+<a id="deconvolution-and-demixing-of-calcium-imaging-data" class="anchor" href="#deconvolution-and-demixing-of-calcium-imaging-data" aria-hidden="true"><span class="octicon octicon-link"></span></a>Deconvolution and demixing of calcium imaging data</h1>
 
 <p><a href="https://gitter.im/epnev/ca_source_extraction?utm_source=badge&amp;utm_medium=badge&amp;utm_campaign=pr-badge&amp;utm_content=badge"><img src="https://badges.gitter.im/Join%20Chat.svg" alt="Join the chat at https://gitter.im/epnev/ca_source_extraction"></a></p>
 
@@ -40,7 +40,43 @@
 
 <p>The algorithm is presented in more detail in</p>
 
-<p>Pnevmatikakis, E. A., Gao, Y., Soudry, D., Pfau, D., Lacefield, C., Poskanzer, K., ... &amp; Paninski, L. (2014). A structured matrix factorization framework for large scale calcium imaging data analysis. arXiv preprint arXiv:1409.2903. <a href="http://arxiv.org/abs/1409.2903">http://arxiv.org/abs/1409.2903</a></p>
+<p>Pnevmatikakis, E.A., Soudry, D., Gao, Y., Machado, T., Merel, J., ... &amp; Paninski, L. (2016). Simultaneous denoising, deconvolution, and demixing of calcium imaging data. Neuron, in press, <a href="http://dx.doi.org/10.1016/j.neuron.2015.11.037">http://dx.doi.org/10.1016/j.neuron.2015.11.037</a></p>
+
+<p>Pnevmatikakis, E.A., Gao, Y., Soudry, D., Pfau, D., Lacefield, C., ... &amp; Paninski, L. (2014). A structured matrix factorization framework for large scale calcium imaging data analysis. arXiv preprint arXiv:1409.2903. <a href="http://arxiv.org/abs/1409.2903">http://arxiv.org/abs/1409.2903</a></p>
+
+<h1>
+<a id="code-description-and-related-packages" class="anchor" href="#code-description-and-related-packages" aria-hidden="true"><span class="octicon octicon-link"></span></a>Code description and related packages</h1>
+
+<p>This repository contains a MATLAB implementation of the spatio-temporal demixing, i.e., (source extraction) code for large scale calcium imaging data. Related code can be found in the following links:</p>
+
+<h2>
+<a id="matlab" class="anchor" href="#matlab" aria-hidden="true"><span class="octicon octicon-link"></span></a>Matlab</h2>
+
+<ul>
+<li><a href="https://github.com/epnev/constrained-foopsi">Constrained deconvolution for neural activity (spike) extraction</a></li>
+<li><a href="https://github.com/epnev/ca_source_extraction">Source extraction (this package)</a></li>
+<li><a href="https://github.com/epnev/continuous_time_ca_sampler">MCMC spike inference</a></li>
+<li><a href="https://github.com/danielso/ROI_detect">Group LASSO initialization</a></li>
+</ul>
+
+<h2>
+<a id="python" class="anchor" href="#python" aria-hidden="true"><span class="octicon octicon-link"></span></a>Python</h2>
+
+<ul>
+<li><a href="https://github.com/epnev/constrained_foopsi_python">Constrained deconvolution for neural activity (spike) extraction</a></li>
+<li><a href="https://github.com/agiovann/SOURCE_EXTRACTION_PYTHON">Source extraction</a></li>
+<li><a href="https://github.com/danielso/ROI_detect">Group LASSO initialization</a></li>
+</ul>
+
+<h2>
+<a id="integration-with-other-libraries" class="anchor" href="#integration-with-other-libraries" aria-hidden="true"><span class="octicon octicon-link"></span></a>Integration with other libraries</h2>
+
+<ul>
+<li>
+<a href="http://www.losonczylab.org/sima/1.3/">SIMA</a>: The <a href="https://github.com/losonczylab/sima/blob/master/sima/spikes.py">constrained deconvolution</a> method has been integrated with SIMA, a Python based library for calcium imaging data analysis.</li>
+<li>
+<a href="http://thunder-project.org/">Thunder</a>: The <a href="https://github.com/j-friedrich/thunder/tree/LocalNMF">group LASSO initialization</a> method has been integrated with Thunder, a library for large scale neural data analysis with Spark.</li>
+</ul>
 
 <h1>
 <a id="usage-and-documentation" class="anchor" href="#usage-and-documentation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Usage and Documentation</h1>
@@ -50,7 +86,7 @@
 <h1>
 <a id="dependencies" class="anchor" href="#dependencies" aria-hidden="true"><span class="octicon octicon-link"></span></a>Dependencies</h1>
 
-<p>The following Matlab toolboxes are needed for the default parameter settings:</p>
+<p>The following matlab toolboxes are needed for the default parameter settings:</p>
 
 <ul>
 <li>Statistics and Machine Learning Toolbox</li>
