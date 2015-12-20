@@ -27,8 +27,8 @@ This repository contains a MATLAB implementation of the spatio-temporal demixing
 - [Group LASSO initialization](https://github.com/danielso/ROI_detect)
 
 ## Integration with other libraries
-- [SIMA](http://www.losonczylab.org/sima/1.3/): The constrained deconvolution method has been integrated with [SIMA](https://github.com/losonczylab/sima/blob/master/sima/spikes.py), a Python based library for calcium imaging data analysis.
-- [Thunder](http://thunder-project.org/): The group LASSO initialization method has been integrated with [Thunder](https://github.com/j-friedrich/thunder/tree/LocalNMF), a library for large scale neural data analysis with Spark.
+- [SIMA](http://www.losonczylab.org/sima/1.3/): The [constrained deconvolution](https://github.com/losonczylab/sima/blob/master/sima/spikes.py) method has been integrated with SIMA, a Python based library for calcium imaging data analysis.
+- [Thunder](http://thunder-project.org/): The [group LASSO initialization](https://github.com/j-friedrich/thunder/tree/LocalNMF) method has been integrated with Thunder, a library for large scale neural data analysis with Spark.
 
 
 Usage and Documentation
