@@ -1,4 +1,4 @@
-# ca_source_extraction
+# Deconvolution and demixing of calcium imaging data
 
 [![Join the chat at https://gitter.im/epnev/ca_source_extraction](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/epnev/ca_source_extraction?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
@@ -6,7 +6,27 @@ The code implements a method for simultaneous source extraction and spike infere
 
 The algorithm is presented in more detail in
 
-Pnevmatikakis, E. A., Gao, Y., Soudry, D., Pfau, D., Lacefield, C., Poskanzer, K., ... & Paninski, L. (2014). A structured matrix factorization framework for large scale calcium imaging data analysis. arXiv preprint arXiv:1409.2903. http://arxiv.org/abs/1409.2903
+Pnevmatikakis, E.A., Soudry, D., Gao, Y., Machado, T., Merel, J., ... & Paninski, L. (2016). Simultaneous denoising, deconvolution, and demixing of calcium imaging data. Neuron, in press, http://dx.doi.org/10.1016/j.neuron.2015.11.037
+
+Pnevmatikakis, E.A., Gao, Y., Soudry, D., Pfau, D., Lacefield, C., ... & Paninski, L. (2014). A structured matrix factorization framework for large scale calcium imaging data analysis. arXiv preprint arXiv:1409.2903. http://arxiv.org/abs/1409.2903
+
+### Code description and related pacakges
+
+This repository contains a MATLAB implementation of the spatio-temporal demixing, i.e., (source extraction) code for large scale calcium imaging data. Related code can be found in the following links:
+
+## Matlab 
+- [Constrained deconvolution for neural activity (spike) extraction](https://github.com/epnev/constrained-foopsi)
+- [Source extraction (this package)](https://github.com/epnev/ca_source_extraction)
+- [MCMC spike inference](https://github.com/epnev/continuous_time_ca_sampler)
+- [Group LASSO initialization](https://github.com/danielso/ROI_detect)
+
+## Python
+- [Constrained deconvolution for neural activity (spike) extraction](https://github.com/epnev/constrained_foopsi_python)
+- [Source extraction](https://github.com/agiovann/SOURCE_EXTRACTION_PYTHON)
+- [Group LASSO initialization](https://github.com/danielso/ROI_detect)
+
+## Thunder
+- [Group LASSO initialization](https://github.com/j-friedrich/thunder/tree/LocalNMF)
 
 Usage and Documentation
 =======
