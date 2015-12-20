@@ -132,7 +132,7 @@ for r = 1:length(K)
         if mod(k,10) == 0; fprintf('found %i out of %i neurons..\n', k,K(r)); end
 
         %get next basis;
-        if k < K
+        if k < K(r)
             iMod = [max(iHat - 2 * gHalf(1), 1), min(iHat + 2 * gHalf(1), M)]; iModLen = iMod(2) - iMod(1) + 1;%patches to modify
             jMod = [max(jHat - 2 * gHalf(2), 1), min(jHat + 2 * gHalf(2), N)]; jModLen = jMod(2) - jMod(1) + 1;
             iLag = iSig - iMod(1) + 1; %relative location of iSig in the small patch
