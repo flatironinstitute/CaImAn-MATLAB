@@ -31,7 +31,7 @@ Names = [
     % HALS parameters (HALS_2d.m)
     'bSiz           ' % expand kernel for HALS growing (default: 3)
     'maxIter        ' % maximum number of HALS iterations (default: 5)
-    % Noise and AR coefficients calculation (arpfit.m)
+    % Noise and AR coefficients calculation (preprocess_data.m)
     'noise_range    ' % frequency range over which to estimate the noise (default: [0.25,0.5]) 
     'noise_method   ' % method for which to estimate the noise level (default: 'logmexp')            
     'flag_g         ' % compute global AR coefficients (default: false)
@@ -181,7 +181,7 @@ Values = [
     % HALS parameters (HALS_2d.m)    
     {3}
     {5}
-    % Noise and AR coefficients calculation (arpfit.m)    
+    % Noise and AR coefficients calculation (preprocess_data.m)    
     {[0.25,0.5]}
     {'logmexp'}
     {false}
