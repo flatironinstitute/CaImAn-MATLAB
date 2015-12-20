@@ -10,7 +10,8 @@ Pnevmatikakis, E.A., Soudry, D., Gao, Y., Machado, T., Merel, J., ... & Paninski
 
 Pnevmatikakis, E.A., Gao, Y., Soudry, D., Pfau, D., Lacefield, C., ... & Paninski, L. (2014). A structured matrix factorization framework for large scale calcium imaging data analysis. arXiv preprint arXiv:1409.2903. http://arxiv.org/abs/1409.2903
 
-### Code description and related pacakges
+Code description and related packages
+=======
 
 This repository contains a MATLAB implementation of the spatio-temporal demixing, i.e., (source extraction) code for large scale calcium imaging data. Related code can be found in the following links:
 
@@ -25,8 +26,10 @@ This repository contains a MATLAB implementation of the spatio-temporal demixing
 - [Source extraction](https://github.com/agiovann/SOURCE_EXTRACTION_PYTHON)
 - [Group LASSO initialization](https://github.com/danielso/ROI_detect)
 
-## Thunder
-- [Group LASSO initialization](https://github.com/j-friedrich/thunder/tree/LocalNMF)
+## Integration with other libraries
+- [SIMA](http://www.losonczylab.org/sima/1.3/): The constrained deconvolution method has been integrated with [SIMA](https://github.com/losonczylab/sima/blob/master/sima/spikes.py), a Python based library for calcium imaging data analysis.
+- [Thunder](http://thunder-project.org/): The group LASSO initialization method has been integrated with [Thunder](https://github.com/j-friedrich/thunder/tree/LocalNMF), a library for large scale neural data analysis with Spark.
+
 
 Usage and Documentation
 =======
