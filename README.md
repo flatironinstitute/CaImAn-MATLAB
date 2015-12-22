@@ -36,12 +36,25 @@ Check the demo scripts and documentation.pdf to get started.
 
 Dependencies
 ========
-The code uses the following libraries
-- [NumPy](http://www.numpy.org/)
-- [SciPy](http://www.scipy.org/)
-- [Matplotlib](http://matplotlib.org/)
-- [Scikit-Learn](http://scikit-learn.org/stable/)
-- [Tifffile](https://pypi.python.org/pypi/tifffile) For reading tiff files. Other choices can work there too.
+The following matlab toolboxes are needed for the default parameter settings:
+
+- Statistics and Machine Learning Toolbox
+- Image processing toolbox
+
+Depending on the settings the following toolboxes may also be required
+
+- Signal processing toolbox (recommended but not required)
+- Parallel computing toolbox (recommended for large datasets but not required)
+- Optimization toolbox (not required)
+
+The default options for the algorithm require the following packages:
+
+- The CVX library which can be downloaded from http://cvxr.com/cvx/download/ (follow the installation instructions provided there)
+
+Depending on the settings the following packages may also be required
+
+- SPGL1 package from https://github.com/mpf/spgl1 (for solving constrained_foopsi using SPGL1)
+- Bayesian spike inference package from https://github.com/epnev/continuous_time_ca_sampler (for using the 'MCMC" deconvolution method).
 
 External Dependencies
 ============
