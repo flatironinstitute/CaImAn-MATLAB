@@ -35,24 +35,26 @@ Usage and Documentation
 Check the demo scripts and documentation.pdf to get started.
 
 Dependencies
+========
+The code uses the following libraries
+- [NumPy](http://www.numpy.org/)
+- [SciPy](http://www.scipy.org/)
+- [Matplotlib](http://matplotlib.org/)
+- [Scikit-Learn](http://scikit-learn.org/stable/)
+- [Tifffile](https://pypi.python.org/pypi/tifffile) For reading tiff files. Other choices can work there too.
+
+External Dependencies
 ============
 
-The following matlab toolboxes are needed for the default parameter settings:
-- Statistics and Machine Learning Toolbox
-- Image processing toolbox
+The constrained deconvolution method (constrained_foopsi_python.py) can estimate with two different methods, each of which requires some additional packages:
+1. 'spgl1'
+  - [SPGL1](https://github.com/epnev/SPGL1_python_port) Python implementation of the SPGL1 method. Please use the "forked" repository linked here.
+2. 'cvx'
+  - [CVXOPT](http://cvxopt.org/) Required.
+  - [PICOS](http://picos.zib.de/) Required.
+  - [MOSEK](https://www.mosek.com/) Optional but strongly recommended for speed improvement, free for academic use.
 
-Depending on the settings the following toolboxes may also be required
-- Signal processing toolbox (recommended but not required)
-- Parallel computing toolbox (recommended for large datasets but not required)
-- Optimization toolbox (not required)
-
-The default options for the algorithm require the following packages:
-
-1. The CVX library which can be downloaded from http://cvxr.com/cvx/download/ (follow the installation instructions provided there) 
-
-Depending on the settings the following packages may also be required
-- SPGL1 package from https://github.com/mpf/spgl1 (for solving constrained_foopsi using SPGL1)
-- Bayesian spike inference package from https://github.com/epnev/continuous_time_ca_sampler (for using the 'MCMC" deconvolution method).
+In general 'spgl1' can be faster, but the python implementation is not as fast as in Matlab and not thoroughly tested.
 
 Questions, comments, issues
 =======
