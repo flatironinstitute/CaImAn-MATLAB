@@ -56,19 +56,6 @@ Depending on the settings the following packages may also be required
 - SPGL1 package from https://github.com/mpf/spgl1 (for solving constrained_foopsi using SPGL1)
 - Bayesian spike inference package from https://github.com/epnev/continuous_time_ca_sampler (for using the 'MCMC" deconvolution method).
 
-External Dependencies
-============
-
-The constrained deconvolution method (constrained_foopsi_python.py) can estimate with two different methods, each of which requires some additional packages:
-1. 'spgl1'
-  - [SPGL1](https://github.com/epnev/SPGL1_python_port) Python implementation of the SPGL1 method. Please use the "forked" repository linked here.
-2. 'cvx'
-  - [CVXOPT](http://cvxopt.org/) Required.
-  - [PICOS](http://picos.zib.de/) Required.
-  - [MOSEK](https://www.mosek.com/) Optional but strongly recommended for speed improvement, free for academic use.
-
-In general 'spgl1' can be faster, but the python implementation is not as fast as in Matlab and not thoroughly tested.
-
 Questions, comments, issues
 =======
 Please use the gitter chat room (use the button above) for questions and comments and create an issue for any bugs you might encounter.
