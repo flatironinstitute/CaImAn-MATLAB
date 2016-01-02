@@ -1,5 +1,5 @@
 function [c,b,c1,g,sn,sp] = constrained_foopsi(y,b,c1,g,sn,options)
-% spike inference using a constrained foopsi approach:
+% spike inference using a constrained deconvolution approach:
 %      min      sum(sp)
 %    c,sp,b,c1
 %      subject to: sp >= 0

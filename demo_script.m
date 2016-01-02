@@ -1,7 +1,6 @@
 clear;
 %% load file
 
-addpath(genpath('../constrained-foopsi'));
 addpath(genpath('utilities'));
              
 nam = 'demoMovie.tif';          % insert path to tiff stack here

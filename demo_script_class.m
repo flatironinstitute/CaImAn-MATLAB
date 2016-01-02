@@ -2,7 +2,6 @@ clear;
 % same demo as demo_script.m but using the clas @Sources2D
 %% load file
 
-addpath(genpath('../constrained-foopsi'));
 addpath(genpath('utilities'));
              
 nam = 'demoMovie.tif';          % insert path to tiff stack here
