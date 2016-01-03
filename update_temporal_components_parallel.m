@@ -135,7 +135,7 @@ else
 end
 p = P.p;
 for iter = 1:ITER
-    [O,lo] = update_order(A);
+    [O,lo] = update_order(A(:,1:K));
     for jo = 1:length(O)
         Ytemp = YrA(:,O{jo}(:)) + (diag(nA(O{jo}))*Cin(O{jo},:))';
         Ctemp = zeros(length(O{jo}),T);
