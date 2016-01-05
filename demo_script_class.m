@@ -81,17 +81,17 @@ end
 %% repeat
 updateSpatial(obj, Yr);
 Y_res = updateTemporal(obj, Yr);
-[C_df, ~, S_df] = extractDF_F(obj, Yr, K_m+1);
 
 %% do some plotting
-
 [srt] = orderROIs(obj);     % order components
+[C_df, ~, S_df] = extractDF_F(obj, Yr, K_m+1); % extract DF/F values.
+
 contour_threshold = 0.95;   % amount of energy used for each component to construct contour plot
 figure;
 [json_file] = viewContours(obj, Cn, contour_threshold, 1);
 pause; 
 %savejson('jmesh',json_file,'filename');        % optional save json file with component coordinates (requires matlab json library)
 plotComponents(obj, Yr, Cn);     % display all components
-%% make movie
 
+%% make movie
 makePatchVideo(obj, Yr) 
