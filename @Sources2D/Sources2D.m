@@ -13,6 +13,9 @@ classdef Sources2D < handle
         S;          % spike counts 
         Coor;       % neuron contours 
         options;    % options for model fitting 
+        Df;         % background for each component to normalize the filtered raw data  
+        C_df;       % temporal components of neurons and background normalized by Df        
+        S_df;       % spike counts of neurons normalized by Df
         P;          % some estimated parameters 
     end
     
@@ -86,8 +89,13 @@ classdef Sources2D < handle
                 i = size(obj.A, 2) + 1;
             end
             
-            [C_df, Df, S_df] = extract_DF_F(Y, [obj.A, obj.b],...
+            [obj.C_df, obj.Df, obj.S_df] = extract_DF_F(Y, [obj.A, obj.b],...
                 [obj.C; obj.f], obj.S, i);
+            
+            C_df =  obj.C_df;
+            Df = obj.Df;
+            S_df = obj.S_df;
+            
         end
         
         %% order_ROIs 
