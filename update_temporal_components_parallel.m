@@ -171,7 +171,7 @@ for iter = 1:ITER
                         btemp(jj) = cb;
                         c1temp(jj) = c1;
                         sntemp(jj) = sn;   
-                        gtemp(jj,:) = gn(:)';
+                        gtemp(jj,1:length(gn)) = gn(:)';
                     case 'MCMC'
                         SAMPLES = cont_ca_sampler(Ytemp(:,jj)/nT(jj),params);
                         Ctemp(jj,:) = make_mean_sample(SAMPLES,Ytemp(:,jj)/nT(jj));
