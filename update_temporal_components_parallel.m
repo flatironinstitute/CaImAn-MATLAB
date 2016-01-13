@@ -143,7 +143,7 @@ for iter = 1:ITER
         btemp = zeros(length(O{jo}),1);
         sntemp = btemp;
         c1temp = btemp;
-        gtemp = zeros(length(O{jo}),5);
+        gtemp = cell(length(O{jo}),1);
         nT = nA(O{jo});
         parfor jj = 1:length(O{jo})
             if p == 0   % p = 0 (no dynamics assumed)
@@ -170,8 +170,8 @@ for iter = 1:ITER
                         Ytemp(:,jj) = Ytemp(:,jj) - nT(jj)*Ctemp(jj,:)';
                         btemp(jj) = cb;
                         c1temp(jj) = c1;
-                        sntemp(jj) = sn;   
-                        gtemp(jj,1:length(gn)) = gn(:)';
+                        sntemp(jj) = sn;
+                        gtemp{jj} = gn(:)';
                     case 'MCMC'
                         SAMPLES = cont_ca_sampler(Ytemp(:,jj)/nT(jj),params);
                         Ctemp(jj,:) = make_mean_sample(SAMPLES,Ytemp(:,jj)/nT(jj));
@@ -179,7 +179,7 @@ for iter = 1:ITER
                         btemp(jj) = mean(SAMPLES.Cb);
                         c1temp(jj) = mean(SAMPLES.Cin);
                         sntemp(jj) = sqrt(mean(SAMPLES.sn2));
-                        gtemp(jj,:) = mean(exp(-1./SAMPLES.g))';
+                        gtemp{jj} = mean(exp(-1./SAMPLES.g))';
                 end
             end
         end
@@ -189,7 +189,7 @@ for iter = 1:ITER
                 P.c1(O{jo}) = num2cell(c1temp);
                 P.neuron_sn(O{jo}) = num2cell(sntemp);
                 for jj = 1:length(O{jo})
-                    P.gn(O{jo}(jj)) = {gtemp(jj,abs(gtemp(jj,:))>0)'};
+                    P.gn(O{jo}(jj)) = gtemp(jj);
                 end
                 YrA(:,O{jo}(:)) = Ytemp;
                 C(O{jo}(:),:) = Ctemp;
