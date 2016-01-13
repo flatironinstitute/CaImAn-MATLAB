@@ -143,7 +143,7 @@ for iter = 1:ITER
         btemp = zeros(length(O{jo}),1);
         sntemp = btemp;
         c1temp = btemp;
-        gtemp = zeros(length(O{jo}),P.p);
+        gtemp = zeros(length(O{jo}),5);
         nT = nA(O{jo});
         parfor jj = 1:length(O{jo})
             if p == 0   % p = 0 (no dynamics assumed)
