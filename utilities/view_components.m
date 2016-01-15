@@ -60,7 +60,7 @@ if save_avi
 end
 thr = 0.9;
 fig = figure;
-    set(gcf,'Position',2*[300,300,960,480]);
+    %set(gcf,'Position',2*[300,300,960,480]);
     set(gcf,'PaperPosition',2*[300,300,960,480]);
     int_x = zeros(nr,2*sx);
     int_y = zeros(nr,2*sx);
