@@ -27,7 +27,7 @@
             if ~split_data
                 for ind = 1:ceil(d/Nb); 
                     xdft = fft(Y((ind-1)*Nb+1:min(ind*Nb,d),:),[],2); 
-                    xdft = xdft(:,1:N/2+1);
+                    xdft = xdft(:,1: floor(N/2)+1); % FN: floor added.
                     psdx = (1/(Fs*N)) * abs(xdft).^2;
                     psdx(:,2:end-1) = 2*psdx(:,2:end-1);
                     %SN{ind} = mean_psd(psdx(:,indf),method);

@@ -11,11 +11,11 @@ classdef Sources2D < handle
         b;          % spatial components of backgrounds
         f;          % temporal components of backgrounds
         S;          % spike counts 
-        Coor;       % neuron contours 
-        options;    % options for model fitting 
+        Coor;       % neuron contours         
         Df;         % background for each component to normalize the filtered raw data  
         C_df;       % temporal components of neurons and background normalized by Df        
         S_df;       % spike counts of neurons normalized by Df
+        options;    % options for model fitting 
         P;          % some estimated parameters 
     end
     

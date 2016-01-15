@@ -145,6 +145,20 @@ for iter = 1:ITER
         c1temp = btemp;
         gtemp = zeros(length(O{jo}),P.p);
         nT = nA(O{jo});
+        % FN added the part below in order to save SAMPLES as a field of P
+        if strcmpi(method,'MCMC')
+            clear samples_mcmc
+            samples_mcmc(length(O{jo})) = struct();
+            [samples_mcmc.Cb] = deal(zeros(params.Nsamples,1));
+            [samples_mcmc.Cin] = deal(zeros(params.Nsamples,1));
+            [samples_mcmc.sn2] = deal(zeros(params.Nsamples,1));
+            [samples_mcmc.ns] = deal(zeros(params.Nsamples,1));
+            [samples_mcmc.ss] = deal(cell(params.Nsamples,1));
+            [samples_mcmc.ld] = deal(zeros(params.Nsamples,1));
+            [samples_mcmc.Am] = deal(zeros(params.Nsamples,1));
+            [samples_mcmc.g] = deal(zeros(params.Nsamples,1));
+            [samples_mcmc.params] = deal(struct('lam_', [], 'spiketimes_', [], 'A_', [], 'b_', [], 'C_in', [], 'sg', [], 'g', []));
+        end
         parfor jj = 1:length(O{jo})
             if p == 0   % p = 0 (no dynamics assumed)
                 cc = max(Ytemp(:,jj)/nT(jj),0);
@@ -180,6 +194,7 @@ for iter = 1:ITER
                         c1temp(jj) = mean(SAMPLES.Cin);
                         sntemp(jj) = sqrt(mean(SAMPLES.sn2));
                         gtemp(jj,:) = mean(exp(-1./SAMPLES.g))';
+                        samples_mcmc(jj) = SAMPLES; % FN added.
                 end
             end
         end
@@ -194,6 +209,10 @@ for iter = 1:ITER
                 YrA(:,O{jo}(:)) = Ytemp;
                 C(O{jo}(:),:) = Ctemp;
                 S(O{jo}(:),:) = Stemp;
+                
+                if strcmpi(method,'MCMC');
+                    P.samples_mcmc(O{jo}) = samples_mcmc; % FN added, a useful parameter to have.
+                end                
             end
         end
         fprintf('%i out of %i components updated \n',sum(lo(1:jo)),K);

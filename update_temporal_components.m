@@ -182,6 +182,7 @@ for iter = 1:ITER
                         P.c1{ii} = mean(SAMPLES.Cin);
                         P.neuron_sn{ii} = sqrt(mean(SAMPLES.sn2));
                         P.gn{ii} = mean(exp(-1./SAMPLES.g));
+                        P.samples_mcmc(ii) = SAMPLES; % FN added, a useful parameter to have.
                     case 'noise_constrained'
                         Y_res = Y_res + A(:,ii)*Cin(ii,:);
                         [~,srt] = sort(A(:,ii),'descend');
