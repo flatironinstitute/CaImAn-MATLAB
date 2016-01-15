@@ -53,12 +53,12 @@ clear Y;
 updateSpatial(obj, Yr);
 
 %% update temporal components
-Y_res = updateTemporal(obj, Yr);
+updateTemporal(obj, Yr);
 
 %% merge found components
 Apr = obj.A;    % store non-merged components
 Cpr = obj.C;
-[K_m, merged_ROIs] = merge(obj, Y_res);
+[K_m, merged_ROIs] = merge(obj, Yr);
 display_merging = 1; % flag for displaying merging example
 if display_merging
     i = 1; randi(length(merged_ROIs));
@@ -80,7 +80,12 @@ end
 
 %% repeat
 updateSpatial(obj, Yr);
+<<<<<<< HEAD
 Y_res = updateTemporal(obj, Yr);
+=======
+updateTemporal(obj, Yr);
+[C_df, ~, S_df] = extractDF_F(obj, Yr, K_m+1);
+>>>>>>> upstream/master
 
 %% do some plotting
 [srt] = orderROIs(obj);     % order components

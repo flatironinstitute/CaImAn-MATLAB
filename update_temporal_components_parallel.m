@@ -1,4 +1,4 @@
-function [C,f,Y_res,P,S] = update_temporal_components_parallel(Y,A,b,Cin,fin,P,options)
+function [C,f,P,S] = update_temporal_components_parallel(Y,A,b,Cin,fin,P,options)
 
 % update temporal components and background given spatial components in
 % parallel, by forming of sequence of vertex covers. 
@@ -34,7 +34,6 @@ function [C,f,Y_res,P,S] = update_temporal_components_parallel(Y,A,b,Cin,fin,P,o
 % OUTPUTS:
 % C:        temporal components (nr X T matrix)
 % f:        temporal background (1 x T vector)
-% Y_res:    residual signal (d X T matrix). Y_res = Y - A*C - b*f
 % P:        struct for neuron parameters
 % S:        deconvolved activity
 
@@ -143,7 +142,7 @@ for iter = 1:ITER
         btemp = zeros(length(O{jo}),1);
         sntemp = btemp;
         c1temp = btemp;
-        gtemp = zeros(length(O{jo}),P.p);
+        gtemp = cell(length(O{jo}),1);
         nT = nA(O{jo});
         % FN added the part below in order to save SAMPLES as a field of P
         if strcmpi(method,'MCMC')
@@ -184,8 +183,8 @@ for iter = 1:ITER
                         Ytemp(:,jj) = Ytemp(:,jj) - nT(jj)*Ctemp(jj,:)';
                         btemp(jj) = cb;
                         c1temp(jj) = c1;
-                        sntemp(jj) = sn;   
-                        gtemp(jj,:) = gn(:)';
+                        sntemp(jj) = sn;
+                        gtemp{jj} = gn(:)';
                     case 'MCMC'
                         SAMPLES = cont_ca_sampler(Ytemp(:,jj)/nT(jj),params);
                         Ctemp(jj,:) = make_mean_sample(SAMPLES,Ytemp(:,jj)/nT(jj));
@@ -193,8 +192,12 @@ for iter = 1:ITER
                         btemp(jj) = mean(SAMPLES.Cb);
                         c1temp(jj) = mean(SAMPLES.Cin);
                         sntemp(jj) = sqrt(mean(SAMPLES.sn2));
+<<<<<<< HEAD
                         gtemp(jj,:) = mean(exp(-1./SAMPLES.g))';
                         samples_mcmc(jj) = SAMPLES; % FN added.
+=======
+                        gtemp{jj} = mean(exp(-1./SAMPLES.g))';
+>>>>>>> upstream/master
                 end
             end
         end
@@ -204,7 +207,7 @@ for iter = 1:ITER
                 P.c1(O{jo}) = num2cell(c1temp);
                 P.neuron_sn(O{jo}) = num2cell(sntemp);
                 for jj = 1:length(O{jo})
-                    P.gn(O{jo}(jj)) = {gtemp(jj,abs(gtemp(jj,:))>0)'};
+                    P.gn(O{jo}(jj)) = gtemp(jj);
                 end
                 YrA(:,O{jo}(:)) = Ytemp;
                 C(O{jo}(:),:) = Ctemp;
@@ -234,11 +237,5 @@ for iter = 1:ITER
     end
 end
 
-if ~strcmpi(method,'noise_constrained')
-    Y_res = Y - A*C;
-end
-
 f = C(K+1:end,:);
 C = C(1:K,:);
-Y_res(unsaturatedPix,:) = Y_res;
-Y_res(saturatedPix,:) = Ysat - Asat*C - bsat*f;

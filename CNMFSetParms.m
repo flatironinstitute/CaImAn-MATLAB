@@ -63,6 +63,7 @@ Names = [
     'resparse       ' % number of times that the solution is resparsened (default: 0)
     % MERGING (merge_ROIs.m)
     'merge_thr      ' % merging threshold (default: 0.85)
+    'fast_merge     ' % flag for using fast merging (default 1)
     % VIDEO (make_patch_video.m)
     'ind            ' % indeces of components to be shown (deafult: 1:4)
     'skip_frame     ' % skip frames when showing the video (default: 1 (no skipping))
@@ -213,6 +214,7 @@ Values = [
     {0}
     % MERGING (merge_ROIs.m)
     {0.85}
+    {1}
     % VIDEO (make_patch_video.m)
     {[1:4]}
     {1}

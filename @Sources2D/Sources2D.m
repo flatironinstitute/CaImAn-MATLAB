@@ -52,21 +52,21 @@ classdef Sources2D < handle
         end
         
         %% update temporal components
-        function Y_res = updateTemporal(obj, Y)
-            [obj.C, obj.f, Y_res, obj.P, obj.S] = update_temporal_components(...
+        function updateTemporal(obj, Y)
+            [obj.C, obj.f, obj.P, obj.S] = update_temporal_components(...
                 Y, obj.A, obj.b, obj.C, obj.f, obj.P, obj.options);
         end
         
         %% update temporal components in parallel
-        function Y_res = updateTemporalParallel(obj, Y)
-            [obj.C, obj.f, Y_res, obj.P, obj.S] = update_temporal_components_parallel(...
+        function updateTemporalParallel(obj, Y)
+            [obj.C, obj.f, obj.P, obj.S] = update_temporal_components_parallel(...
                 Y, obj.A, obj.b, obj.C, obj.f, obj.P, obj.options);
         end
                 
         %% merge found components
-        function [nr, merged_ROIs] = merge(obj, Y_res)
+        function [nr, merged_ROIs] = merge(obj, Y)
             [obj.A, obj.C, nr, merged_ROIs, obj.P, obj.S] = merge_components(...
-                Y_res,obj.A, obj.b, obj.C, obj.f, obj.P,obj.S, obj.options);
+                Y,obj.A, obj.b, obj.C, obj.f, obj.P,obj.S, obj.options);
         end
         
         %% compute the residual
