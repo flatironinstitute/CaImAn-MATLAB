@@ -1,4 +1,4 @@
-function [C,f,Y_res,P,S] = update_temporal_components_parallel(Y,A,b,Cin,fin,P,options)
+function [C,f,P,S] = update_temporal_components_parallel(Y,A,b,Cin,fin,P,options)
 
 % update temporal components and background given spatial components in
 % parallel, by forming of sequence of vertex covers. 
@@ -34,7 +34,6 @@ function [C,f,Y_res,P,S] = update_temporal_components_parallel(Y,A,b,Cin,fin,P,o
 % OUTPUTS:
 % C:        temporal components (nr X T matrix)
 % f:        temporal background (1 x T vector)
-% Y_res:    residual signal (d X T matrix). Y_res = Y - A*C - b*f
 % P:        struct for neuron parameters
 % S:        deconvolved activity
 
@@ -215,11 +214,5 @@ for iter = 1:ITER
     end
 end
 
-if ~strcmpi(method,'noise_constrained')
-    Y_res = Y - A*C;
-end
-
 f = C(K+1:end,:);
 C = C(1:K,:);
-Y_res(unsaturatedPix,:) = Y_res;
-Y_res(saturatedPix,:) = Ysat - Asat*C - bsat*f;
