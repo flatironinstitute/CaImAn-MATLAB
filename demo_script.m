@@ -50,13 +50,13 @@ clear Y;
 [A,b] = update_spatial_components(Yr,Cin,fin,Ain,P,options);
 
 %% update temporal components
-
-[C,f,Y_res,P,S] = update_temporal_components(Yr,A,b,Cin,fin,P,options);
+% consider using update_temporal_components_parallel for increased speed
+[C,f,P,S] = update_temporal_components(Yr,A,b,Cin,fin,P,options);
 
 %% merge found components
-
-[Am,Cm,K_m,merged_ROIs,P,Sm] = merge_components(Y_res,A,b,C,f,P,S,options);
-
+tic;
+[Am,Cm,K_m,merged_ROIs,P,Sm] = merge_components(Yr,A,b,C,f,P,S,options);
+toc;
 display_merging = 1; % flag for displaying merging example
 if display_merging
     i = 1; randi(length(merged_ROIs));
@@ -78,7 +78,7 @@ end
 
 %% repeat
 [A2,b2] = update_spatial_components(Yr,Cm,f,Am,P,options);
-[C2,f2,Y_res,P,S2] = update_temporal_components(Yr,A2,b2,Cm,f,P,options);
+[C2,f2,P,S2] = update_temporal_components(Yr,A2,b2,Cm,f,P,options);
 [C_df,~,S_df] = extract_DF_F(Yr,[A2,b2],[C2;f2],S2,K_m+1); % extract DF/F values (optional)
 
 %% do some plotting
