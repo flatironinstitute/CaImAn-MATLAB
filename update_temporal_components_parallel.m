@@ -192,12 +192,8 @@ for iter = 1:ITER
                         btemp(jj) = mean(SAMPLES.Cb);
                         c1temp(jj) = mean(SAMPLES.Cin);
                         sntemp(jj) = sqrt(mean(SAMPLES.sn2));
-<<<<<<< HEAD
-                        gtemp(jj,:) = mean(exp(-1./SAMPLES.g))';
-                        samples_mcmc(jj) = SAMPLES; % FN added.
-=======
                         gtemp{jj} = mean(exp(-1./SAMPLES.g))';
->>>>>>> upstream/master
+                        samples_mcmc(jj) = SAMPLES; % FN added.
                 end
             end
         end
