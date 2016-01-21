@@ -81,7 +81,6 @@ end
 %% repeat
 updateSpatial(obj, Yr);
 updateTemporal(obj, Yr);
-[C_df, ~, S_df] = extractDF_F(obj, Yr, K_m+1);
 
 %% do some plotting
 [srt] = orderROIs(obj);     % order components

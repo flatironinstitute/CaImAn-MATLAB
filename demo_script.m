@@ -79,11 +79,12 @@ end
 %% repeat
 [A2,b2] = update_spatial_components(Yr,Cm,f,Am,P,options);
 [C2,f2,P,S2] = update_temporal_components(Yr,A2,b2,Cm,f,P,options);
-[C_df,~,S_df] = extract_DF_F(Yr,[A2,b2],[C2;f2],S2,K_m+1); % extract DF/F values (optional)
 
 %% do some plotting
 
 [A_or,C_or,S_or,P] = order_ROIs(A2,C2,S2,P);    % order components
+[C_df,~,S_df] = extract_DF_F(Yr,[A_or,b2],[C_or;f2],S_or,K_m+1); % extract DF/F values (optional)
+
 contour_threshold = 0.95;                       % amount of energy used for each component to construct contour plot
 figure;
 [Coor,json_file] = plot_contours(A_or,reshape(P.sn,d1,d2),contour_threshold,1); % contour plot of spatial footprints
