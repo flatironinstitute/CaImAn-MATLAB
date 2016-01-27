@@ -108,7 +108,10 @@ mB = 0.95*max(C_np(:));
 up = zeros(1,4);
 for i = 1:4
     up(i) = 0.95*max(max(A_com(:,:,i)))*max(C(ind(i),:));
+    ff = find(cont{ind(i)}(1,2:end)<0.1);
+    cont{ind(i)}(:,ff+1) = [];
 end
+
 for t = 1:skp:T
     subplot(4,6,[1,2,7,8]); imagesc(Y(:,:,t),[0,mY]); 
         title('Raw data','fontweight','bold','fontsize',16);
