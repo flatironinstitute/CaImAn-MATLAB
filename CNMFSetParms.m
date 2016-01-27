@@ -76,8 +76,8 @@ Names = [
     % PLOT COMPONENTS (view_patches.m)
     'plot_df        ' % flag for displaying DF/F estimates (default: 1)
     'make_gif       ' % save animation (default: 0)
-    'make_anim      ' % view animation (default: 1)
     'save_avi       ' % save video (default: 0)
+    'pause_time     ' % time to pause between each component (default: Inf, user has to click)
     ];
 
 [m,n] = size(Names);
@@ -227,8 +227,8 @@ Values = [
     % PLOT COMPONENTS (plot_patches.m)
     {1}
     {0}
-    {1}
     {0}
+    {Inf}
     ];
 
 for j = 1:m

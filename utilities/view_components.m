@@ -21,13 +21,13 @@ if ~isfield(options,'d2') || isempty(options.d2); d2 = input('What is the total 
 if ~isfield(options,'plot_df') || isempty(options.plot_df); options.df = defoptions.plot_df; end
     plot_df = options.plot_df;
 if ~isfield(options,'make_gif') || isempty(options.make_gif); options.make_gif = defoptions.make_gif; end
-    make_gif = options.make_gif;
-if ~isfield(options,'make_anim') || isempty(options.make_anim); options.make_anim = defoptions.make_anim; end
-    make_anim = options.make_anim;    
+    make_gif = options.make_gif; 
 if ~isfield(options,'save_avi') || isempty(options.save_avi); options.save_avi = defoptions.save_avi; end
     save_avi = options.save_avi; 
 if ~isfield(options,'sx') || isempty(options.sx); options.sx = defoptions.sx; end
     sx = min([options.sx,floor(d1/2),floor(d2/2)]);
+if ~isfield(options,'pause_time') || isempty(options.pause_time); options.pause_time = defoptions.pause_time; end
+    pause_time = options.pause_time;
 if isfield(options,'name') && ~isempty(options.name); 
     name = [options.name,'_components'];
 else
@@ -117,7 +117,7 @@ for i = 1:nr+nb
         drawnow; 
         hold off;
         if make_gif
-            frame = getframe(1);
+            frame = getframe(fig); %getframe(1);
               im = frame2im(frame);
               [imind,clm] = rgb2ind(im,256);
               if i == 1;
@@ -128,14 +128,18 @@ for i = 1:nr+nb
         else
             if i < nr+nb && ~save_avi
                 fprintf('component %i. Press any key to continue.. \n', i);
-                pause;
+                if pause_time == Inf;
+                    pause;
+                else
+                    pause(pause_time);
+                end
             end
         end
     else
         plot(1:T,f(i-nr,:)); title('Background activity','fontsize',16,'fontweight','bold');
         drawnow; 
         if make_gif
-            frame = getframe(1);
+            frame = getframe(fig); %getframe(1);
               im = frame2im(frame);
               [imind,clm] = rgb2ind(im,256);
               if i == 1;
@@ -146,7 +150,11 @@ for i = 1:nr+nb
         else
             if i < nr+nb && ~save_avi
                 fprintf('background component %i. Press any key to continue.. \n', i-nr);
-                pause;
+                if pause_time == Inf;
+                    pause;
+                else
+                    pause(pause_time);
+                end
             end
         end
     end
