@@ -8,6 +8,7 @@ sframe=1;						% user input: first frame to read (optional, default 1)
 num2read=2000;					% user input: how many frames to read   (optional, default until the end)
 
 Y = bigread2(nam,sframe,num2read);
+Y = Y - min(Y(:)); 
 if ~isa(Y,'double');    Y = double(Y);  end         % convert to double
 
 [d1,d2,T] = size(Y);                                % dimensions of dataset
@@ -25,7 +26,7 @@ options = CNMFSetParms(...
     'search_method','ellipse','dist',3,...      % search locations when updating spatial components
     'deconv_method','constrained_foopsi',...    % activity deconvolution method
     'temporal_iter',2,...                       % number of block-coordinate descent steps 
-    'fudge_factor',0.98,...                      % bias correction for AR coefficients
+    'fudge_factor',0.98,...                     % bias correction for AR coefficients
     'merge_thr',merge_thr...                    % merging threshold
     );
 %% Data pre-processing
@@ -50,7 +51,6 @@ clear Y;
 [A,b] = update_spatial_components(Yr,Cin,fin,Ain,P,options);
 
 %% update temporal components
-% consider using update_temporal_components_parallel for increased speed
 [C,f,P,S] = update_temporal_components(Yr,A,b,Cin,fin,P,options);
 
 %% merge found components

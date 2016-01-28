@@ -56,13 +56,7 @@ classdef Sources2D < handle
             [obj.C, obj.f, obj.P, obj.S] = update_temporal_components(...
                 Y, obj.A, obj.b, obj.C, obj.f, obj.P, obj.options);
         end
-        
-        %% update temporal components in parallel
-        function updateTemporalParallel(obj, Y)
-            [obj.C, obj.f, obj.P, obj.S] = update_temporal_components_parallel(...
-                Y, obj.A, obj.b, obj.C, obj.f, obj.P, obj.options);
-        end
-                
+                       
         %% merge found components
         function [nr, merged_ROIs] = merge(obj, Y)
             [obj.A, obj.C, nr, merged_ROIs, obj.P, obj.S] = merge_components(...
