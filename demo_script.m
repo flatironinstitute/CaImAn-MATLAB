@@ -44,7 +44,8 @@ figure;imagesc(Cn);
     scatter(center(:,2),center(:,1),'mo');
     title('Center of ROIs found from initialization algorithm');
     drawnow;
-
+%% refine components manually
+% new_centers=manually_refine_components(center,Cn);
 %% update spatial components
 Yr = reshape(Y,d,T);
 clear Y;
@@ -52,7 +53,6 @@ clear Y;
 
 %% update temporal components
 [C,f,P,S] = update_temporal_components(Yr,A,b,Cin,fin,P,options);
-
 %% merge found components
 tic;
 [Am,Cm,K_m,merged_ROIs,P,Sm] = merge_components(Yr,A,b,C,f,P,S,options);
@@ -82,7 +82,7 @@ end
 
 %% do some plotting
 
-[A_or,C_or,S_or,P] = order_ROIs(A2,C2,S2,P);    % order components
+[A_or,C_or,S_or,P] = order_ROIs(A2,C2,S2,P); % order components
 [C_df,~,S_df] = extract_DF_F(Yr,[A_or,b2],[C_or;f2],S_or,K_m+1); % extract DF/F values (optional)
 
 contour_threshold = 0.95;                       % amount of energy used for each component to construct contour plot
@@ -90,8 +90,8 @@ figure;
 [Coor,json_file] = plot_contours(A_or,reshape(P.sn,d1,d2),contour_threshold,1); % contour plot of spatial footprints
 pause; 
 %savejson('jmesh',json_file,'filename');        % optional save json file with component coordinates (requires matlab json library)
-view_components(Yr,A_or,C_or,b2,f2,Cn,options);         % display all components
-
+%%
+plot_components_GUI(Yr,A_or,C_or,b2,f2,Cn,options)
 %% make movie
 
 make_patch_video(A_or,C_or,b2,f2,Yr,Coor,options)
