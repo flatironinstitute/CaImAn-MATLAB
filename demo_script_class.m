@@ -10,6 +10,7 @@ num2read=2000;					% user input: how many frames to read   (optional, default un
 
 Y = bigread2(nam,sframe,num2read);
 if ~isa(Y,'double');    Y = double(Y);  end         % convert to double
+Y = Y - min(Y(:));                                  % make data non-negative
 
 [d1,d2,T] = size(Y);                                % dimensions of dataset
 d = d1*d2;                                          % total number of pixels
