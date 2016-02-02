@@ -85,6 +85,7 @@ updateTemporal(obj, Yr);
 
 %% do some plotting
 [srt] = orderROIs(obj);     % order components
+K_m = size(obj.C,1);
 [C_df, ~, S_df] = extractDF_F(obj, Yr, K_m+1); % extract DF/F values.
 
 contour_threshold = 0.95;   % amount of energy used for each component to construct contour plot
