@@ -45,7 +45,7 @@
                 Yc = mat2cell(Y,[Nb*ones(nc-1,1);d-(nc-1)*Nb],N);
                 parfor ind = 1:ceil(d/Nb); 
                     xdft = fft(Yc{ind},[],2); 
-                    xdft = xdft(:,1:N/2+1);
+                    xdft = xdft(:,1:floor(N/2)+1);
                     psdx = (1/(Fs*N)) * abs(xdft).^2;
                     psdx(:,2:end-1) = 2*psdx(:,2:end-1);
                     Yc{ind} = [];
@@ -63,7 +63,7 @@
             sn = cell2mat(SN);
         else
             xdft = fft(Y);
-            xdft = xdft(:,1:N/2+1);
+            xdft = xdft(:,1:floor(N/2)+1);
             psdx = (1/(Fs*N)) * abs(xdft).^2;
             psdx(:,2:end-1) = 2*psdx(:,2:end-1);
             switch method
