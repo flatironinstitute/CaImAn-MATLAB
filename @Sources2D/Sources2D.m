@@ -115,6 +115,14 @@ classdef Sources2D < handle
             view_components(Y, obj.A, obj.C, obj.b, obj.f, Cn, obj.options); 
         end 
         
+        %% plot components GUI
+        function plotComponentsGUI(obj, Y, Cn)
+            if ~exist('Cn', 'var')
+                Cn = []; 
+            end
+            plot_components_GUI(Y,obj.A,obj.C,obj.b,obj.f,Cn,obj.options)
+        end 
+        
         %% make movie 
         function makePatchVideo(obj, Y) 
             make_patch_video(obj.A, obj.C, obj.b, obj.f, Y, obj.Coor,...

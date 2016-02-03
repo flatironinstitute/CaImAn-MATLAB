@@ -93,7 +93,7 @@ figure;
 [json_file] = viewContours(obj, Cn, contour_threshold, 1);
 pause; 
 %savejson('jmesh',json_file,'filename');        % optional save json file with component coordinates (requires matlab json library)
-plotComponents(obj, Yr, Cn);     % display all components
+plotComponentsGUI(obj, Yr, Cn);     % display all components
 
 %% make movie
 makePatchVideo(obj, Yr) 

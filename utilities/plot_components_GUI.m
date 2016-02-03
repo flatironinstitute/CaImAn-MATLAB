@@ -93,7 +93,7 @@ plot_component(1)
 
     function surfzlim(source,callbackdata)
         i = source.Value;
-        plot_component(i)
+        plot_component(round(i))
         % For R2014a and earlier:
         % i = get(source,'Value');
         

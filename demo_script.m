@@ -44,8 +44,7 @@ figure;imagesc(Cn);
     scatter(center(:,2),center(:,1),'mo');
     title('Center of ROIs found from initialization algorithm');
     drawnow;
-%% refine components manually
-% new_centers=manually_refine_components(center,Cn);
+
 %% update spatial components
 Yr = reshape(Y,d,T);
 clear Y;
@@ -93,6 +92,7 @@ pause;
 %savejson('jmesh',json_file,'filename');        % optional save json file with component coordinates (requires matlab json library)
 %%
 plot_components_GUI(Yr,A_or,C_or,b2,f2,Cn,options)
+pause;
 %% make movie
 
 make_patch_video(A_or,C_or,b2,f2,Yr,Coor,options)
