@@ -167,7 +167,7 @@ Values = [
     {1}
     {'greedy'}
     % greedyROI parameters (greedyROI2d.m)    
-    {[]}
+    {[5,5]}
     {[]}
     {1}
     {5}
