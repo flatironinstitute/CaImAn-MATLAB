@@ -27,7 +27,8 @@ options = CNMFSetParms(...
     'deconv_method','constrained_foopsi',...    % activity deconvolution method
     'temporal_iter',2,...                       % number of block-coordinate descent steps 
     'fudge_factor',0.98,...                     % bias correction for AR coefficients
-    'merge_thr',merge_thr...                    % merging threshold
+    'merge_thr',merge_thr,...                    % merging threshold
+    'gSig',tau...
     );
 %% Data pre-processing
 
@@ -52,6 +53,7 @@ clear Y;
 
 %% update temporal components
 [C,f,P,S] = update_temporal_components(Yr,A,b,Cin,fin,P,options);
+
 %% merge found components
 tic;
 [Am,Cm,K_m,merged_ROIs,P,Sm] = merge_components(Yr,A,b,C,f,P,S,options);
