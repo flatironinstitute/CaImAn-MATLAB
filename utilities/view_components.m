@@ -42,10 +42,16 @@ if nargin < 6 || isempty(Cn);
     Cn = reshape(mean(Y,2),d1,d2);
 end
 
+nA = sqrt(sum(A.^2))';
+[K,~] = size(C);
+A = A/spdiags(nA,0,K,K);    % normalize spatial components to unit energy
+C = spdiags(nA,0,K,K)*C;
+
 nr = size(A,2);     % number of ROIs
 nb = size(f,1);     % number of background components
-nA = full(sum(A.^2))';  % energy of each row
-Y_r = spdiags(nA,0,nr,nr)\(A'*(Y- A*C - full(b)*f)) + C; 
+%nA = full(sum(A.^2))';  % energy of each row
+%Y_r = spdiags(nA,0,nr,nr)\(A'*Y- (A'*A)*C - (A'*full(b))*f) + C; 
+Y_r = (A'*Y- (A'*A)*C - (A'*full(b))*f) + C;
 
 if plot_df
     [~,Df] = extract_DF_F(Y,[A,b],[C;f],[],size(A,2)+1);
@@ -91,7 +97,7 @@ for i = 1:nr+nb
         imagesc(2*Cn); axis equal; axis tight; axis off; hold on; 
         A_temp = full(reshape(A(:,i),d1,d2));
         A_temp = medfilt2(A_temp,[3,3]);
-        A_temp = A_temp(:);
+        A_temp = A_temp(:)/norm(A_temp(:));
         [temp,ind] = sort(A_temp(:).^2,'ascend'); 
         temp =  cumsum(temp);
         ff = find(temp > (1-thr)*temp(end),1,'first');

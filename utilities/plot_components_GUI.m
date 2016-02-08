@@ -14,8 +14,8 @@ if ~isfield(options,'save_avi') || isempty(options.save_avi); options.save_avi =
 save_avi = options.save_avi;
 if ~isfield(options,'sx') || isempty(options.sx); options.sx = defoptions.sx; end
 sx = min([options.sx,floor(d1/2),floor(d2/2)]);
-if ~isfield(options,'pause_time') || isempty(options.pause_time); options.pause_time = defoptions.pause_time; end
-pause_time = options.pause_time;
+%if ~isfield(options,'pause_time') || isempty(options.pause_time); options.pause_time = defoptions.pause_time; end
+%pause_time = options.pause_time;
 if isfield(options,'name') && ~isempty(options.name);
     name = [options.name,'_components'];
 else
@@ -30,10 +30,16 @@ if nargin < 6 || isempty(Cn);
     Cn = reshape(mean(Y,2),d1,d2);
 end
 
+nA = sqrt(sum(A.^2))';
+[K,~] = size(C);
+A = A/spdiags(nA,0,K,K);    % normalize spatial components to unit energy
+C = spdiags(nA,0,K,K)*C;
+
 nr = size(A,2);     % number of ROIs
 nb = size(f,1);     % number of background components
-nA = full(sum(A.^2))';  % energy of each row
-Y_r = spdiags(nA,0,nr,nr)\(A'*(Y- A*C - full(b)*f)) + C;
+%nA = full(sum(A.^2))';  % energy of each row
+%Y_r = spdiags(nA,0,nr,nr)\(A'*Y- (A'*A)*C - (A'*full(b))*f) + C; 
+Y_r = (A'*Y- (A'*A)*C - (A'*full(b))*f) + C;
 
 if plot_df
     [~,Df] = extract_DF_F(Y,[A,b],[C;f],[],size(A,2)+1);
