@@ -82,10 +82,14 @@ fprintf('Refining initial estimates with HALS \n');
 center = ssub*com(Ain,d1s,d2s); 
 Ain = imresize(reshape(Ain, d1s, d2s, sum(K)), [d1, d2]);
 Ain = reshape(Ain, d1*d2, []); 
-bin = imresize(reshape(bin, d1s, d2s), [d1, d2]);
-bin = reshape(bin, [], 1); 
+bin_temp = reshape(bin, d1s, d2s, options.nb);
+bin = zeros(d1,d2,options.nb);
+for i = 1:options.nb
+    bin(:,:,i) = imresize(bin_temp(:,:,i), [d1, d2]);
+end
+bin = reshape(bin, [], options.nb); 
 Cin = imresize(Cin, [sum(K), Ts*tsub]);
-fin = imresize(fin, [1, Ts*tsub]);
+fin = imresize(fin, [options.nb, Ts*tsub]);
 if T ~= Ts*tsub
     Cin = padarray(Cin, [0, T-Ts*tsub], 'post'); 
     fin = padarray(fin, [0, T-Ts*tsub], fin(end), 'post');   
