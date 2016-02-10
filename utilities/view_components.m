@@ -13,7 +13,7 @@ function view_components(Y,A,C,b,f,Cn,options)
 % Eftychios A. Pnevmatikakis, Simons Foundation, 2015
 
 defoptions = CNMFSetParms;
-if nargin < 7 || isempty(options); options = []; end
+if nargin < 7 || isempty(options); options = defoptions; end
 if ~isfield(options,'d1') || isempty(options.d1); d1 = input('What is the total number of rows? \n'); else d1 = options.d1; end          % # of rows
 if ~isfield(options,'d2') || isempty(options.d2); d2 = input('What is the total number of columns? \n'); else d2 = options.d2; end          % # of columns
 % if ~isfield(options,'normalize') || isempty(options.normalize); options.normalize = ones(size(A,1),1); end
