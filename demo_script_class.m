@@ -1,5 +1,5 @@
 clear;
-% same demo as demo_script.m but using the clas @Sources2D
+% same demo as demo_script.m but using the class @Sources2D
 %% load file
 
 addpath(genpath('utilities'));
@@ -48,6 +48,12 @@ figure;imagesc(Cn);
     title('Center of ROIs found from initialization algorithm');
     drawnow;
 
+%% manually refine components (optional)
+refine_components = false;  % flag for manual refinement
+if refine_components
+    [center] = refineComponents(Y,obj,center,Cn,tau);
+end
+    
 %% update spatial components
 Yr = reshape(Y,d,T);
 clear Y;

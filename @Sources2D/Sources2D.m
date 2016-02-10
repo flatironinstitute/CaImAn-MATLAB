@@ -45,6 +45,11 @@ classdef Sources2D < handle
             [obj.A, obj.C, obj.b, obj.f, center] = initialize_components(Y, K, tau, obj.options);
         end
         
+        %% manual refinement
+        function center = refineComponents(Y,obj,center,img,sx)
+            [obj.A,obj.C,center] = manually_refine_components(Y,obj.A,obj.C,center,img,sx,obj.options);
+        end
+        
         %% update spatial components
         function updateSpatial(obj, Y)
             [obj.A, obj.b, obj.C] = update_spatial_components(Y, ...
