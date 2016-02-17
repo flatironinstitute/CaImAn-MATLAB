@@ -39,7 +39,7 @@ options = CNMFSetParms(...
 [Ain,Cin,bin,fin,center] = initialize_components(Y,K,tau,options);  % initialize
 
 % display centers of found components
-Cn =  correlation_image(Y); %max(Y,[],3); %std(Y,[],3); % image statistic (only for display purposes)
+Cn =  reshape(P.sn,d1,d2); %correlation_image(Y); %max(Y,[],3); %std(Y,[],3); % image statistic (only for display purposes)
 figure;imagesc(Cn);
     axis equal; axis tight; hold all;
     scatter(center(:,2),center(:,1),'mo');
