@@ -40,7 +40,11 @@ Y(P.mis_entries) = NaN; % remove interpolated values
 
 K = size(C,1);       % number of neurons
 
-IND = determine_search_location(A_(:,1:K),method,options);
+if islogical(A_)     % check if search locations have been provided, otherwise estimate them
+    IND = A_;
+else
+    IND = determine_search_location(A_(:,1:K),method,options);
+end
 
 Cf = [C;f];
 
