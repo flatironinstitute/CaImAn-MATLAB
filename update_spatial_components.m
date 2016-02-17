@@ -27,27 +27,41 @@ warning('off', 'MATLAB:maxNumCompThreads:Deprecated');
 
 [d,T] = size(Y);
 if nargin < 6 || isempty(options); options = []; end
-if ~isfield(options,'d1') || isempty(options.d1); d1 = input('What is the total number of rows? \n'); else d1 = options.d1; end          % # of rows
-if ~isfield(options,'d2') || isempty(options.d2); d2 = input('What is the total number of columns? \n'); else d2 = options.d2; end          % # of columns
+if ~isfield(options,'d1') || isempty(options.d1); d1 = input('What is the total number of rows? \n'); options.d1 = d1; else d1 = options.d1; end          % # of rows
+if ~isfield(options,'d2') || isempty(options.d2); d2 = input('What is the total number of columns? \n'); options.d2 = d2; else d2 = options.d2; end          % # of columns
 if ~isfield(options,'show_sum'); show_sum = 0; else show_sum = options.show_sum; end            % do some plotting while calculating footprints
 if ~isfield(options,'interp'); Y_interp = sparse(d,T); else Y_interp = options.interp; end      % identify missing data
 if ~isfield(options,'use_parallel'); use_parallel = ~isempty(which('parpool')); else use_parallel = options.use_parallel; end % use parallel toolbox if present
 if ~isfield(options,'search_method'); method = []; else method = options.search_method; end     % search method for determining footprint of spatial components
 
-if nargin < 5 || isempty(P); P = preprocess_data(Y,1); end
+if nargin < 2 || (isempty(A_) && isempty(C))  % at least either spatial or temporal components should be provided
+    error('Not enough input arguments')
+else
+    if ~isempty(C); K = size(C,1); elseif islogical(A_); K = size(A_,2); else K = size(A_2,2) - options.nb; end
+end
+
+if nargin < 5 || isempty(P); P = preprocess_data(Y,1); end  % etsimate noise values if not present
+if nargin < 4 || isempty(A_); 
+    IND = ones(d,size(C,1)); 
+else
+    if islogical(A_)     % check if search locations have been provided, otherwise estimate them
+        IND = A_;
+        if isempty(C)    
+            INDav = double(IND)/diag(sum(double(IND)));          
+            px = (sum(IND,2)>0);
+            f = mean(Y(~px,:));
+            b = max(Y*f',0)/norm(f)^2;
+            C = max(INDav'*Y - (INDav'*b)*f,0);
+        end
+    else
+        IND = determine_search_location(A_(:,1:K),method,options);
+    end
+end
+
 options.sn = P.sn;
 Y(P.mis_entries) = NaN; % remove interpolated values
 
-K = size(C,1);       % number of neurons
-
-if islogical(A_)     % check if search locations have been provided, otherwise estimate them
-    IND = A_;
-else
-    IND = determine_search_location(A_(:,1:K),method,options);
-end
-
 Cf = [C;f];
-
 
 if use_parallel         % solve BPDN problem for each pixel
     Nthr = 2*maxNumCompThreads;
