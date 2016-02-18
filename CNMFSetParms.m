@@ -10,6 +10,7 @@ Names = [
     % dataset info
     'd1                 ' % number of rows
     'd2                 ' % number of cols
+    'd3                 ' % number of planes (for 3d imaging, default: 1)
     % INITIALIZATION  (initialize_components.m)
     'ssub               ' % spatial downsampling factor (default: 1)
     'tsub               ' % temporal downsampling factor (default: 1)
@@ -164,6 +165,7 @@ Values = [
     % dataset info    
     {[]}
     {[]}
+    {1}
     % INITIALIZATION  (initialize_components.m)    
     {1}
     {1}
