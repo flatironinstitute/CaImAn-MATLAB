@@ -51,10 +51,22 @@ P.pixels = find_unsaturatedPixels(Y);                % pixels that do not exhibi
 % estimate noise levels
 
 fprintf('Estimating the noise power for each pixel from a simple PSD estimate...');
-sn = get_noise_fft(Y,options);
+[sn,psdx] = get_noise_fft(Y,options);
 P.sn = sn(:);
 fprintf('  done \n');
 
+% cluster pixels based on PSD
+
+%[P.W,P.H] = nnmf(sqrt(psdx(:,3:end)),2); %,'h0',H0);
+r = sort(rand(1,size(psdx,2)-2),'descend');
+H = [r/norm(r); ones(1,length(r))/sqrt(length(r))];
+psdx = sqrt(psdx(:,3:end));
+for iter = 1:100
+    W = max((H*H')\(H*psdx'),0)';
+    H = max((W'*W)\(W'*psdx),0);
+end
+P.W = W;
+P.H = H;
 % estimate global time constants
 
 

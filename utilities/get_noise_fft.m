@@ -24,6 +24,7 @@
             Y = reshape(Y,d,N);
             Nb = prod(block_size);
             SN = cell(ceil(d/Nb),1);
+            PSDX = cell(ceil(d/Nb),1);
             if ~split_data
                 for ind = 1:ceil(d/Nb); 
                     xdft = fft(Y((ind-1)*Nb+1:min(ind*Nb,d),:),[],2); 
@@ -39,6 +40,7 @@
                         case 'logmexp'
                             SN{ind} = sqrt(exp(mean(log(psdx(:,indf)/2),2)));
                     end
+                    PSDX{ind} = psdx;
                 end
             else
                 nc = ceil(d/Nb);
@@ -75,7 +77,7 @@
                     sn = sqrt(exp(mean(log(psdx(:,indf)/2),2)));
             end
         end
-        clear psdx
+        psdx = cell2mat(PSDX);
         if dims > 2
             sn = reshape(sn,sizY(1:dims-1));
         end
