@@ -21,7 +21,10 @@ function Ath = threshold_components(A,options)
     
     [d,nr] = size(A);
     Ath = spalloc(d,nr,nnz(A));
-    for i = 1:nr
+    
+    indf = cell(nr,1);
+    valf = cell(nr,1);
+    parfor i = 1:nr
         A_temp = reshape(full(A(:,i)),options.d1,options.d2,options.d3);
         for z = 1:options.d3
             A_temp(:,:,z) = medfilt2(A_temp(:,:,z),options.medw);
@@ -39,12 +42,17 @@ function Ath = threshold_components(A,options)
         if NUM > 0
             nrg = zeros(NUM,1);
             for l = 1:NUM
-                ff = find(L==l);
-                nrg(l) = sum(A(ff,i).^2);
+                ff = (L==l);
+                nrg(l) = sum(A_temp(ff,i).^2);
             end
             [~,indm] = max(nrg);
             ff = find(L==indm);
-            Ath(ff,i) = A(ff,i);
+            %Ath(ff,i) = A(ff,i);
+            indf{i} = ff;
+            valf{i} = A_temp(ff,i);
         end
-    end        
+    end   
+    for i = 1:nr
+        Ath(indf{i},i) = valf{i};
+    end
 end

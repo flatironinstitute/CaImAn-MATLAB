@@ -62,7 +62,7 @@ switch method
            IND = zeros(d,nr);       % indicator for distance								   
            %cm(:,1) = Coor.x'*A(:,1:nr)./sum(A(:,1:nr)); 
            %cm(:,2) = Coor.y'*A(:,1:nr)./sum(A(:,1:nr));          % center of mass for each components
-           for i = 1:nr            % calculation of variance for each component and construction of ellipses
+           parfor i = 1:nr            % calculation of variance for each component and construction of ellipses
                if d3 == 1
                    Vr{i} = ([Coor.x - cm(i,1), Coor.y - cm(i,2)]'*spdiags(A(:,i),0,d,d)*[Coor.x - cm(i,1), Coor.y - cm(i,2)])/sum(A(:,i));
                    [V,D] = eig(Vr{i});
@@ -86,8 +86,8 @@ switch method
         end
     case 'dilate'
         A = threshold_components(A,params);
-        for i = 1:nr
-            A_temp = imdilate(reshape(full(A(:,i)),d1,d2),expandCore);
+        parfor i = 1:nr
+            A_temp = imdilate(reshape(full(A(:,i)),d1,d2,d3),expandCore);
             IND(:,i) = A_temp(:)>0;
         end
     otherwise
