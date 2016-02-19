@@ -43,13 +43,13 @@ function Ath = threshold_components(A,options)
             nrg = zeros(NUM,1);
             for l = 1:NUM
                 ff = (L==l);
-                nrg(l) = sum(A_temp(ff,i).^2);
+                nrg(l) = sum(A_temp(ff).^2);
             end
             [~,indm] = max(nrg);
             ff = find(L==indm);
             %Ath(ff,i) = A(ff,i);
             indf{i} = ff;
-            valf{i} = A_temp(ff,i);
+            valf{i} = A_temp(ff);
         end
     end   
     for i = 1:nr
