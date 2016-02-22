@@ -86,16 +86,28 @@ if ~isempty(ff)
     end
 end
 
-if isempty(Cin) || nargin < 4
-    Cin = max((A'*A)\(A'*Y),0);
+% estimate temporal (and spatial) background if they are not present
+if isempty(fin) || nargin < 5   % temporal background missing
+    bk_pix = (sum(A,2)==0);     % pixels with no active neurons
+    if isempty(b) || nargin < 3
+        fin = mean(Y(bk_pix,:));
+        fin = fin/norm(fin);
+        b = max(Y*fin',0);
+    else
+        fin = max(b(bk_pix)'*Y(bk_pix,:),0)/norm(b(bk_pix))^2;
+    end
+end
+
+if isempty(Cin) || nargin < 4    % estimate temporal components if missing
+    Cin = max((A'*A)\(A'*Y - (A'*b)*fin),0);
     ITER = max(ITER,3);
 end
 
-if  isempty(b) || isempty(fin) || nargin < 5
+if  isempty(b) || isempty(fin) || nargin < 5  % re-estimate temporal background
     if isempty(b) || nargin < 3
         [b,fin] = nnmf(max(Y - A*Cin,0),1);
     else
-        fin = max(b'*Y/norm(b)^2,0);
+        fin = max((b'*Y - (b'*A)*Cin)/norm(b)^2,0);
     end
 end
 
