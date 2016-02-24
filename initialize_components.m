@@ -51,21 +51,40 @@ if ssub == 1; fprintf('No spatial downsampling is performed. Consider spatial do
 if ~isfield(options, 'tsub'), options.tsub = 1; end; tsub = options.tsub;
 if tsub == 1; fprintf('No temporal downsampling is performed. Consider temporal downsampling if the recording is very long. \n'); end
 
-[d1,d2,T] = size(Y);
-d1s = ceil(d1/ssub);        %size of downsampled image
-d2s = ceil(d2/ssub);
+ndimsY = ndims(Y)-1;
+sY = size(Y);
+d = sY(1:ndimsY);
+T = sY(end);
+
+ds = d;
+ds(1:2) = ceil(d(1:2)/ssub); % do not subsample along z axis
+%d1s = ceil(d1/ssub);        %size of downsampled image
+%d2s = ceil(d2/ssub);
 Ts = floor(T/tsub);         %reduced number of frames
 % spatial downsampling
-if ssub~=1, Y_ds = imresize(Y, [d1s, d2s], 'box'); else Y_ds = Y; end
+fprintf('starting resampling \n')
+if ssub~=1;
+    if ndimsY == 2; Y_ds = imresize(Y, [ds(1), ds(2)], 'box'); end 
+    if ndimsY == 3;
+        Y_ds = zeros([ds(1:2),T,ds(end)]);
+        for z = 1:ds(3)
+            Y_ds(:,:,:,z) = imresize(squeeze(Y(:,:,z,:)), [ds(1), ds(2)], 'box');
+        end
+        Y_ds = permute(Y_ds,[1,2,4,3]);
+    end
+else
+    Y_ds = Y; 
+end
 % temporal downsampling
 if tsub~=1
-    Y_ds = squeeze(mean(reshape(Y_ds(:, :, 1:(Ts*tsub)),d1s, d2s, tsub, Ts), 3));
+    if ndimsY == 2; Y_ds = squeeze(mean(reshape(Y_ds(:, :, 1:(Ts*tsub)),ds(1), ds(2), tsub, Ts), 3)); end
+    if ndimsY == 3; Y_ds = squeeze(mean(reshape(Y_ds(:, :, :, 1:(Ts*tsub)),ds(1), ds(2), ds(3), tsub, Ts), 4)); end
 end
 
 if strcmpi(options.init_method,'greedy')
     % run greedy method
     fprintf('Initializing components with greedy method \n');
-    [Ain, Cin, bin, fin] = greedyROI2d(Y_ds, K, options);
+    [Ain, Cin, bin, fin] = greedyROI(Y_ds, K, options);
 elseif strcmpi(options.init_method,'sparse_NMF')
     % run sparse_NMF method
     fprintf('Initializing components with sparse NMF \n');
@@ -75,19 +94,26 @@ else
 end
 
 % refine with HALS
-fprintf('Refining initial estimates with HALS \n');
-[Ain, Cin, bin, fin] = HALS_2d(Y_ds, full(Ain), Cin, bin, fin, options); 
-
+fprintf('Refining initial estimates with HALS...');
+%[Ain1, Cin1, bin1, fin1] = HALS_2d(Y_ds, full(Ain), Cin, bin, fin, options); 
+[Ain, Cin, bin, fin] = HALS(Y_ds, full(Ain), Cin, bin, fin, options); 
+fprintf('  done \n');
 %% upsample Ain, Cin, bin, fin
-center = ssub*com(Ain,d1s,d2s); 
-Ain = imresize(reshape(Ain, d1s, d2s, sum(K)), [d1, d2]);
-Ain = reshape(Ain, d1*d2, []); 
-bin_temp = reshape(bin, d1s, d2s, options.nb);
-bin = zeros(d1,d2,options.nb);
-for i = 1:options.nb
-    bin(:,:,i) = imresize(bin_temp(:,:,i), [d1, d2]);
-end
-bin = reshape(bin, [], options.nb); 
+if ndimsY == 2; center = ssub*com(Ain,ds(1),ds(2)); else center = ssub*com(Ain,ds(1),ds(2),ds(3)); end
+%Ain = imresize(reshape(Ain, ds(1), ds(2), sum(K)), d);
+%Ain = imresize(reshape(full(Ain), [ds, sum(K)]), d);
+Ain = imresize(reshape(full(Ain), [ds(1),ds(2), sum(K)*prod(ds)/ds(1)/ds(2)]),[d(1),d(2)]); %,prod(d)/d(1)/d(2)*sum(K)]);
+Ain = sparse(reshape(Ain, prod(d), [])); 
+%bin_temp = reshape(bin, ds(1), ds(2), options.nb);
+%bin = zeros(d(1),d(2),options.nb);
+bin = imresize(reshape(bin,[ds(1),ds(2), options.nb*prod(ds)/ds(1)/ds(2)]),[d(1),d(2)]);
+bin = reshape(bin,prod(d),[]);
+% bin_temp = reshape(bin, [ds, options.nb]);
+% bin = zeros([d,options.nb]);
+% for i = 1:options.nb
+%     bin(:,:,i) = imresize(bin_temp(:,:,i), d);
+% end
+%bin = reshape(bin, [], options.nb); 
 Cin = imresize(Cin, [sum(K), Ts*tsub]);
 fin = imresize(fin, [options.nb, Ts*tsub]);
 if T ~= Ts*tsub

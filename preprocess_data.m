@@ -53,6 +53,7 @@ P.pixels = find_unsaturatedPixels(Y);                % pixels that do not exhibi
 fprintf('Estimating the noise power for each pixel from a simple PSD estimate...');
 [sn,psdx] = get_noise_fft(Y,options);
 P.sn = sn(:);
+%P.psdx = psdx;
 fprintf('  done \n');
 
 % cluster pixels based on PSD
