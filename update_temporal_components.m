@@ -225,13 +225,18 @@ if options.temporal_parallel
                     S(O{jo}(:),:) = Stemp;
                     %C_dif = (C - Cin)'*AA/spdiags(nA(:),0,length(nA),length(nA));
                     %YrA(:,O{jo}(:)) = YrA(:,O{jo}(:)) -  C_dif(:,O{jo}(:)); %Ytemp;
-                    %YrA = (YA - C'*AA)/spdiags(nA(:),0,length(nA),length(nA));
-                    YrA(:,O{jo}(jj)) = (YA(:,O{jo}(jj)) - C'*AA(:,O{jo}(jj)))/spdiags(nA(O{jo}(jj))',0,length(nA(O{jo}(jj))),length(nA(O{jo}(jj))));
+                    YrA = (YA - C'*AA)/spdiags(nA(:),0,length(nA),length(nA));
+                    %YrA(:,O{jo}(jj)) = (YA(:,O{jo}(jj)) - C'*AA(:,O{jo}(jj)))/spdiags(nA(O{jo}(jj))',0,length(nA(O{jo}(jj))),length(nA(O{jo}(jj))));
                     
                     if strcmpi(method,'MCMC');
                         P.samples_mcmc(O{jo}) = samples_mcmc; % FN added, a useful parameter to have.
                     end                
                 end
+            else
+                C(O{jo}(:),:) = Ctemp;
+                S(O{jo}(:),:) = Stemp;
+                YrA = (YA - C'*AA)/spdiags(nA(:),0,length(nA),length(nA));
+                %YrA(:,O{jo}(jj)) = (YA(:,O{jo}(jj)) - C'*AA(:,O{jo}(jj)))/spdiags(nA(O{jo}(jj))',0,length(nA(O{jo}(jj))),length(nA(O{jo}(jj))));
             end
             fprintf('%i out of %i components updated \n',sum(lo(1:jo)),K);
         end
