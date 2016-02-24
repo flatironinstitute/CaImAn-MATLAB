@@ -76,7 +76,7 @@ while ~isempty(x)
             [INT_x,INT_y] = meshgrid(int_x,int_y);
             coor = sub2ind([options.d1,options.d2],INT_x(:),INT_y(:));
             Y_res = Ypatch - A(coor,:)*C;
-            [atemp, ctemp, ~, ~, newcenter, ~] = greedyROI2d(reshape(Y_res,2*sx+1,2*sx+1,T), 1, options);
+            [atemp, ctemp, ~, ~, newcenter, ~] = greedyROI(reshape(Y_res,2*sx+1,2*sx+1,T), 1, options);
             %[atemp, ctemp] = initialize_components(reshape(Y_res,2*sx+1,2*sx+1,T), 1,sx,options);  % initialize
             % find contour
             a_srt = sort(atemp,'descend');
