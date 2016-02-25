@@ -81,6 +81,10 @@ if tsub~=1
     if ndimsY == 3; Y_ds = squeeze(mean(reshape(Y_ds(:, :, :, 1:(Ts*tsub)),ds(1), ds(2), ds(3), tsub, Ts), 4)); end
 end
 
+options_ds = options;
+options_ds.d1 = ds(1);
+options_ds.d2 = ds(2);
+
 if strcmpi(options.init_method,'greedy')
     % run greedy method
     fprintf('Initializing components with greedy method \n');
@@ -88,15 +92,14 @@ if strcmpi(options.init_method,'greedy')
 elseif strcmpi(options.init_method,'sparse_NMF')
     % run sparse_NMF method
     fprintf('Initializing components with sparse NMF \n');
-    [Ain,Cin,bin,fin] = sparse_NMF_initialization(Y_ds,K,options);
+    [Ain,Cin,bin,fin] = sparse_NMF_initialization(Y_ds,K,options_ds);
 else
     error('Unknown initialization method')
 end
 
 % refine with HALS
 fprintf('Refining initial estimates with HALS...');
-%[Ain1, Cin1, bin1, fin1] = HALS_2d(Y_ds, full(Ain), Cin, bin, fin, options); 
-[Ain, Cin, bin, fin] = HALS(Y_ds, full(Ain), Cin, bin, fin, options); 
+%[Ain, Cin, bin, fin] = HALS(Y_ds, full(Ain), Cin, bin, fin, options); 
 fprintf('  done \n');
 %% upsample Ain, Cin, bin, fin
 if ndimsY == 2; center = ssub*com(Ain,ds(1),ds(2)); else center = ssub*com(Ain,ds(1),ds(2),ds(3)); end
