@@ -132,9 +132,9 @@ if strcmpi(method,'noise_constrained')
     LD = 10*ones(mc,K);
 else
     nA = sum(A.^2);
-    AA = A'*A;
-    YA = Y'*A;
-    YrA = (YA - Cin'*AA)/spdiags(nA(:),0,length(nA),length(nA));
+    AA = A'*A/spdiags(nA(:),0,length(nA),length(nA));
+    YA = Y'*A/spdiags(nA(:),0,length(nA),length(nA));
+    YrA = (YA - Cin'*AA);
     if strcmpi(method,'constrained_foopsi') || strcmpi(method,'MCEM_foopsi')
         P.gn = cell(K,1);
         P.b = cell(K,1);
@@ -221,36 +221,30 @@ if options.temporal_parallel
                     for jj = 1:length(O{jo})
                         P.gn(O{jo}(jj)) = gtemp(jj);
                     end
+                    YrA = YrA - (Ctemp-C(O{jo}(:),:))'*AA(O{jo}(:),:);
                     C(O{jo}(:),:) = Ctemp;
-                    S(O{jo}(:),:) = Stemp;
-                    %C_dif = (C - Cin)'*AA/spdiags(nA(:),0,length(nA),length(nA));
-                    %YrA(:,O{jo}(:)) = YrA(:,O{jo}(:)) -  C_dif(:,O{jo}(:)); %Ytemp;
-                    YrA = (YA - C'*AA)/spdiags(nA(:),0,length(nA),length(nA));
-                    %YrA(:,O{jo}(jj)) = (YA(:,O{jo}(jj)) - C'*AA(:,O{jo}(jj)))/spdiags(nA(O{jo}(jj))',0,length(nA(O{jo}(jj))),length(nA(O{jo}(jj))));
-                    
+                    S(O{jo}(:),:) = Stemp;                   
                     if strcmpi(method,'MCMC');
                         P.samples_mcmc(O{jo}) = samples_mcmc; % FN added, a useful parameter to have.
                     end                
                 end
             else
+                YrA = YrA - (Ctemp-C(O{jo}(:),:))'*AA(O{jo}(:),:);
                 C(O{jo}(:),:) = Ctemp;
                 S(O{jo}(:),:) = Stemp;
-                YrA = (YA - C'*AA)/spdiags(nA(:),0,length(nA),length(nA));
-                %YrA(:,O{jo}(jj)) = (YA(:,O{jo}(jj)) - C'*AA(:,O{jo}(jj)))/spdiags(nA(O{jo}(jj))',0,length(nA(O{jo}(jj))),length(nA(O{jo}(jj))));
+                %YrA = (YA - C'*AA)/spdiags(nA(:),0,length(nA),length(nA));
             end
             fprintf('%i out of %i components updated \n',sum(lo(1:jo)),K);
         end
         ii = K + 1;
         %YrA(:,ii) = YrA(:,ii) + Cin(ii,:)';
-        cc = max(YrA(:,ii)+Cin(ii,:)',0);
-        C(ii,:) = full(cc');
+        cc = full(max(YrA(:,ii)'+Cin(ii,:),0));
+        YrA = YrA - (cc-C(ii,:))'*AA(ii,:);
+        C(ii,:) = cc; %full(cc');
         %YrA(:,ii) = YrA(:,ii) - C(ii,:)';
-        YrA(:,end) = (YA(:,end) - C'*AA(:,end))/nA(end); %spdiags(nA(:),0,length(nA),length(nA));
+        %YrA(:,end) = (YA(:,end) - C'*AA(:,end)); %/nA(end); %spdiags(nA(:),0,length(nA),length(nA));
+        
         %YrA = (YA - Cin'*AA)/spdiags(nA(:),0,length(nA),length(nA));
-    %     if mod(jj,10) == 0
-    %         fprintf('%i out of total %i temporal components updated \n',jj,K);
-    %     end
-        %disp(norm(Fin(1:nr,:) - F,'fro')/norm(F,'fro'));
         if norm(Cin - C,'fro')/norm(C,'fro') <= 1e-3
             % stop if the overall temporal component does not change by much
             break;
@@ -341,7 +335,6 @@ else
                 fprintf('%i out of total %i temporal components updated \n',jj,K);
             end
         end
-        %disp(norm(Fin(1:nr,:) - F,'fro')/norm(F,'fro'));
         if norm(Cin - C,'fro')/norm(C,'fro') <= 1e-3
             % stop if the overall temporal component does not change by much
             break;
