@@ -49,7 +49,7 @@ Depending on the settings the following toolboxes may also be required
 
 The default options for the algorithm require the following packages:
 
-- The CVX library which can be downloaded from http://cvxr.com/cvx/download/ (follow the installation instructions provided there)
+- The CVX library which can be downloaded from http://cvxr.com/cvx/download/ (after unpacking CVX open Matlab and run cvx_setup from inside the CVX directory to properly install and add CVX to the Matlab path)
 
 Depending on the settings the following packages may also be required
 
