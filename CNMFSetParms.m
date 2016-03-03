@@ -215,7 +215,7 @@ Values = [
     {~isempty(which('parpool'))}
     % CONSTRAINED DECONVOLUTION (constrained_foopsi.m)
     {'cvx'}
-    {0}
+    {1}
     {0.99}
     {0}
     % MERGING (merge_ROIs.m)
