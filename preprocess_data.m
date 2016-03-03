@@ -31,7 +31,7 @@ if ~isfield(options,'lags'); options.lags = defoptions.lags; end
 if ~isfield(options,'include_noise'); options.include_noise = defoptions.include_noise; end; include_noise = options.include_noise;
 if ~isfield(options,'split_data'); split_data = defoptions.split_data; else split_data = options.split_data; end
 
-% interpolate missing data
+%% interpolate missing data
 
 if any(isnan(Y(:)))
     Y_interp = interp_missing_data(Y);      % interpolate missing data
@@ -44,32 +44,38 @@ end
 P.mis_values = full(Y_interp(mis_data));
 P.mis_entries = mis_data;
 
-% indentify saturated pixels
+%% indentify saturated pixels
 
 P.pixels = find_unsaturatedPixels(Y);                % pixels that do not exhibit saturation
 
-% estimate noise levels
+%% estimate noise levels
 
 fprintf('Estimating the noise power for each pixel from a simple PSD estimate...');
-[sn,psdx] = get_noise_fft(Y,options);
+[sn,psx] = get_noise_fft(Y,options);
 P.sn = sn(:);
-%P.psdx = psdx;
 fprintf('  done \n');
 
-% cluster pixels based on PSD
+%% cluster pixels based on PSD
 
-%[P.W,P.H] = nnmf(sqrt(psdx(:,3:end)),2); %,'h0',H0);
-r = sort(rand(1,size(psdx,2)-2),'descend');
-H = [r/norm(r); ones(1,length(r))/sqrt(length(r))];
-psdx = sqrt(psdx(:,3:end));
-for iter = 1:100
-    W = max((H*H')\(H*psdx'),0)';
-    H = max((W'*W)\(W'*psdx),0);
-end
-P.W = W;
-P.H = H;
-% estimate global time constants
+psdx = sqrt(psx(:,3:end));
+X = psdx(:,1:min(size(psdx,2),1500));
+X = bsxfun(@minus,X,mean(X,2));     % center
+X = spdiags(std(X,[],2),0,size(X,1),size(X,1))\X;
+[L,Cx] = kmeans_pp(X',2);
+[~,ind] = min(sum(Cx(end-49:end,:),1));
+P.active_pixels = (L==ind);
 
+% [P.W,P.H] = nnmf(sqrt(psdx(:,3:end)),2); %,'h0',H0);
+% r = sort(rand(1,size(psdx,2)-2),'descend');
+% H = [r/norm(r); ones(1,length(r))/sqrt(length(r))];
+% for iter = 1:100
+%     W = max((H*H')\(H*psdx'),0)';
+%     H = max((W'*W)\(W'*psdx),0);
+% end
+% P.W = W;
+% P.H = H;
+
+%% estimate global time constants
 
 if options.flag_g
     if ndims(Y) == 3
