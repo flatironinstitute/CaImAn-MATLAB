@@ -100,7 +100,7 @@ for i = 1:nm
         end
         cc = update_temporal_components(Y_res(ff,:),A_merged(ff,i),b(ff,:),median(spdiags(nC,0,length(nC),length(nC))\C(merged_ROIs{i},:)),f,Pmr,options);
         [aa,bb] = update_spatial_components(Y_res,cc,f,A_merged(:,i),P,options);    
-        [cc,~,~,Ptemp,ss] = update_temporal_components(Y_res(ff,:),aa(ff),bb(ff,:),cc,f,Pmr,options);
+        [cc,~,Ptemp,ss] = update_temporal_components(Y_res(ff,:),aa(ff),bb(ff,:),cc,f,Pmr,options);
     end
     A_merged(:,i) = aa;    
     C_merged(i,:) = cc;

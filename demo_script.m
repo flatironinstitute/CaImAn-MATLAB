@@ -64,6 +64,12 @@ clear Y;
 tic;
 [Am,Cm,K_m,merged_ROIs,P,Sm] = merge_components(Yr,A,b,C,f,P,S,options);
 toc;
+%%
+options.fast_merge = 0;
+tic;
+[Am2,Cm2,K_m2,merged_ROIs2,P2,Sm2] = merge_components(Yr,A,b,C,f,P,S,options);
+toc;
+%%
 display_merging = 1; % flag for displaying merging example
 if display_merging
     i = 1; randi(length(merged_ROIs));
@@ -98,9 +104,10 @@ figure;
 [Coor,json_file] = plot_contours(A_or,reshape(P.sn,d1,d2),contour_threshold,1); % contour plot of spatial footprints
 pause; 
 %savejson('jmesh',json_file,'filename');        % optional save json file with component coordinates (requires matlab json library)
-%%
+%% display components
+
 plot_components_GUI(Yr,A_or,C_or,b2,f2,Cn,options)
-pause;
+
 %% make movie
 
 make_patch_video(A_or,C_or,b2,f2,Yr,Coor,options)

@@ -97,9 +97,9 @@ K_m = size(obj.C,1);
 contour_threshold = 0.95;   % amount of energy used for each component to construct contour plot
 figure;
 [json_file] = viewContours(obj, Cn, contour_threshold, 1);
-pause; 
 %savejson('jmesh',json_file,'filename');        % optional save json file with component coordinates (requires matlab json library)
-plotComponentsGUI(obj, Yr, Cn);     % display all components
 
+plotComponentsGUI(obj, Yr, Cn);     % display all components
+pause;
 %% make movie
 makePatchVideo(obj, Yr) 
