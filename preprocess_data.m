@@ -60,10 +60,12 @@ fprintf('  done \n');
 psdx = sqrt(psx(:,3:end));
 X = psdx(:,1:min(size(psdx,2),1500));
 X = bsxfun(@minus,X,mean(X,2));     % center
-X = spdiags(std(X,[],2),0,size(X,1),size(X,1))\X;
+X = spdiags(std(X,[],2)+1e-5,0,size(X,1),size(X,1))\X;
 [L,Cx] = kmeans_pp(X',2);
 [~,ind] = min(sum(Cx(end-49:end,:),1));
 P.active_pixels = (L==ind);
+P.centroids = Cx;
+P.psdx = psdx;
 
 % [P.W,P.H] = nnmf(sqrt(psdx(:,3:end)),2); %,'h0',H0);
 % r = sort(rand(1,size(psdx,2)-2),'descend');
