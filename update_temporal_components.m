@@ -236,13 +236,14 @@ if options.temporal_parallel
             end
             fprintf('%i out of %i components updated \n',sum(lo(1:jo)),K);
         end
-        ii = K + 1;
-        %YrA(:,ii) = YrA(:,ii) + Cin(ii,:)';
-        cc = full(max(YrA(:,ii)'+Cin(ii,:),0));
-        YrA = YrA - (cc-C(ii,:))'*AA(ii,:);
-        C(ii,:) = cc; %full(cc');
-        %YrA(:,ii) = YrA(:,ii) - C(ii,:)';
-        %YrA(:,end) = (YA(:,end) - C'*AA(:,end)); %/nA(end); %spdiags(nA(:),0,length(nA),length(nA));
+        for ii = K + 1:size(C,1)
+            %YrA(:,ii) = YrA(:,ii) + Cin(ii,:)';
+            cc = full(max(YrA(:,ii)'+Cin(ii,:),0));
+            YrA = YrA - (cc-C(ii,:))'*AA(ii,:);
+            C(ii,:) = cc; %full(cc');
+            %YrA(:,ii) = YrA(:,ii) - C(ii,:)';
+            %YrA(:,end) = (YA(:,end) - C'*AA(:,end)); %/nA(end); %spdiags(nA(:),0,length(nA),length(nA));
+        end
         
         %YrA = (YA - Cin'*AA)/spdiags(nA(:),0,length(nA),length(nA));
         if norm(Cin - C,'fro')/norm(C,'fro') <= 1e-3
