@@ -92,7 +92,7 @@ if length(K) > 1  % order size of components to be found in descending order
     params.gSiz = params.gSiz(ord,:);
 end
 
-Ain = spalloc(d,sum(K),K(:)'*prod(params.gSig)); %zeros(M*N,sum(K));
+Ain = spalloc(d,sum(K),K(:)'*ceil(prod(params.gSiz))); %zeros(M*N,sum(K));
 Cin = zeros(sum(K),T);
 center = zeros(sum(K),dimY);
 
@@ -103,7 +103,7 @@ for r = 1:length(K)
     gHalf = floor(gSiz / 2); %half size of the kernel, used to calculate margin
     gSiz = 2 * gHalf + 1; %actual size
 
-    Atemp = spalloc(d,K(r),K(r)*prod(gSig)); %zeros(M, N, K(r));
+    Atemp = spalloc(d,K(r),K(r)*ceil(prod(gSiz))); %zeros(M, N, K(r));
     %basis = spalloc(M*N,K,K*prod(gSiz));
     trace = zeros(T, K(r));
     centers = zeros(K(r), dimY);
