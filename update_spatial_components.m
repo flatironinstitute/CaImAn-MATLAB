@@ -122,6 +122,5 @@ if nnz(Y_interp);
     Y(ff) = Y_interp(ff);
 end
 
-Y_res = Y - A(:,1:K)*C(1:K,:);
-b = max(Y_res*f'/(f*f'),0); % update baseline based on residual
+b = max((Y*f' - A(:,1:K)*(C(1:K,:)*f'))/(f*f'),0);
 A = A(:,1:K);
