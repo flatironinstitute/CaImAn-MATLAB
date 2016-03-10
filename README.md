@@ -22,7 +22,7 @@ This repository contains a MATLAB implementation of the spatio-temporal demixing
 
 ## Python
 - [Constrained deconvolution for neural activity (spike) extraction](https://github.com/epnev/constrained_foopsi_python)
-- [Source extraction with CNMF](https://github.com/agiovann/SOURCE_EXTRACTION_PYTHON)
+- [Source extraction with CNMF](https://github.com/agiovann/Constrained_NMF)
 - [Group LASSO initialization and spatial CNMF](https://github.com/danielso/ROI_detect)
 
 ## Integration with other libraries
