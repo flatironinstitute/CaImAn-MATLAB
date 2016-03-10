@@ -65,7 +65,7 @@ X = spdiags(std(X,[],2)+1e-5,0,size(X,1),size(X,1))\X;
 [~,ind] = min(sum(Cx(end-49:end,:),1));
 P.active_pixels = (L==ind);
 P.centroids = Cx;
-P.psdx = psdx;
+P.psdx = X;
 
 % [P.W,P.H] = nnmf(sqrt(psdx(:,3:end)),2); %,'h0',H0);
 % r = sort(rand(1,size(psdx,2)-2),'descend');
