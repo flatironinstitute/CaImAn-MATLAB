@@ -61,14 +61,8 @@ clear Y;
 [C,f,P,S] = update_temporal_components(Yr,A,b,Cin,fin,P,options);
 
 %% merge found components
-tic;
 [Am,Cm,K_m,merged_ROIs,P,Sm] = merge_components(Yr,A,b,C,f,P,S,options);
-toc;
-%%
-options.fast_merge = 0;
-tic;
-[Am2,Cm2,K_m2,merged_ROIs2,P2,Sm2] = merge_components(Yr,A,b,C,f,P,S,options);
-toc;
+
 %%
 display_merging = 1; % flag for displaying merging example
 if display_merging

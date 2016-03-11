@@ -24,8 +24,14 @@ function [A,b,C] = update_spatial_components(Y,C,f,A_,P,options)
 % Eftychios A. Pnevmatikakis, Simons Foundation, 2015
 
 warning('off', 'MATLAB:maxNumCompThreads:Deprecated');
-
-[d,T] = size(Y);
+memmaped = isobject(Y);
+if memmaped
+    sizY = size(Y,'Y');
+    d = prod(sizY(1:end-1));
+    T = sizY(end);
+else
+    [d,T] = size(Y);
+end
 if nargin < 6 || isempty(options); options = []; end
 if ~isfield(options,'d1') || isempty(options.d1); d1 = input('What is the total number of rows? \n'); options.d1 = d1; else d1 = options.d1; end          % # of rows
 if ~isfield(options,'d2') || isempty(options.d2); d2 = input('What is the total number of columns? \n'); options.d2 = d2; else d2 = options.d2; end          % # of columns
@@ -59,33 +65,50 @@ else
 end
 
 options.sn = P.sn;
-Y(P.mis_entries) = NaN; % remove interpolated values
+if ~memmaped
+    Y(P.mis_entries) = NaN; % remove interpolated values
+end
 
 Cf = [C;f];
 
 if use_parallel         % solve BPDN problem for each pixel
-    Nthr = 2*maxNumCompThreads;
-    siz_row = [ceil(d/Nthr)*ones(Nthr-1,1);d-ceil(d/Nthr)*(Nthr-1)];    
-    Ycell = mat2cell(Y,siz_row,T);
+    Nthr = max(2*maxNumCompThreads,round(d*T/2^24));
+    siz_row = [floor(d/Nthr)*ones(Nthr-1,1);d-floor(d/Nthr)*(Nthr-1)];
+    indeces = [0;cumsum(siz_row)];
+    if ~memmaped
+        Ycell = mat2cell(Y,siz_row,T);
+    else
+        Ycell = cell(Nthr,1);
+    end
     INDc =  mat2cell(IND,siz_row,K);
     Acell = cell(Nthr,1);
-    Psnc = mat2cell(options.sn,siz_row,1);    
+    Psnc = mat2cell(options.sn(:),siz_row,1); 
+    Yf = cell(Nthr,1);
     parfor nthr = 1:Nthr
         Acell{nthr} = zeros(siz_row(nthr),size(Cf,1));
+        if memmaped
+            Ytemp = double(Y.Yr(indeces(nthr)+1:indeces(nthr+1),:));
+        else
+            Ytemp = Ycell{nthr};
+        end
+        Yf{nthr} = Ytemp*f';
         for px = 1:siz_row(nthr)
-            fn = ~isnan(Ycell{nthr}(px,:));       % identify missing data
+            fn = ~isnan(Ytemp(px,:));       % identify missing data
             ind = find(INDc{nthr}(px,:));
             if ~isempty(ind);
                 ind2 = [ind,K+(1:size(f,1))];
-                [~, ~, a, ~] = lars_regression_noise(Ycell{nthr}(px,fn)', Cf(ind2,fn)', 1, Psnc{nthr}(px)^2*T);
+                %[~, ~, a, ~] = lars_regression_noise(Ycell{nthr}(px,fn)', Cf(ind2,fn)', 1, Psnc{nthr}(px)^2*T);
+                [~, ~, a, ~] = lars_regression_noise(Ytemp(px,fn)', Cf(ind2,fn)', 1, Psnc{nthr}(px)^2*T);
                 Acell{nthr}(px,ind2) = a';
             end
         end
     end
     A = cell2mat(Acell);
+    Yf = cell2mat(Yf);
 else
     A = [zeros(d,K),zeros(d,size(f,1))];
     sA = zeros(d1,d2);
+    Yf = Y*f';
     for px = 1:d   % estimate spatial components
         fn = ~isnan(Y(px,:));       % identify missing data
         ind = find(IND(px,:));
@@ -117,10 +140,5 @@ if ~isempty(ff)
     C(ff,:) = [];
 end
 
-if nnz(Y_interp);
-    ff = find(Y_interp);
-    Y(ff) = Y_interp(ff);
-end
-
-b = max((Y*f' - A(:,1:K)*(C(1:K,:)*f'))/(f*f'),0);
+b = max((Yf - A(:,1:K)*(C(1:K,:)*f'))/(f*f'),0);
 A = A(:,1:K);

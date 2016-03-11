@@ -42,7 +42,14 @@ function [C,f,P,S,YrA] = update_temporal_components(Y,A,b,Cin,fin,P,options)
 % Written by: 
 % Eftychios A. Pnevmatikakis, Simons Foundation, 2015
 
-[d,T] = size(Y);
+memmaped = isobject(Y);
+if memmaped
+    sizY = size(Y,'Y');
+    d = prod(sizY(1:end-1));
+    T = sizY(end);
+else
+    [d,T] = size(Y);
+end
 if isempty(P) || nargin < 6
     active_pixels = find(sum(A,2));                                 % pixels where the greedy method found activity
     unsaturated_pixels = find_unsaturatedPixels(Y);                 % pixels that do not exhibit saturation
@@ -62,7 +69,9 @@ if isfield(P,'interp'); Y_interp = P.interp; else Y_interp = sparse(d,T); end   
 if isfield(P,'unsaturatedPix'); unsaturatedPix = P.unsaturatedPix; else unsaturatedPix = 1:d; end   % saturated pixels
 
 mis_data = find(Y_interp);              % interpolate any missing data before deconvolution
-Y(mis_data) = Y_interp(mis_data);
+if ~memmaped
+    Y(mis_data) = Y_interp(mis_data);
+end
 
 if (strcmpi(method,'noise_constrained') || strcmpi(method,'project')) && ~isfield(P,'g')
     options.flag_g = 1;
@@ -111,14 +120,16 @@ if  isempty(b) || isempty(fin) || nargin < 5  % re-estimate temporal background
     end
 end
 
-saturatedPix = setdiff(1:d,unsaturatedPix);     % remove any saturated pixels
-Ysat = Y(saturatedPix,:);
-Asat = A(saturatedPix,:);
-bsat = b(saturatedPix,:);
-Y = Y(unsaturatedPix,:);
-A = A(unsaturatedPix,:);
-b = b(unsaturatedPix,:);
-d = length(unsaturatedPix);
+if ~memmaped
+    saturatedPix = setdiff(1:d,unsaturatedPix);     % remove any saturated pixels
+    Ysat = Y(saturatedPix,:);
+    Asat = A(saturatedPix,:);
+    bsat = b(saturatedPix,:);
+    Y = Y(unsaturatedPix,:);
+    A = A(unsaturatedPix,:);
+    b = b(unsaturatedPix,:);
+    d = length(unsaturatedPix);
+end
 
 K = size(A,2);
 A = [A,b];
@@ -133,7 +144,17 @@ if strcmpi(method,'noise_constrained')
 else
     nA = sum(A.^2);
     AA = A'*A/spdiags(nA(:),0,length(nA),length(nA));
-    YA = Y'*A/spdiags(nA(:),0,length(nA),length(nA));
+    if memmaped
+        YA = zeros(T,length(nA));
+        tic;
+        for i = 1:5e3:d
+            YA = YA + double(Y.Yr(i:min(i+1e4-1,d),:))'*A(i:min(i+1e4-1,d),:);
+        end
+        toc
+        YA = YA/spdiags(nA(:),0,length(nA),length(nA));
+    else
+        YA = Y'*A/spdiags(nA(:),0,length(nA),length(nA));
+    end
     YrA = (YA - Cin'*AA);
     if strcmpi(method,'constrained_foopsi') || strcmpi(method,'MCEM_foopsi')
         P.gn = cell(K,1);
