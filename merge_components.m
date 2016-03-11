@@ -87,7 +87,9 @@ for i = 1:nm
             cc = (aa'*A(:,merged_ROIs{i}))*C(merged_ROIs{i},:)/sum(aa.^2);
             aa = A(:,merged_ROIs{i})*(C(merged_ROIs{i},:)*cc')/norm(cc)^2;
         end        
-        [cc,b_temp,c1_temp,g_temp,sn_temp,ss] = constrained_foopsi(cc);
+        %[cc,b_temp,c1_temp,g_temp,sn_temp,ss] = constrained_foopsi(cc);
+        cc = cc';
+        ss = cc;
     else
         A_merged(:,i) = sum(A(:,merged_ROIs{i})*spdiags(nC,0,length(nC),length(nC)),2);    
         Y_res = Y_res + A(:,merged_ROIs{i})*C(merged_ROIs{i},:);
@@ -109,10 +111,10 @@ for i = 1:nm
     S_merged(i,:) = ss;
     if strcmpi(options.deconv_method,'constrained_foopsi') || strcmpi(options.deconv_method,'MCEM_foopsi')
         if options.fast_merge
-            P_merged.gn{i} = g_temp;
-            P_merged.b{i} = b_temp;
-            P_merged.c1{i} = c1_temp;
-            P_merged.neuron_sn{i} = sn_temp;
+            P_merged.gn{i} = 0; %g_temp;   % do not perform deconvolution during merging
+            P_merged.b{i} = 0;  %b_temp;
+            P_merged.c1{i} = 0; %c1_temp;
+            P_merged.neuron_sn{i} = 0; %sn_temp;
         else
             P_merged.gn{i} = Ptemp.gn{1};
             P_merged.b{i} = Ptemp.b{1};
