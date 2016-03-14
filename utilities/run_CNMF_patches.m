@@ -84,10 +84,10 @@ parfor i = 1:length(patches)
     Yr = reshape(Y,d,T);
     %clear Y;
     options_temp.use_parallel = 0; % turn off parallel updating for spatial components
-    [A,b,Cin] = update_spatial_components_memmap(Yr,Cin,fin,Ain,P,options_temp);
+    [A,b,Cin] = update_spatial_components(Yr,Cin,fin,Ain,P,options_temp);
     P.p = 0;
     options_temp.temporal_parallel = 0;
-    [C,f,P,S] = update_temporal_components_memmap(Yr,A,b,Cin,fin,P,options_temp);
+    [C,f,P,S] = update_temporal_components(Yr,A,b,Cin,fin,P,options_temp);
     [Am,Cm,K_m,merged_ROIs,P,Sm] = merge_components(Yr,A,b,C,f,P,S,options_temp);
     [A2,b2,Cm] = update_spatial_components(Yr,Cm,f,Am,P,options_temp);
     P.p = p;
@@ -218,11 +218,11 @@ fin = medfilt1(fin,11);
 options.d1 = sizY(1);
 options.d2 = sizY(2);
 if length(sizY) == 4; options.d3 = sizY(3); end
-[A,b,C] = update_spatial_components_memmap(data,C,fin,A,Pm,options);
+[A,b,C] = update_spatial_components(data,C,fin,A,Pm,options);
 fprintf(' done. \n');
 %% update temporal components
 fprintf('Updating temporal components... ')
 Pm.p = p;
 options.temporal_iter = 2;
-[C,f,P,S,YrA] = update_temporal_components_memmap(data,A,b,C,fin,Pm,options);
+[C,f,P,S,YrA] = update_temporal_components(data,A,b,C,fin,Pm,options);
 fprintf(' done. \n');
