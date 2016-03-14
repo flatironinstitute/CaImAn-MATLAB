@@ -133,7 +133,7 @@ A = threshold_components(A,options);  % post-processing of components
 
 fprintf('Updated spatial components \n');
 
-ff = find(sum(A)==0);           % remove empty components
+ff = find(sum(A(:,1:K))==0);           % remove empty components
 if ~isempty(ff)
     K = K - length(ff);
     A(:,ff) = [];
