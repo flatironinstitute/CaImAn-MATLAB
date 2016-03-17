@@ -50,6 +50,8 @@ function Ath = threshold_components(A,options)
             %Ath(ff,i) = A(ff,i);
             indf{i} = ff;
             valf{i} = A_temp(ff);
+        else
+            valf{i} = 0;
         end
     end   
     for i = 1:nr-options.nb

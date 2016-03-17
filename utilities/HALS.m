@@ -24,6 +24,7 @@ dimY = ndims(Y)-1;
 sizY = size(Y);
 d = sizY(1:dimY);
 
+if nargin < 6; params = []; end
 if isfield(params, 'bSiz'), bSiz = params.bSiz; else bSiz=3; end
 if isfield(params, 'maxIter'), maxIter = params.maxIter; else maxIter=5; end
 
