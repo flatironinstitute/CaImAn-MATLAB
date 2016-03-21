@@ -31,7 +31,7 @@ else
 end
 
 ind_del = false(size(ind));     % indicator of deleting neurons 
-center = obj.estCenter();       % estimate neurons center 
+ctr = obj.estCenter();       % estimate neurons center 
 gSiz = obj.options.gSiz;        % maximum size of a neuron 
 Cn = obj.Cn;                    % correlation image 
 if isempty(Cn)
@@ -54,7 +54,6 @@ else
 end
 
 % start displaying neurons 
-ctr = obj.estCenter(); 
 for m=1:length(ind)
     %% contours + correlation image 
     subplot(221); cla;
@@ -75,8 +74,8 @@ for m=1:length(ind)
     subplot(222);
     imagesc(reshape(obj.A(:, ind(m)), obj.options.d1, obj.options.d2));
     axis equal; axis off;
-    x0 = center(ind(m), 2);
-    y0 = center(ind(m), 1);
+    x0 = ctr(ind(m), 2);
+    y0 = ctr(ind(m), 1);
     xlim(x0+[-gSiz, gSiz]*2);
     ylim(y0+[-gSiz, gSiz]*2);
     

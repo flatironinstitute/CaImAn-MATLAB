@@ -47,7 +47,9 @@ d1 = options.d1;
 d2 = options.d2;
 gSig = 3; %options.gSig;
 gSiz = options.gSiz;
+nb = options.nb; 
 pSiz = 1;
+bSiz = options.bSiz; 
 psf = ones(gSig)/(gSig^2);
 min_corr = options.min_corr;
 nhood = strel('disk', bSiz);    % matrix describing neighbours.
@@ -194,13 +196,12 @@ res = bsxfun(@plus, Y, Y_median);
 bin = zeros(d1*d2, nb);
 fin = zeros(nb, T);
 
-% endoscope data doesn't need initialization of the background
-
-tsub = max(1, round(T/1000));
-[bin, f] = nnmf(max(res(:, 1:tsub:T), 0), nb);
-fin = imresize(f, [nb, T]);
-fin = HALS_temporal(max(res, 0), bin, fin, maxIter);
-bin = HALS_spatial(max(res, 0), bin, fin, [], maxIter);
+%% endoscope data doesn't need initialization of the background
+% tsub = max(1, round(T/1000));
+% [bin, f] = nnmf(max(res(:, 1:tsub:T), 0), nb);
+% fin = imresize(f, [nb, T]);
+% fin = HALS_temporal(max(res, 0), bin, fin, maxIter);
+% bin = HALS_spatial(max(res, 0), bin, fin, [], maxIter);
 end
 
 function [ai, ci] = finetune2d(data, ci, nIter)

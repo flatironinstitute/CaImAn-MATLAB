@@ -19,14 +19,14 @@ if ~exist('model', 'var'); model = 'nmf'; end
 
 % convert data into vectorized format, each frame (d1*d2) is one column
 Y = obj.reshape(Y, 1);
-[~, T] = size(Y,2);
+[d, T] = size(Y);
 
 %% start factorization
 if strcmpi(model, 'svd')
     Y_mean = mean(Y, 1);
     Y = bsxfun(@minus, Y,Y_mean);
     [~, ~, v] = svdsecon(Y(1:10:end, :), nb);
-    B = [ones(d1*d2,1), Y*v];
+    B = [ones(d,1), Y*v];
     F = [Y_mean; v'];
 else
     tsub = max(1, round(T/500));   % maximumly 1000 frames are used for initialization
