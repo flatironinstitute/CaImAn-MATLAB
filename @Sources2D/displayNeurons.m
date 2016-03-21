@@ -3,7 +3,7 @@ function displayNeurons(obj, ind, C2, folder_nm)
 %   neuon contours with correlation image and shows the corresponding 
 %   spatial/temporal components 
 %% input:  
-%   ind: vector, indice of components to be displayed, no bigger than the maximum
+%   ind: vector, indices of components to be displayed, no bigger than the maximum
 %       number of neurons
 %   C2:  K*T matrix, another temporal component to be displayed together
 %       with the esitmated C. usually it is C without deconvolution. 

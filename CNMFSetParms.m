@@ -14,7 +14,8 @@ Names = [
     % INITIALIZATION  (initialize_components.m)
     'ssub               ' % spatial downsampling factor (default: 1)
     'tsub               ' % temporal downsampling factor (default: 1)
-    'init_method        ' % initialization method ('greedy','sparse_NMF') (default: 'greedy')
+    'init_method        ' % initialization method ('greedy','sparse_NMF', 'greedy_corr') (default: 'greedy')
+    'min_corr           ' % minimum local correlation for initializing a neuron (default: 0.3)
     % greedyROI parameters (greedyROI2d.m)
     'gSig               ' % half size of neurons to be found (default: [5,5])
     'gSiz               ' % half size of bounding box for each neuron (default: 2*gSig+1)
@@ -170,6 +171,7 @@ Values = [
     {1}
     {1}
     {'greedy'}
+    {0.3}
     % greedyROI parameters (greedyROI2d.m)    
     {5}
     {[]}
