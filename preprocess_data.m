@@ -14,10 +14,11 @@ function [P,Y] = preprocess_data(Y,p,options)
 defoptions.noise_range = [0.25,0.5];            % frequency range over which to estimate the noise
 defoptions.noise_method = 'logmexp';            % method for which to estimate the noise level
 defoptions.block_size = [64,64];
-defoptions.flag_g = false;                          % compute global AR coefficients
-defoptions.lags = 5;                                 % number of extra lags when computing the AR coefficients
-defoptions.include_noise = 0;                        % include early lags when computing AR coefs
+defoptions.flag_g = false;                         % compute global AR coefficients
+defoptions.lags = 5;                               % number of extra lags when computing the AR coefficients
+defoptions.include_noise = 0;                      % include early lags when computing AR coefs
 defoptions.split_data = 0;                         % split data into patches for memory reasons
+defoptions.cluster_pixels = true;                  % cluster pixels into active or inactive
 
 if nargin < 3 || isempty(options); options = defoptions; end
 if nargin < 2 || isempty(p); p = 2; end
@@ -30,6 +31,8 @@ if ~isfield(options,'flag_g'); options.flag_g = defoptions.flag_g; end
 if ~isfield(options,'lags'); options.lags = defoptions.lags; end
 if ~isfield(options,'include_noise'); options.include_noise = defoptions.include_noise; end; include_noise = options.include_noise;
 if ~isfield(options,'split_data'); split_data = defoptions.split_data; else split_data = options.split_data; end
+if ~isfield(options,'cluster_pixels'); cluster_pixels = defoptions.cluster_pixels; else cluster_pixels = options.cluster_pixels; end
+
 
 %% interpolate missing data
 
@@ -56,27 +59,27 @@ P.sn = sn(:);
 fprintf('  done \n');
 
 %% cluster pixels based on PSD
+if cluster_pixels
+    psdx = sqrt(psx(:,3:end));
+    X = psdx(:,1:min(size(psdx,2),1500));
+    P.psdx = X;
+    X = bsxfun(@minus,X,mean(X,2));     % center
+    X = spdiags(std(X,[],2)+1e-5,0,size(X,1),size(X,1))\X;
+    [L,Cx] = kmeans_pp(X',2);
+    [~,ind] = min(sum(Cx(max(1,end-49):end,:),1));
+    P.active_pixels = (L==ind);
+    P.centroids = Cx;
 
-psdx = sqrt(psx(:,3:end));
-X = psdx(:,1:min(size(psdx,2),1500));
-P.psdx = X;
-X = bsxfun(@minus,X,mean(X,2));     % center
-X = spdiags(std(X,[],2)+1e-5,0,size(X,1),size(X,1))\X;
-[L,Cx] = kmeans_pp(X',2);
-[~,ind] = min(sum(Cx(end-49:end,:),1));
-P.active_pixels = (L==ind);
-P.centroids = Cx;
-
-% [P.W,P.H] = nnmf(sqrt(psdx(:,3:end)),2); %,'h0',H0);
-% r = sort(rand(1,size(psdx,2)-2),'descend');
-% H = [r/norm(r); ones(1,length(r))/sqrt(length(r))];
-% for iter = 1:100
-%     W = max((H*H')\(H*psdx'),0)';
-%     H = max((W'*W)\(W'*psdx),0);
-% end
-% P.W = W;
-% P.H = H;
-
+    % [P.W,P.H] = nnmf(sqrt(psdx(:,3:end)),2); %,'h0',H0);
+    % r = sort(rand(1,size(psdx,2)-2),'descend');
+    % H = [r/norm(r); ones(1,length(r))/sqrt(length(r))];
+    % for iter = 1:100
+    %     W = max((H*H')\(H*psdx'),0)';
+    %     H = max((W'*W)\(W'*psdx),0);
+    % end
+    % P.W = W;
+    % P.H = H;
+end
 %% estimate global time constants
 
 if options.flag_g

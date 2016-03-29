@@ -41,6 +41,7 @@ Names = [
     'pixels             ' % pixels to include when computing the AR coefs (default: 1:numel(Y)/size(Y,ndims(Y)))
     'split_data         ' % split data into patches for memory reasons (default: 0)
     'block_size         ' % block size for estimating noise std in patches (default: [64,64])
+    'cluster_pixels     ' % cluster pixels to active/inactive based on the PSD density
     % UPDATING SPATIAL COMPONENTS (unpdate_spatial_components.m)
     'search_method      ' % method for determining footprint of spatial components 'ellipse' or 'dilate' (default: 'ellipse')
     'use_parallel       ' % update pixels in parallel (default: 1 if present)
@@ -196,6 +197,7 @@ Values = [
     {[]}
     {false}
     {[64,64]}
+    {true}
     % UPDATING SPATIAL COMPONENTS (unpdate_spatial_components.m)    
     {'ellipse'}
     {~isempty(which('parpool'))}
