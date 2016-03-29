@@ -121,16 +121,19 @@ else
     P.psdx = zeros(patches{end}(2),patches{end}(4),patches{end}(6),size(RESULTS(1).P.psdx,2));
 end
 
+cnt = 0;
 for i = 1:length(patches)
     for k = 1:K
         if k <= size(RESULTS(i).A,2)
+            cnt = cnt + 1;
             Atemp = zeros(sizY(1:end-1));
             if length(sizY) == 3
                 Atemp(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4)) = reshape(RESULTS(i).A(:,k),patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1);            
             else
                 Atemp(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6)) = reshape(RESULTS(i).A(:,k),patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1,patches{i}(6)-patches{i}(5)+1);
             end
-            A(:,(i-1)*K+k) = sparse(Atemp(:));
+            %A(:,(i-1)*K+k) = sparse(Atemp(:));
+            A(:,cnt) = sparse(Atemp(:));
         end
     end
     if length(sizY) == 3
@@ -150,6 +153,7 @@ for i = 1:length(patches)
     P.gn = [P.gn;RESULTS(i).P.gn];
     P.neuron_sn = [P.neuron_sn;RESULTS(i).P.neuron_sn];
 end
+A(:,cnt+1:end) = [];
 C = cell2mat({RESULTS(:).C}');
 S = cell2mat({RESULTS(:).S}');
 ff = find(sum(A,1)==0);
@@ -168,7 +172,7 @@ X = reshape(X,[],size(X,ndims(X)));
 X = bsxfun(@minus,X,mean(X,2));     % center
 X = spdiags(std(X,[],2)+1e-5,0,size(X,1),size(X,1))\X;
 [L,Cx] = kmeans_pp(X',2);
-[~,ind] = min(sum(Cx(end-49:end,:),1));
+[~,ind] = min(sum(Cx(max(1,end-49):end,:),1));
 P.active_pixels = (L==ind);
 P.centroids = Cx;
 fprintf(' done. \n');
@@ -179,10 +183,10 @@ Cm = C;
 Pm = P;
 Sm = S;
 Km = 0;
-K = size(A,2);
+Kn = size(A,2);
 
-while Km < K
-    K = size(Am,2);
+while Km < Kn
+    Kn = size(Am,2);
     [Am,Cm,~,~,Pm,Sm] = merge_components([],Am,[],Cm,[],Pm,Sm,options);
     Km = size(Am,2);
 end
