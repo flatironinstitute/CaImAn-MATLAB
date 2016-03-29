@@ -174,9 +174,18 @@ P.centroids = Cx;
 fprintf(' done. \n');
 %% merge results
 fprintf('Merging overlaping components...')
-tic;
-[Am,Cm,~,~,Pm,Sm] = merge_components([],A,[],C,[],P,S,options);
-toc;
+Am = A;
+Cm = C;
+Pm = P;
+Sm = S;
+Km = 0;
+K = size(A,2);
+
+while Km < K
+    K = size(Am,2);
+    [Am,Cm,~,~,Pm,Sm] = merge_components([],Am,[],Cm,[],Pm,Sm,options);
+    Km = size(Am,2);
+end
 fprintf(' done. \n');
 %% classify components
 ff = false(1,size(Am,2));
