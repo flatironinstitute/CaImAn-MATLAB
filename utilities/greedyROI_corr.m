@@ -65,7 +65,7 @@ Y = bsxfun(@minus, Y, Y_median);
 
 %% find local maximum
 k = 0;      %number of found components
-min_pixel = (2*pSiz+1)^2;  % minimum number of peaks to be a neuron
+min_pixel = 6 ; %(2*pSiz+1)^2;  % minimum number of peaks to be a neuron
 peak_ratio = full(max(Y, [], 2))./Y_std; %(max-median)/std
 peak_ratio(isinf(peak_ratio)) = 0;  % avoid constant values
 save_avi = false;   %save procedures for demo
@@ -86,7 +86,7 @@ while k<K
     [max_v, ind_p] = max(peak_ratio.*(Cn(:)));
     
     peak_ratio(ind_p) = 0;    % no longer visit this pixel any more
-    if  max_v<1;     break; end  %the peak ratio is too small
+    if  max_v< 2*min_corr;     break; end  %the peak ratio is too small
     if Cn(ind_p)<min_corr; continue; end % ignore this local maximum due to small local correlation
     [r, c] = ind2sub([d1,d2], ind_p);
     

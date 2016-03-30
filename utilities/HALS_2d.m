@@ -21,7 +21,7 @@ function [A, C, b, f] = HALS_2d(Y, A, C, b, f, params)
 
 %% parameters
 if isfield(params, 'maxIter'), maxIter = params.maxIter; else maxIter=5; end
-if isfiled(params, 'search_method'); method=params.search_method; else method='ellipse'; end
+if isfield(params, 'search_method'); method=params.search_method; else method='ellipse'; end
 if and(isfield(params, 'bSiz'), strcmpi(method, 'dilate'))
     params.se = strel('disk', params.bSiz);
 end

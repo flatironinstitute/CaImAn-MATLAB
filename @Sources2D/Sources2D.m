@@ -106,7 +106,7 @@ classdef Sources2D < handle
         end
         
         %% view contours
-        function [json_file] = viewContours(obj, Cn, contour_threshold, display, ind)
+        function [Coor, json_file] = viewContours(obj, Cn, contour_threshold, display, ind)
             if or(isempty(Cn), ~exist('Cn', 'var') )
                 Cn = reshape(obj.P.sn, obj.options.d1, obj.options.d2);
             end
@@ -114,6 +114,7 @@ classdef Sources2D < handle
             if nargin<5; ind=1:size(obj.A, 2); end
             [obj.Coor, json_file] = plot_contours(obj.A(:, ind), Cn, ...
                 contour_threshold, display);
+            Coor = obj.Coor;
         end
         
         %% plot components
@@ -157,7 +158,7 @@ classdef Sources2D < handle
         end
         
         %% quick merge neurons based on spatial and temporal correlation
-        merged_ROIs = quickMerge(obj, Y)
+        merged_ROIs = quickMerge(obj, temporal_component)
         
         
         %% quick view
@@ -186,9 +187,7 @@ classdef Sources2D < handle
         %% update A & C using HALS
         function obj = HALS_AC(obj, Y)
             %update A,C,b,f with HALS
-            if ndims(Y)~=3
-                Y = reshape(Y, obj.options.d1, obj.options.d2, []);
-            end
+            obj.reshape(Y, 1); 
             [obj.A, obj.C, obj.b, obj.f] = HALS_2d(Y, obj.A, obj.C, obj.b,...
                 obj.f, obj.options);
         end
