@@ -10,7 +10,7 @@ C = spdiags(nA(:),0,nr,nr)*C;
 mA = sum(A.^4).^(1/4);
 %sA = sum(A);
 mC = max(C,[],2);
-if ~exist('srt', 'var')
+if ~exist('srt', 'var')||isempty(srt)
     [~,srt] = sort(mC.*mA','descend');
 end
 A_or = A(:,srt);
