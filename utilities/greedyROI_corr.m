@@ -1,7 +1,7 @@
 function [Ain, Cin,  bin, fin, center, res] = greedyROI_corr(Y, K, options, sn, debug_on)
-%% a greedy method for detecting ROIs and initializing CNMF. in each iteration, 
+%% a greedy method for detecting ROIs and initializing CNMF. in each iteration,
 % it searches the one with large (peak-median)/noise level and large local
-% correlation 
+% correlation
 %% Input:
 %   Y:  d X T matrx, imaging data
 %   K:  scalar, maximum number of neurons to be detected.
@@ -39,14 +39,15 @@ if ~exist('debug_on', 'var'); debug_on = false; end
 
 d1 = options.d1;
 d2 = options.d2;
-gSig = options.gSig; 
+gSig = options.gSig;
 gSiz = options.gSiz;
-min_corr = options.min_corr;    % minimum local correaltion value to start one neuron 
+min_corr = options.min_corr;    % minimum local correaltion value to start one neuron
 nb = options.nb;        % number of the background
 pSiz = 1;       % after selecting one pixel, take the mean of square box
-    %near the pixel as temporal activity. the box size is (2*pSiz+1)
-psf = ones(gSig)/(gSig^2); 
+%near the pixel as temporal activity. the box size is (2*pSiz+1)
+psf = ones(gSig)/(gSig^2);
 
+min_snr = 3;
 maxIter = 5;            % iterations for refining results
 sz = 4;            %distance of neighbouring pixels for computing local correlation
 
@@ -58,14 +59,16 @@ center = zeros(K, 2);   % center of the initialized components
 
 %% compute correlation image and (max-median)/std ratio
 ind_frame = round(linspace(1, T, min(T, 1000)));    % select few frames for speed issues
-Cn = correlation_image(full(Y(:, ind_frame)), sz, d1, d2);
+C1 = correlation_image(full(Y(:, ind_frame)), sz, d1, d2);
+Cb =  correlation_image(full(Y(:, ind_frame(1:3:end))), [gSiz, gSiz+1], d1, d2);
+Cn = C1-Cb;
 Y_median = median(Y(:, ind_frame), 2);
 Y = bsxfun(@minus, Y, Y_median);
 % Y_std = sqrt(mean(Y.*Y, 2));
 
 %% find local maximum
 k = 0;      %number of found components
-min_pixel = 6 ; %(2*pSiz+1)^2;  % minimum number of peaks to be a neuron
+min_pixel = gSig^2;  % minimum number of peaks to be a neuron
 peak_ratio = full(max(Y, [], 2))./Y_std; %(max-median)/std
 peak_ratio(isinf(peak_ratio)) = 0;  % avoid constant values
 save_avi = false;   %save procedures for demo
@@ -81,13 +84,15 @@ if debug_on
     end
 end
 
+max_thresh = min_snr * (min_corr);
 while k<K
     %% find the pixel with the maximum ratio
     [max_v, ind_p] = max(peak_ratio.*(Cn(:)));
-    
-    peak_ratio(ind_p) = 0;    % no longer visit this pixel any more
-    if  max_v< 2*min_corr;     break; end  %the peak ratio is too small
+    peak_ratio(ind_p) = 0;  % no longer visit this pixel any more
+    if max_v<max_thresh; break; end
     if Cn(ind_p)<min_corr; continue; end % ignore this local maximum due to small local correlation
+    if  max_v/(min_corr)< min_snr;     continue;    end
+    
     [r, c] = ind2sub([d1,d2], ind_p);
     
     % select its neighbours for computing correlation
@@ -135,6 +140,7 @@ while k<K
     %  expand nonzero area
     data = Y_box(active_pixel(:), :);
     ind_active = ind_nhood(active_pixel(:));  %indices of active pixels within the whole frame
+    peak_ratio(ind_nhood(ind_peak)) = 0;    % the small area near the peak is not able to initialize neuron anymore
     
     % do a rank-1 matrix factorization in this small area
     [ai, ci] = finetune2d(data, y0, maxIter);
@@ -175,7 +181,7 @@ while k<K
     temp = zeros(nr, nc);
     temp(active_pixel) = max(0, tmp_old-tmp_new); % after each iteration, the peak ratio can not be increased
     peak_ratio(ind_nhood) = max(0, peak_ratio(ind_nhood) - reshape(imfilter(temp, psf), [], 1)); % update peak_ratio, results are smoothed
-    Cn(ind_nhood) = correlation_image(full(Y(ind_nhood, ind_frame)), sz, nr, nc);  % update local correlation 
+    Cn(ind_nhood) = correlation_image(full(Y(ind_nhood, ind_frame)), sz, nr, nc)-reshape(Cb(ind_nhood), nr, nc);  % update local correlation
 end
 
 center = center(1:k, :);
@@ -185,12 +191,12 @@ Cin(Cin<0) = 0;
 if save_avi; avi_file.close(); end
 res = bsxfun(@plus, Y, Y_median);
 
-%% initialize background 
-tsub = max(1, round(T/1000)); 
-[bin, f] = nnmf(max(res(:, 1:tsub:T), 0), nb); 
-fin = imresize(f, [nb, T]); 
-fin = HALS_temporal(max(res, 0), bin, fin, maxIter); 
-bin = HALS_spatial(max(res, 0), bin, fin, [], maxIter); 
+%% initialize background
+tsub = max(1, round(T/1000));
+[bin, f] = nnmf(max(res(:, 1:tsub:T), 0), nb);
+fin = imresize(f, [nb, T]);
+fin = HALS_temporal(max(res, 0), bin, fin, maxIter);
+bin = HALS_spatial(max(res, 0), bin, fin, [], maxIter);
 end
 
 function [ai, ci] = finetune2d(data, ci, nIter)

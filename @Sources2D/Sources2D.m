@@ -192,7 +192,7 @@ classdef Sources2D < handle
         %% update A & C using HALS
         function obj = HALS_AC(obj, Y)
             %update A,C,b,f with HALS
-            obj.reshape(Y, 1); 
+            Y = obj.reshape(Y, 1); 
             [obj.A, obj.C, obj.b, obj.f] = HALS_2d(Y, obj.A, obj.C, obj.b,...
                 obj.f, obj.options);
         end

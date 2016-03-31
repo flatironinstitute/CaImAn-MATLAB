@@ -89,6 +89,9 @@ if strcmpi(options.init_method,'greedy')
     % run greedy method
     fprintf('Initializing components with greedy method \n');
     [Ain, Cin, bin, fin] = greedyROI(Y_ds, K, options);
+elseif strcmpi(options.init_method, 'greedy_corr')
+    fprintf('Initializing components with greedy_corr method \n');
+    [Ain, Cin, bin, fin] = greedyROI_corr(Y_ds, K, options);   
 elseif strcmpi(options.init_method,'sparse_NMF')
     % run sparse_NMF method
     fprintf('Initializing components with sparse NMF \n');
