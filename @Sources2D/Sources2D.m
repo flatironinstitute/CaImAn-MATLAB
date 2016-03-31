@@ -72,12 +72,17 @@ classdef Sources2D < handle
         end
         
         %% take the snapshot of current results
-        function [A, C, b, f, P] = snapshot(obj)
+        function [A, C,  b, f, P, S] = snapshot(obj)
             A = obj.A;
             C = obj.C;
             b = obj.b;
             f = obj.f;
             P = obj.P;
+	    try 
+		    S = obj.S; 
+	    catch 
+		    S = []; 
+	    end
         end
         
         %% extract DF/F signal after performing NMF
