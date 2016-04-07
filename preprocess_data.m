@@ -60,7 +60,7 @@ fprintf('  done \n');
 
 %% cluster pixels based on PSD
 if cluster_pixels
-    psdx = sqrt(psx(:,3:end));
+    psdx = sqrt(psx(:,3:end-1));
     X = psdx(:,1:min(size(psdx,2),1500));
     P.psdx = X;
     X = bsxfun(@minus,X,mean(X,2));     % center
