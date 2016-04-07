@@ -16,6 +16,9 @@ function [A,b,C,f,S,P,RESULTS,YrA] = run_CNMF_patches(data,K,patches,tau,p,optio
 %   data.Yr     (the data matrix reshaped in 2d format)
 %   data.sizY   (dimensions of the original dataset)
 %   data.nY     (minimum value of dataset)
+% OR the original dataset in 3d/4d format in which case a memory mapped
+%   file is created
+
 % K      :   number of components to be found in each patch
 % patches:   cell array containing the start and end points of each patch   
 % tau    :   half-size of each cell for initializing the components
@@ -34,7 +37,19 @@ function [A,b,C,f,S,P,RESULTS,YrA] = run_CNMF_patches(data,K,patches,tau,p,optio
 
 % Author: Eftychios A. Pnevmatikakis, Simons Foundation, 2016
 
-sizY = data.sizY;
+memmaped = isobject(data);
+if memmaped
+    sizY = data.sizY;
+else    % create a memory mapped object named data_file.mat
+    Y = data;
+    clear data;
+    sizY = size(Y);
+    Yr = reshape(Y,prod(sizY(1:end-1)),[]);
+    nY = min(Yr(:));
+    %Yr = Yr - nY;    
+    save('data_file.mat','Yr','Y','nY','sizY','-v7.3');
+    data = matfile('data_file.mat','Writable',true);
+end
 
 defoptions = CNMFSetParms;
 if nargin < 6 || isempty(options)
