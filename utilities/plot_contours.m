@@ -1,20 +1,20 @@
-function [CC,jsf] = plot_contours(Aor,Cn,thr,display_numbers,max_number)
+function [CC,jsf] = plot_contours(Aor,Cn,thr,display_numbers,max_number,Coor)
 
 % save and plot the contour traces of the found spatial components againsts
 % specified background image. The contour is drawn around the value above
 % which a specified fraction of energy is explained (default 99%)
 
-if nargin < 5
+if nargin < 5 || isempty(max_number)
     max_number = size(Aor,2);
-    if nargin < 4
-        display_numbers = 0;
-        if nargin < 3
-            thr = [];
-        end
-    end
+else
+    max_number = min(max_number,size(Aor,2));
 end
-max_number = min(max_number,size(Aor,2));
-if isempty(thr); thr = 0.995; end
+if nargin < 4 || isempty(display_numbers)
+    display_numbers = 0;
+end
+if nargin < 3 || isempty(thr)
+    thr = 0.995;
+end
 
 units = 'centimeters';
 fontname = 'helvetica';
@@ -44,39 +44,53 @@ fontname = 'helvetica';
     hold on;
     
     cmap = hot(3*size(Aor,2));
-    CC = cell(size(Aor,2),1);
-    CR = cell(size(Aor,2),2);
-    for i = 1:size(Aor,2)
-        A_temp = full(reshape(Aor(:,i),d1,d2));
-        A_temp = medfilt2(A_temp,[3,3]);
-        A_temp = A_temp(:);
-        [temp,ind] = sort(A_temp(:).^2,'ascend'); 
-        temp =  cumsum(temp);
-        ff = find(temp > (1-thr)*temp(end),1,'first');
-        if ~isempty(ff)
-            CC{i} = contour(reshape(A_temp,d1,d2),[0,0]+A_temp(ind(ff)),'LineColor',cmap(i+size(Aor,2),:));
-            fp = find(A_temp >= A_temp(ind(ff)));
-            [ii,jj] = ind2sub([d1,d2],fp);
-            CR{i,1} = [ii,jj]';
-            CR{i,2} = A_temp(fp)';
+    if ~(nargin < 6 || isempty(Coor))
+        CC = Coor;
+        for i = 1:size(Aor,2)
+            cont = medfilt1(Coor{i}')';
+            if size(cont,2) > 1
+                plot(cont(1,2:end),cont(2,2:end),'Color',cmap(i+size(Aor,2),:)); hold on;
+            end
         end
-        hold on;
+    else
+        CC = cell(size(Aor,2),1);
+        CR = cell(size(Aor,2),2);
+        for i = 1:size(Aor,2)
+            A_temp = full(reshape(Aor(:,i),d1,d2));
+            A_temp = medfilt2(A_temp,[3,3]);
+            A_temp = A_temp(:);
+            [temp,ind] = sort(A_temp(:).^2,'ascend'); 
+            temp =  cumsum(temp);
+            ff = find(temp > (1-thr)*temp(end),1,'first');
+            if ~isempty(ff)
+                CC{i} = contour(reshape(A_temp,d1,d2),[0,0]+A_temp(ind(ff)),'LineColor',cmap(i+size(Aor,2),:));
+                fp = find(A_temp >= A_temp(ind(ff)));
+                [ii,jj] = ind2sub([d1,d2],fp);
+                CR{i,1} = [ii,jj]';
+                CR{i,2} = A_temp(fp)';
+            end
+            hold on;
+        end
     end
     cm = com(Aor(:,1:end),d1,d2);
     if display_numbers
         lbl = strtrim(cellstr(num2str((1:size(Aor,2))')));
         text(round(cm(1:max_number,2)),round(cm(1:max_number,1)),lbl(1:max_number),'color',[0,0,0],'fontsize',16,'fontname',fontname,'fontweight','bold');
     end
-    for i = 1:size(Aor,2);
-        if ~isempty(CR{i,1})
-            jsf(i) = struct('id',i,...
-                        'coordinates',CR{i,1}',...
-                        'values',CR{i,2},...
-                        'bbox',[min(CR{i,1}(1,:)),max(CR{i,1}(1,:)),min(CR{i,1}(2,:)),max(CR{i,1}(2,:))],...
-                        'centroid',cm(i,:));
-        end
-        if i == 1
-            jsf = repmat(jsf,size(Aor,2),1);
-        end
-    end
     axis off;
+    if ~(nargin < 6 || isempty(Coor))
+        jsf = [];
+    else
+        for i = 1:size(Aor,2);
+            if ~isempty(CR{i,1})
+                jsf(i) = struct('id',i,...
+                            'coordinates',CR{i,1}',...
+                            'values',CR{i,2},...
+                            'bbox',[min(CR{i,1}(1,:)),max(CR{i,1}(1,:)),min(CR{i,1}(2,:)),max(CR{i,1}(2,:))],...
+                            'centroid',cm(i,:));
+            end
+            if i == 1
+                jsf = repmat(jsf,size(Aor,2),1);
+            end
+        end
+    end    
