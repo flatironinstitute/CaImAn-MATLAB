@@ -24,8 +24,11 @@ if nargin < 5
     [~,i] = min(sum(A.^6)); % identify background component
 end
 
-Yf = A'*(Y - A(:,[1:i-1,i+1:K])*C([1:i-1,i+1:K],:));
-Df = median(Yf,2);
+non_bg=1:K;
+non_bg(i)=[];% Non-background indices
+
+Yf = A'*(Y - A(:,non_bg)*C(non_bg,:));  % Calculate background activity
+Df = median(Yf,2); % Acquire median over time for df/f normalization
 C_df = spdiags(Df,0,K,K)\C;
 C_df(i,:) = 0;
 
@@ -35,5 +38,5 @@ if nargin < 4 || isempty(S)
         warning('Merged spikes matrix is returned as empty because the original matrix was not provided.');
     end
 else
-    S_df = spdiags(Df([1:i-1,i+1:K]),0,K-1,K-1)\S;
+    S_df = spdiags(Df(non_bg),0,size(non_bg,2),size(non_bg,2) )\S;
 end
