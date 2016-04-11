@@ -67,6 +67,9 @@ Names = [
     % MERGING (merge_ROIs.m)
     'merge_thr          ' % merging threshold (default: 0.85)
     'fast_merge         ' % flag for using fast merging (default 1)
+    % DF/F (extract_DF_F.m)
+    'df_prctile         ' % percentile to be defined as baseline (default 50, median)
+    'df_window          ' % length of running window (default [], no window)
     % CONTOUR PLOTS (plot_contours.m)
     'cont_threshold     '
     % VIDEO (make_patch_video.m)
@@ -225,6 +228,9 @@ Values = [
     % MERGING (merge_ROIs.m)
     {0.85}
     {1}
+    % DF/F (extract_DF_F.m)
+    {50}
+    {[]}
     % CONTOUR PLOTS (plot_contours.m)
     {0.9} 
     % VIDEO (make_patch_video.m)
