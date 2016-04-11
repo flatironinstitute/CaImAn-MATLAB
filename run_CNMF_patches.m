@@ -207,17 +207,10 @@ while Km < Kn
 end
 fprintf(' done. \n');
 %% classify components
-ff = false(1,size(Am,2));
-for i = 1:size(Am,2)
-    a1 = Am(:,i);
-    a2 = Am(:,i).*Pm.active_pixels(:);
-    if sum(a2.^2) >= cl_thr^2*sum(a1.^2)
-        ff(i) = true;
-    end
-end
-
+ff = classify_components(Am,Pm,options);
 A = Am(:,ff);
 C = Cm(ff,:);
+
 %% update spatial components
 fprintf('Updating spatial components...');
 % FIRST COMPUTE A TEMPORAL BACKGROUND

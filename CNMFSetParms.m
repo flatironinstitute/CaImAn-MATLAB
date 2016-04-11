@@ -83,6 +83,8 @@ Names = [
     'make_gif           ' % save animation (default: 0)
     'save_avi           ' % save video (default: 0)
     'pause_time         ' % time to pause between each component (default: Inf, user has to click)
+    % CLASSIFY COMPONENTS (classify components.m)
+    'cl_thr             ' % overlap threshold for energy for a component to be classified as true (default: 0.8)
     ];
 
 [m,n] = size(Names);
@@ -239,6 +241,8 @@ Values = [
     {0}
     {0}
     {Inf}
+    % CLASSIFY COMPONENTS (classify_components.m)
+    {0.8}
     ];
 
 for j = 1:m
