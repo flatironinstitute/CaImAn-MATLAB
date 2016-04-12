@@ -39,7 +39,9 @@ if nargin < 5 || isempty(i)
     [~,i] = min(sum(A.^6)); % identify background component
 end
 
-Yf = A'*Y - (A'*A(:,[1:i-1,i+1:K]))*C([1:i-1,i+1:K],:);
+non_bg = true(1,K); 
+non_bg(i) = false;      % non-background components
+Yf = A'*Y - (A'*A(:,non_bg))*C(non_bg,:);
 
 if isempty(options.df_window) || (options.df_window > size(C,2))
     if options.df_prctile == 50
@@ -63,15 +65,15 @@ end
             
 C_df(i,:) = 0;
 
-if nargin < 4 || isempty(S)
+if nargin < 4 || isempty(S) || nargout < 3
     S_df = [];
     if nargout == 3
         warning('Merged spikes matrix is returned as empty because the original matrix was not provided.');
     end
 else
     if isempty(options.df_window) || (options.df_window > size(C,2))
-        S_df = spdiags(Df([1:i-1,i+1:K]),0,K-1,K-1)\S;
+        S_df = spdiags(Df(non_bg(:)),0,sum(non_bg),sum(non_bg))\S;
     else
-        S_df = S./Df([1:i-1,i+1:K],:);
+        S_df = S./Df(non_bg,:);
     end
 end
