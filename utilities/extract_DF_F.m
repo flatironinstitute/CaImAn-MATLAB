@@ -39,6 +39,8 @@ if nargin < 5 || isempty(i)
     [~,i] = min(sum(A.^6)); % identify background component
 end
 
+non_bg=1:K;
+non_bg(i)=[];% Non-background indices
 Yf = A'*Y - (A'*A(:,non_bg))*C(non_bg,:);
 
 if isempty(options.df_window) || (options.df_window > size(C,2))
