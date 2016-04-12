@@ -39,7 +39,9 @@ if nargin < 5 || isempty(i)
     [~,i] = min(sum(A.^6)); % identify background component
 end
 
-Yf = A'*Y - (A'*A(:,[1:i-1,i+1:K]))*C([1:i-1,i+1:K],:);
+non_bg=1:K;
+non_bg(i)=[];% Non-background indices
+Yf = A'*Y - (A'*A(:,non_bg))*C(non_bg,:);
 
 if isempty(options.df_window) || (options.df_window > size(C,2))
     if options.df_prctile == 50
@@ -70,8 +72,8 @@ if nargin < 4 || isempty(S)
     end
 else
     if isempty(options.df_window) || (options.df_window > size(C,2))
-        S_df = spdiags(Df([1:i-1,i+1:K]),0,K-1,K-1)\S;
+        S_df = spdiags(Df(non_bg),0,size(non_bg,2),size(non_bg,2) )\S;
     else
-        S_df = S./Df([1:i-1,i+1:K],:);
+        S_df = S./Df(non_bg,:);
     end
 end

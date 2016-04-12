@@ -1,13 +1,15 @@
-clear;
-%% load file
+% clear;
+% %% load file
+% 
+% addpath(genpath('utilities'));
+%              
+% nam = 'demoMovie.tif';          % insert path to tiff stack here
+% sframe=1;						% user input: first frame to read (optional, default 1)
+% num2read=2000;					% user input: how many frames to read   (optional, default until the end)
+% 
+% Y = bigread2(nam,sframe,num2read);
 
-addpath(genpath('utilities'));
-             
-nam = 'demoMovie.tif';          % insert path to tiff stack here
-sframe=1;						% user input: first frame to read (optional, default 1)
-num2read=2000;					% user input: how many frames to read   (optional, default until the end)
-
-Y = bigread2(nam,sframe,num2read);
+%%
 Y = Y - min(Y(:)); 
 if ~isa(Y,'double');    Y = double(Y);  end         % convert to double
 
@@ -16,9 +18,9 @@ d = d1*d2;                                          % total number of pixels
 
 %% Set parameters
 
-K = 30;                                           % number of components to be found
-tau = 4;                                          % std of gaussian kernel (size of neuron) 
-p = 2;                                            % order of autoregressive system (p = 0 no dynamics, p=1 just decay, p = 2, both rise and decay)
+K = 500;                                           % number of components to be found
+tau = 10;                                          % std of gaussian kernel (size of neuron) 
+pan = 2;                                            % order of autoregressive system (p = 0 no dynamics, p=1 just decay, p = 2, both rise and decay)
 merge_thr = 0.8;                                  % merging threshold
 
 options = CNMFSetParms(...                      
@@ -32,7 +34,7 @@ options = CNMFSetParms(...
     );
 %% Data pre-processing
 
-[P,Y] = preprocess_data(Y,p);
+[P,Y] = preprocess_data(Y,pan);
 
 %% fast initialization of spatial components using greedyROI and HALS
 
@@ -47,14 +49,14 @@ figure;imagesc(Cn);
     drawnow;
 
 %% manually refine components (optional)
-refine_components = false;  % flag for manual refinement
+refine_components = true;  % flag for manual refinement
 if refine_components
     [Ain,Cin,center] = manually_refine_components(Y,Ain,Cin,center,Cn,tau,options);
 end
     
 %% update spatial components
 Yr = reshape(Y,d,T);
-clear Y;
+%clear Y;
 [A,b,Cin] = update_spatial_components(Yr,Cin,fin,Ain,P,options);
 
 %% update temporal components
@@ -69,18 +71,35 @@ if display_merging
     i = 1; randi(length(merged_ROIs));
     ln = length(merged_ROIs{i});
     figure;
-        set(gcf,'Position',[300,300,(ln+2)*300,300]);
+        scrsz = get(groot,'ScreenSize');
+        set(gcf, 'Position',[50 50 scrsz(3)-100 scrsz(4)-150])
+        %set(gcf,'Position',[300,300,(ln+2)*300,300]);
+        
+        % If error here, install panel() toolbox from http://www.mathworks.com/matlabcentral/fileexchange/20003-panel
+        pan = panel();
+        pan.pack({3/4 1/4})
+        pan(1).pack((ceil((ln+1)/16)), 16);
+
         for j = 1:ln
-            subplot(1,ln+2,j); imagesc(reshape(A(:,merged_ROIs{i}(j)),d1,d2)); 
-                title(sprintf('Component %i',j),'fontsize',16,'fontweight','bold'); axis equal; axis tight;
+            %subplot(1,ln+2,j); 
+            pan(1,ceil(j/16),j-16*floor((j-1)/16)).select();
+            imagesc(reshape(A(:,merged_ROIs{i}(j)),d1,d2)); 
+                title(sprintf('Component %i',j),'fontsize',8,'fontweight','bold'); axis equal; axis tight;
+                axis off;
         end
-        subplot(1,ln+2,ln+1); imagesc(reshape(Am(:,K_m-length(merged_ROIs)+i),d1,d2));
-                title('Merged Component','fontsize',16,'fontweight','bold');axis equal; axis tight; 
-        subplot(1,ln+2,ln+2);
+        %subplot(1,ln+2,ln+1); 
+        pan(1,ceil(j/16),16).select();
+        imagesc(reshape(Am(:,K_m-length(merged_ROIs)+i),d1,d2));
+                title('Merged Component','fontsize',8,'fontweight','bold');axis equal; axis tight; 
+        %subplot(1,ln+2,ln+2);
+        pan(2).select();
             plot(1:T,(diag(max(C(merged_ROIs{i},:),[],2))\C(merged_ROIs{i},:))'); 
             hold all; plot(1:T,Cm(K_m-length(merged_ROIs)+i,:)/max(Cm(K_m-length(merged_ROIs)+i,:)),'--k')
-            title('Temporal Components','fontsize',16,'fontweight','bold')
+            title('Temporal Components','fontsize',8,'fontweight','bold')
         drawnow;
+
+        pan.de.margin = 3;
+        %p.fontsize = 8;
 end
 
 %% repeat
@@ -91,10 +110,13 @@ end
 
 [A_or,C_or,S_or,P] = order_ROIs(A2,C2,S2,P); % order components
 K_m = size(C_or,1);
-[C_df,~,S_df] = extract_DF_F(Yr,[A_or,b2],[C_or;f2],S_or,K_m+1:K_m+size(f2,1)); % extract DF/F values (optional)
+[C_df,~,S_df] = extract_DF_F(Yr,[A_or,b2],[C_or;f2],S_or,K_m+1); % extract DF/F values (optional)
 
 contour_threshold = 0.95;                       % amount of energy used for each component to construct contour plot
 figure;
+        scrsz = get(groot,'ScreenSize');
+        set(gcf, 'Position',[50 50 scrsz(3)-100 scrsz(4)-150])
+        
 [Coor,json_file] = plot_contours(A_or,reshape(P.sn,d1,d2),contour_threshold,1); % contour plot of spatial footprints
 pause; 
 %savejson('jmesh',json_file,'filename');        % optional save json file with component coordinates (requires matlab json library)

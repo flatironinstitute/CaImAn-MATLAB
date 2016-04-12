@@ -75,10 +75,13 @@ if make_avi
     open(vidObj);
 end
 fig = figure; %colormap('bone');
-    set(gcf, 'PaperUnits', 'inches','Units', 'inches')           
-    set(gcf, 'PaperPositionMode', 'manual')
-    set(gcf, 'PaperPosition',1.5*[0,0, 14, 10.5]/1.5)
-    set(gcf, 'Position',1.5*[2,2, 14, 10.5]/1.5)%Yr = reshape(Y,d1,d2,T);
+    %set(gcf, 'PaperUnits', 'inches','Units', 'inches')           
+    %set(gcf, 'PaperPositionMode', 'manual')
+    %set(gcf, 'PaperPosition',1.5*[0,0, 14, 10.5]/1.5)
+    %set(gcf, 'Position',1.5*[2,2, 14, 10.5]/1.5)%Yr = reshape(Y,d1,d2,T);
+    scrsz = get(groot,'ScreenSize');
+    set(gcf, 'Position',[50 50 scrsz(3)-100 scrsz(4)-150])
+    set(gcf, 'PaperPosition',[50 50 scrsz(3)-100 scrsz(4)-150])
     colormap(cmap);
 int_x = zeros(4,2*sx);
 int_y = zeros(4,2*sx);

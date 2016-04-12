@@ -36,7 +36,8 @@ fontname = 'helvetica';
         %cpos = [posA(1),posA(2)-cpos(4)-0.01,posA(3),cpos(4)];
         ylabel(cbar,'Average neighbor correlation');
         set(cbar,'position',cpos,'TickDirection','in');
-        set(cbar,'fontweight','bold','fontsize',14,'fontname',fontname);
+        %set(cbar,'fontweight','bold','fontsize',14,'fontname',fontname);
+        set(cbar,'fontsize',8,'fontname',fontname);
     end
     %hold on; scatter(cm(:,2),cm(:,1),'ko'); hold off; 
     %v = axis;
@@ -75,7 +76,8 @@ fontname = 'helvetica';
     cm = com(Aor(:,1:end),d1,d2);
     if display_numbers
         lbl = strtrim(cellstr(num2str((1:size(Aor,2))')));
-        text(round(cm(1:max_number,2)),round(cm(1:max_number,1)),lbl(1:max_number),'color',[0,0,0],'fontsize',16,'fontname',fontname,'fontweight','bold');
+        %text(round(cm(1:max_number,2)),round(cm(1:max_number,1)),lbl(1:max_number),'color',[0,0,0],'fontsize',16,'fontname',fontname,'fontweight','bold');
+        text(round(cm(1:max_number,2)),round(cm(1:max_number,1)),lbl(1:max_number),'color',[0,0,0],'fontsize',8,'fontname',fontname);
     end
     axis off;
     if ~(nargin < 6 || isempty(Coor))
