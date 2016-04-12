@@ -86,9 +86,11 @@ for i = 1:nm
         for iter = 1:10
             cc = (aa'*A(:,merged_ROIs{i}))*C(merged_ROIs{i},:)/sum(aa.^2);
             aa = A(:,merged_ROIs{i})*(C(merged_ROIs{i},:)*cc')/norm(cc)^2;
-        end        
+        end
+        na = sqrt(sum(aa.^2));
+        aa = aa/na;
         %[cc,b_temp,c1_temp,g_temp,sn_temp,ss] = constrained_foopsi(cc);
-        cc = cc';
+        cc = na*cc';
         ss = cc;
     else
         A_merged(:,i) = sum(A(:,merged_ROIs{i})*spdiags(nC,0,length(nC),length(nC)),2);    

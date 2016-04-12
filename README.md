@@ -56,6 +56,10 @@ Depending on the settings the following packages may also be required
 - SPGL1 package from https://github.com/mpf/spgl1 (for solving constrained_foopsi using SPGL1)
 - Bayesian spike inference package from https://github.com/epnev/continuous_time_ca_sampler (for using the 'MCMC" deconvolution method).
 
+Wiki
+=======
+Some issues are covered in the [wiki](https://github.com/epnev/ca_source_extraction/wiki). More pages will be added and suggestions are welcome.
+
 Questions, comments, issues
 =======
 Please use the gitter chat room (use the button above) for questions and comments and create an issue for any bugs you might encounter.
