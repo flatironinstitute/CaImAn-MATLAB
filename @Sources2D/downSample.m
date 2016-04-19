@@ -11,7 +11,7 @@ function [obj_ds, Y_ds] = downSample(obj, Y)
 Y_ds = dsData(Y, obj.options);    % call dsData to do downsampling  
 [d1, d2, ~] = size(Y_ds);
 obj_ds = obj.copy();
-
+obj_ds.Fs = obj.Fs/obj.options.tsub; 
 ssub = obj.options.ssub; 
 % update parameters 
 obj_ds.updateParams('d1', d1, 'd2',...

@@ -80,7 +80,7 @@ he=info.StripOffsets;
 %finds the offset of each strip in the movie.  Image does not have to have
 %uniform strips, but needs uniform bytes per strip/row.
 idss=max(size(info(1).StripOffsets));
-ofds=zeros(numFrames);
+ofds=zeros(numFrames, 1);
 for i=1:numFrames
     ofds(i)=info(i).StripOffsets(1);
     %ofds(i)

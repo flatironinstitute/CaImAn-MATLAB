@@ -45,7 +45,7 @@ if ~exist('save_avi', 'var'); save_avi = false; end
 
 d1 = options.d1;
 d2 = options.d2;
-gSig = 3; %options.gSig;
+gSig = options.gSig;
 gSiz = options.gSiz;
 nb = options.nb; 
 pSiz = 1;
@@ -75,7 +75,13 @@ Y = bsxfun(@minus, Y, Y_median);
 k = 0;      %number of found components
 min_pixel = 4; %(2*pSiz+1)^2; % minimum number of pixels to be a neuron
 peak_ratio = full(max(Y, [], 2))./Y_std; %(max-median)/std
+peak_ratio = reshape(peak_ratio, d1, d2); 
 peak_ratio(isinf(peak_ratio)) = 0;  % avoid the case where std=0
+peak_ratio(1:gSig, :) = 0; 
+peak_ratio((end-gSig+1):end, :) = 0; 
+peak_ratio(:, 1:gSig) = 0; 
+peak_ratio(:, (end-gSig+1):end) = 0; 
+peak_ratio = reshape(peak_ratio, [],1); 
 if debug_on
     figure('position', [100, 100, 800, 650]); %#ok<*UNRCH>
     subplot(331);

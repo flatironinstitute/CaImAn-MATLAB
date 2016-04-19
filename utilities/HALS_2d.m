@@ -33,8 +33,17 @@ IND = determine_search_location(A, method, params);
 for miter=1:maxIter
     %% update neurons
     Yac = Y - b*f;
+    ind_del = find(std(A,0,1)==0); 
+    A(:, ind_del) = []; 
+    C(ind_del, :) = []; 
+    IND(:, ind_del) = []; 
     %   temporal
     C = HALS_temporal(Yac, A, C, 5);
+    
+    ind_del = find(std(C,0,2)==0); 
+    A(:, ind_del) = []; 
+    C(ind_del, :) = []; 
+    IND(:, ind_del) = []; 
     %   spatial
     A = HALS_spatial(Yac, A, C, IND, 5);
     

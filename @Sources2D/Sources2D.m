@@ -1,6 +1,6 @@
 classdef Sources2D < handle
     
-    % This class is a wrapper of Constrained NMF for standard 2D data. 
+    % This class is a wrapper of Constrained NMF for standard 2D data.
     % Author: Pengcheng Zhou, zhoupc1988@gmail.com with modifications from
     % Eftychios Pnevmatikakis
     
@@ -18,7 +18,7 @@ classdef Sources2D < handle
         S_df;       % spike counts of neurons normalized by Df
         options;    % options for model fitting
         P;          % some estimated parameters
-        Fs = nan;    % frame rate 
+        Fs = nan;    % frame rate
     end
     
     %% methods
@@ -78,11 +78,11 @@ classdef Sources2D < handle
             b = obj.b;
             f = obj.f;
             P = obj.P;
-	    try 
-		    S = obj.S; 
-	    catch 
-		    S = []; 
-	    end
+            try
+                S = obj.S;
+            catch
+                S = [];
+            end
         end
         
         %% extract DF/F signal after performing NMF
@@ -103,7 +103,7 @@ classdef Sources2D < handle
         %% order_ROIs
         function [srt] = orderROIs(obj, srt)
             %% order neurons
-            % srt: sorting order 
+            % srt: sorting order
             
             if nargin<2; srt=[]; end
             [obj.A, obj.C, obj.S, obj.P, srt] = order_ROIs(obj.A, obj.C,...
@@ -175,12 +175,12 @@ classdef Sources2D < handle
             obj.A(:, ind) = [];
             obj.C(ind, :) = [];
             try  %#ok<TRYNC>
-                obj.S(ind, :) = []; 
-                obj.P.gn(ind) = []; 
-                obj.P.b(ind) = [];               
-                obj.P.c1(ind) = [];               
-                obj.P.neuron_sn(ind) = [];               
-                obj.Coor(ind) = []; 
+                obj.S(ind, :) = [];
+                obj.P.gn(ind) = [];
+                obj.P.b(ind) = [];
+                obj.P.c1(ind) = [];
+                obj.P.neuron_sn(ind) = [];
+                obj.Coor(ind) = [];
             end
         end
         
@@ -192,7 +192,7 @@ classdef Sources2D < handle
         %% update A & C using HALS
         function obj = HALS_AC(obj, Y)
             %update A,C,b,f with HALS
-            Y = obj.reshape(Y, 1); 
+            Y = obj.reshape(Y, 1);
             [obj.A, obj.C, obj.b, obj.f] = HALS_2d(Y, obj.A, obj.C, obj.b,...
                 obj.f, obj.options);
         end
@@ -240,17 +240,17 @@ classdef Sources2D < handle
             
             Yres = Y-b1*f1;
             b0 = median(Yres, 2);
-%             b0 = quantile(Yres, 0.05,2);
+            %             b0 = quantile(Yres, 0.05,2);
             Y = bsxfun(@minus, Yres, b0);
             bg.b = [b1, b0];
             bg.f = [f1; ones(1,T)];
         end
         
-        %% select background pixels 
-         function [f1, ind_bg] = findBG(obj, Y, q)
+        %% select background pixels
+        function [f1, ind_bg] = findBG(obj, Y, q)
             d1 = obj.options.d1;
             d2 = obj.options.d2;
-            if nargin<3;    q = 0.1; end;   %quantiles for selecting background pixels 
+            if nargin<3;    q = 0.1; end;   %quantiles for selecting background pixels
             % model the background as linear function
             if ndims(Y)==3; Y = neuron.reshape(Y,1); end
             T = size(Y,2);
@@ -305,7 +305,7 @@ classdef Sources2D < handle
                 K = size(A2, 2); %number of neurons
                 
                 tmp_C = (A2'*A2)\(A2'*Y);        % update temporal components
-                tmp_C(tmp_C<0) = 0; 
+                tmp_C(tmp_C<0) = 0;
                 % %                 tmp_C(bsxfun(@gt, quantile(tmp_C, 0.95, 2), tmp_C)) = 0;
                 %                 tmp_C(bsxfun(@gt, mean(tmp_C, 2)+std(tmp_C, 0.0, 2), tmp_C)) = 0;
                 A2 = (Y*tmp_C')/(tmp_C*tmp_C');           % update spatial components
@@ -333,43 +333,44 @@ classdef Sources2D < handle
             obj.C = temp;
         end
         
-        %% regress A given C 
+        %% regress A given C
         function [A2, ind_neuron] = regressA(obj, Y, C)
             if ~ismatrix(Y); Y=obj.reshape(Y,2); end
             A2 = obj.A;  % initial spatial components
             ind_nonzero = obj.trimSpatial(50); % remove tiny nonzero pixels
             active_pixel = determine_search_location(A2, 'dilate', obj.options);
             K = size(A2, 2); %number of neurons
- 
-                A2 = (Y*C')/(C*C');           % update spatial components
-                A2(or(A2<0, ~active_pixel)) = 0;
-                
-                for m=1:K
-                    % remove disconnected pixels
-                    img = obj.reshape(A2(:,m), 2);
-                    lb = bwlabel(img>max(img(:))/50, 4);
-                    img(lb~=mode(lb(ind_nonzero(:, m)))) = 0 ; %find pixels connected to the original components
-                    A2(:,m) = img(:);
-                end
-                
-                center_ratio = sum(A2.*ind_nonzero, 1)./sum(A2, 1); %
-                % captured too much pixels, ignore newly captured pixels
-                ind_too_much = (center_ratio<0.3);
-                A2(:, ind_too_much) = A2(:, ind_too_much) .*ind_nonzero(:, ind_too_much);
-                % captured too much noiser pixels or all pxiels are zero, ignore this neuron
-                ind_delete = or(center_ratio<0., sum(A2,1)==0);
-                A2(:, ind_delete) = []; 
-                C(ind_delete) = []; 
-                ind_neuron = (1:K); 
-                ind_neuron(ind_delete) =[]; 
+            
+            A2 = (Y*C')/(C*C');           % update spatial components
+            A2(or(A2<0, ~active_pixel)) = 0;
+            
+            for m=1:K
+                % remove disconnected pixels
+                img = obj.reshape(A2(:,m), 2);
+                lb = bwlabel(img>max(img(:))/50, 4);
+                img(lb~=mode(lb(ind_nonzero(:, m)))) = 0 ; %find pixels connected to the original components
+                A2(:,m) = img(:);
+            end
+            
+            center_ratio = sum(A2.*ind_nonzero, 1)./sum(A2, 1); %
+            % captured too much pixels, ignore newly captured pixels
+            ind_too_much = (center_ratio<0.3);
+            A2(:, ind_too_much) = A2(:, ind_too_much) .*ind_nonzero(:, ind_too_much);
+            % captured too much noiser pixels or all pxiels are zero, ignore this neuron
+            ind_delete = or(center_ratio<0., sum(A2,1)==0);
+            A2(:, ind_delete) = [];
+            C(ind_delete) = [];
+            ind_neuron = (1:K);
+            ind_neuron(ind_delete) =[];
         end
         
         %% view results
-        function runMovie(obj, Y, min_max, save_avi, avi_name)
+        function runMovie(obj, Y, min_max, save_avi, avi_name, S)
             ctr = obj.estCenter();
             if ~exist('save_avi', 'var')||isempty(save_avi); save_avi=false; end
             if ~exist('avi_name', 'var'); avi_name = []; end
-            run_movie(Y, obj.A, obj.C, obj.Cn, min_max, obj.Coor, ctr, 5, 1, save_avi, avi_name)
+            if ~exist('S', 'var');  S = []; end
+            run_movie(Y, obj.A, obj.C, obj.Cn, min_max, obj.Coor, ctr, 5, 1, save_avi, avi_name, S)
         end
         
         %% function
@@ -378,12 +379,64 @@ classdef Sources2D < handle
             if nargin<3; imagesc(a); else imagesc(a, min_max); end
         end
         
-        %% normalize 
+        %% normalize
         function normalize(obj)
-            norm_A = max(obj.A, [], 1); 
-            tmp_A = bsxfun(@times, obj.A, 1./norm_A); 
-            tmp_C = bsxfun(@times, obj.C, norm_A'); 
-            obj.A = tmp_A; obj.C = tmp_C; 
-        end 
+            norm_A = max(obj.A, [], 1);
+            tmp_A = bsxfun(@times, obj.A, 1./norm_A);
+            tmp_C = bsxfun(@times, obj.C, norm_A');
+            obj.A = tmp_A; obj.C = tmp_C;
+        end
+        
+        %% load data
+        function [Y, neuron] = load_data(obj, nam, sframe, num2read)
+            ssub = obj.options.ssub;
+            tsub = obj.options.tsub;
+            d1 = obj.options.d1;
+            d2 = obj.options.d2;
+            Tbatch = round((2^30/8)/(d1*d2)/tsub)*tsub;
+            if Tbatch>=num2read
+                Yraw = bigread2(nam, sframe, num2read);
+                [neuron, Y] = obj.downSample(Yraw);
+            else
+                d1s = ceil(d1/ssub);
+                d2s = ceil(d2/ssub);
+                Ts = floor(num2read/tsub);
+                Y = zeros(d1s, d2s, Ts);
+                k0 = 1;
+                k1 = Tbatch/tsub;
+                nbatch = floor(num2read/Tbatch);
+                for m=1:nbatch
+                    if m==nbatch
+                        Yraw = bigread2(nam, sframe, num2read-(m-1)*Tbatch);
+                        [neuron, Y(:,:, k0:end)] = obj.downSample(Yraw);
+                    else
+                        Yraw = bigread2(nam, sframe, Tbatch);
+                        [~, Y(:, :, k0:k1)] = obj.downSample(Yraw);
+                        k0 = k1+1;
+                        k1 = k0+Tbatch/tsub-1;
+                        sframe = sframe+Tbatch;
+                    end
+                end
+            end
+        end
+        
+        %% merge neurons
+        function img = overlapA(obj)
+            %merge all neurons' spatial components into one singal image
+            A = obj.A;
+            A(bsxfun(@lt, A, max(A, [], 1)*0.2)) = 0;
+            [d, K] = size(A);
+            
+            col = randi(6, 1, K)+1;
+            img = zeros(d, 3);
+            for m=1:3
+                img(:, m) = sum(bsxfun(@times, A, mod(col, 2)), 2);
+                col = round(col/2);
+            end
+            img = obj.reshape(img, 2);
+            img = uint16(img*100);
+            
+        end
     end
+    
 end

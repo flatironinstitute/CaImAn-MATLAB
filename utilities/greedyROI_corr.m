@@ -59,8 +59,9 @@ center = zeros(K, 2);   % center of the initialized components
 
 %% compute correlation image and (max-median)/std ratio
 ind_frame = round(linspace(1, T, min(T, 1000)));    % select few frames for speed issues
-C1 = correlation_image(full(Y(:, ind_frame)), sz, d1, d2);
-Cb =  correlation_image(full(Y(:, ind_frame(1:3:end))), [gSiz, gSiz+1], d1, d2);
+tmp_noise = randn(d1*d2, length(ind_frame)); 
+C1 = correlation_image(full(Y(:, ind_frame))+tmp_noise, sz, d1, d2);
+Cb =  correlation_image(full(Y(:, ind_frame(1:3:end)))+tmp_noise(:, 1:3:end), [gSiz, gSiz+1], d1, d2);
 Cn = C1-Cb;
 Y_median = median(Y(:, ind_frame), 2);
 Y = bsxfun(@minus, Y, Y_median);

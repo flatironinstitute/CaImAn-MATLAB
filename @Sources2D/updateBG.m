@@ -23,11 +23,22 @@ Y = obj.reshape(Y, 1);
 
 %% start factorization
 if strcmpi(model, 'svd')
-    Y_mean = mean(Y, 1);
-    Y = bsxfun(@minus, Y,Y_mean);
+%     if nb>1
+%     Y_mean = mean(Y, 1);
+%     Y = bsxfun(@minus, Y,Y_mean);
     [~, ~, v] = svdsecon(Y(1:10:end, :), nb);
-    B = [ones(d,1), Y*v];
-    F = [Y_mean; v'];
+    B = Y*v;
+    F =v';
+%     else
+%         [u, s, v] = svd(Y, 1); 
+%         B = u*s; 
+%         F = v'; 
+%     end 
+%     Y_mean = mean(Y, 2);
+%     Y = bsxfun(@minus, Y,Y_mean);
+%     [u, ~, ~] = svdsecon(Y(:, 1:10:end), nb);
+%     B = [Y_mean, u];
+%     F = [ones(1, T); u'*Y];
 else
     tsub = max(1, round(T/500));   % maximumly 1000 frames are used for initialization
     frames = (1:tsub:T);
@@ -47,7 +58,7 @@ else
         V = F*F';
         ff = diag(V);
         for m=1:nb
-            B(:, m) = max(0, B(:, m)+(U(:, m)- B*V)/ff(m));
+            B(:, m) = max(0, B(:, m)+(U(:, m)- B*V(:, m))/ff(m));
         end
     end
 end
