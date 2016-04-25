@@ -421,22 +421,66 @@ classdef Sources2D < handle
         end
         
         %% merge neurons
-        function img = overlapA(obj)
+        function img = overlapA(obj, ind)
             %merge all neurons' spatial components into one singal image
-            A = obj.A;
-            A(bsxfun(@lt, A, max(A, [], 1)*0.2)) = 0;
+            if nargin<2
+                A = obj.A;
+            else
+                A = obj.A(:, ind);
+            end
+            A(bsxfun(@lt, A, max(A, [], 1)*0.4)) = 0;
+            A = bsxfun(@times, A, 30000./max(A, [], 1));
             [d, K] = size(A);
             
-            col = randi(6, 1, K)+1;
+            col = randi(6, 1, K);
             img = zeros(d, 3);
             for m=1:3
                 img(:, m) = sum(bsxfun(@times, A, mod(col, 2)), 2);
                 col = round(col/2);
             end
             img = obj.reshape(img, 2);
-            img = uint16(img*100);
+            img = uint16(img);
             
         end
+        
+        %% play video
+        function playAC(obj, avi_file, cell_id)
+            if nargin<3
+                cell_id = 1:size(obj.C, 1); 
+            end 
+            [K, T] = size(obj.C(cell_id, :));
+            % draw random color for each neuron
+            tmp = mod((1:K)', 6)+1;
+            col = zeros(K, 3);
+            for m=1:3
+                col(:, m) = mod(tmp, 2);
+                tmp = round(tmp/2);
+            end
+            figure;
+            % play
+            if nargin>1
+                fp = VideoWriter(avi_file);
+                fp.open();
+            end
+            
+            for m=1:T
+                img = obj.A(:, cell_id)*bsxfun(@times, obj.C(cell_id,m), col);
+                img = obj.reshape(img, 2);                
+                imagesc(uint8(img));
+                axis equal off tight;
+                title(sprintf('Time %.2f seconds', m/obj.Fs));
+                
+                pause(.1);
+                if nargin>1
+                    frame = getframe(gcf);
+                    fp.writeVideo(frame);
+                end
+            end
+            if nargin>1; fp.close(); end
+        end
+        
+        %% manually add missing neurons
+        manual_add(obj, Yres);
     end
     
 end

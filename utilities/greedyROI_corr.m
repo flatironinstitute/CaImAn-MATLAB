@@ -1,4 +1,4 @@
-function [Ain, Cin,  bin, fin, center, res] = greedyROI_corr(Y, K, options, sn, debug_on)
+function [Ain, Cin,  bin, fin, center, res] = greedyROI_corr(Y, K, options, sn, debug_on, save_avi)
 %% a greedy method for detecting ROIs and initializing CNMF. in each iteration,
 % it searches the one with large (peak-median)/noise level and large local
 % correlation
@@ -47,7 +47,7 @@ pSiz = 1;       % after selecting one pixel, take the mean of square box
 %near the pixel as temporal activity. the box size is (2*pSiz+1)
 psf = ones(gSig)/(gSig^2);
 
-min_snr = 3;
+min_snr = 3;        % minimum value of (peak-median)/sig 
 maxIter = 5;            % iterations for refining results
 sz = 4;            %distance of neighbouring pixels for computing local correlation
 
@@ -61,7 +61,7 @@ center = zeros(K, 2);   % center of the initialized components
 ind_frame = round(linspace(1, T, min(T, 1000)));    % select few frames for speed issues
 tmp_noise = randn(d1*d2, length(ind_frame)); 
 C1 = correlation_image(full(Y(:, ind_frame))+tmp_noise, sz, d1, d2);
-Cb =  correlation_image(full(Y(:, ind_frame(1:3:end)))+tmp_noise(:, 1:3:end), [gSiz, gSiz+1], d1, d2);
+Cb =  correlation_image(full(Y(:, ind_frame(1:3:end)))+tmp_noise(:, 1:3:end), [gSiz, gSiz+1], d1, d2);  %backgroung correlatin 
 Cn = C1-Cb;
 Y_median = median(Y(:, ind_frame), 2);
 Y = bsxfun(@minus, Y, Y_median);
@@ -69,7 +69,7 @@ Y = bsxfun(@minus, Y, Y_median);
 
 %% find local maximum
 k = 0;      %number of found components
-min_pixel = gSig^2;  % minimum number of peaks to be a neuron
+min_pixel = gSig^2/2;  % minimum number of peaks to be a neuron
 peak_ratio = full(max(Y, [], 2))./Y_std; %(max-median)/std
 peak_ratio(isinf(peak_ratio)) = 0;  % avoid constant values
 save_avi = false;   %save procedures for demo
@@ -138,7 +138,7 @@ while k<K
     if tmp_v<min_pixel;         continue;  end % neuron is too small
     
     %% save neuron
-    %  expand nonzero area
+    %   nonzero area
     data = Y_box(active_pixel(:), :);
     ind_active = ind_nhood(active_pixel(:));  %indices of active pixels within the whole frame
     peak_ratio(ind_nhood(ind_peak)) = 0;    % the small area near the peak is not able to initialize neuron anymore
