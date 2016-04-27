@@ -137,6 +137,9 @@ else
 end
 
 cnt = 0;
+B = sparse(prod(sizY(1:end-1)),length(patches));
+MASK = zeros(sizY(1:end-1));
+F = zeros(length(patches),sizY(end));
 for i = 1:length(patches)
     for k = 1:K
         if k <= size(RESULTS(i).A,2)
@@ -152,6 +155,9 @@ for i = 1:length(patches)
         end
     end
     if length(sizY) == 3
+        b_temp = sparse(sizY(1),sizY(2));
+        b_temp(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4)) = reshape(RESULTS(i).b,patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1);
+        MASK(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4)) = MASK(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4)) + 1;
         P.sn(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4)) = reshape(RESULTS(i).P.sn,patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1);
         P.active_pixels(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4)) = P.active_pixels(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4)) + ...
             reshape(RESULTS(i).P.active_pixels,patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1);
@@ -167,8 +173,12 @@ for i = 1:length(patches)
     P.c1 = [P.c1;RESULTS(i).P.c1];
     P.gn = [P.gn;RESULTS(i).P.gn];
     P.neuron_sn = [P.neuron_sn;RESULTS(i).P.neuron_sn];
+    B(:,i) = b_temp(:);
+    F(i,:) = RESULTS(i).f;
 end
 A(:,cnt+1:end) = [];
+A = spdiags(1./MASK(:),0,prod(sizY(1:end-1)),prod(sizY(1:end-1)))*A;
+B = spdiags(1./MASK(:),0,prod(sizY(1:end-1)),prod(sizY(1:end-1)))*B;
 C = cell2mat({RESULTS(:).C}');
 S = cell2mat({RESULTS(:).S}');
 ff = find(sum(A,1)==0);
@@ -207,9 +217,11 @@ while Km < Kn
 end
 fprintf(' done. \n');
 %% classify components
-ff = classify_components(Am,Pm,options);
-A = Am(:,ff);
-C = Cm(ff,:);
+% ff = classify_components(Am,Pm,options);
+% A = Am(:,ff);
+% C = Cm(ff,:);
+A = Am;
+C = Cm;
 
 %% update spatial components
 fprintf('Updating spatial components...');
@@ -226,15 +238,21 @@ fprintf('Updating spatial components...');
 %     cnt = cnt + fm(i)-fp(i)+1;
 % end
  
-bsum = zeros(length(patches),1);
-for i = 1:length(patches)
-    bsum(i) = sum(RESULTS(i).b);
-end
-bsum = bsum/sum(bsum);
-f_p = cell2mat({RESULTS(:).f}');
-fin = mean(spdiags(bsum,0,length(patches),length(patches))*f_p);
-fin = medfilt1(fin,11);
+% bsum = zeros(length(patches),1);
+% for i = 1:length(patches)
+%     bsum(i) = sum(RESULTS(i).b);
+% end
+% bsum = bsum/sum(bsum);
+% f_p = cell2mat({RESULTS(:).f}');
+% fin = mean(spdiags(bsum,0,length(patches),length(patches))*f_p);
+% fin = medfilt1(fin,11);
 
+fin = mean(F);
+for iter = 1:10
+    bin = max(B*(F*fin')/norm(fin)^2,0);
+    fin = max((bin'*B)*F/norm(bin)^2,0);
+end
+%%
 % PROCESS PATCHES 
 options.d1 = sizY(1);
 options.d2 = sizY(2);

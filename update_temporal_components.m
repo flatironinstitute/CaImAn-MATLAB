@@ -142,18 +142,19 @@ if strcmpi(method,'noise_constrained')
     mc = min(d,15);  % number of constraints to be considered
     LD = 10*ones(mc,K);
 else
+    step = 5e3;
     nA = sum(A.^2);
-    AA = A'*A/spdiags(nA(:),0,length(nA),length(nA));
+    AA = (A'*A)/spdiags(nA(:),0,length(nA),length(nA));
     if memmaped
         YA = zeros(T,length(nA));
         tic;
-        for i = 1:5e3:d
-            YA = YA + double(Y.Yr(i:min(i+1e4-1,d),:))'*A(i:min(i+1e4-1,d),:);
+        for i = 1:step:d
+            YA = YA + double(Y.Yr(i:min(i+step-1,d),:))'*A(i:min(i+step-1,d),:);
         end
         toc
         YA = YA/spdiags(nA(:),0,length(nA),length(nA));
     else
-        YA = Y'*A/spdiags(nA(:),0,length(nA),length(nA));
+        YA = (Y'*A)/spdiags(nA(:),0,length(nA),length(nA));
     end
     YrA = (YA - Cin'*AA);
     if strcmpi(method,'constrained_foopsi') || strcmpi(method,'MCEM_foopsi')
