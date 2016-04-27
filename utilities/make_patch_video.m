@@ -80,10 +80,10 @@ fig = figure; %colormap('bone');
     set(gcf, 'PaperPosition',1.5*[0,0, 14, 10.5]/1.5)
     set(gcf, 'Position',1.5*[2,2, 14, 10.5]/1.5)%Yr = reshape(Y,d1,d2,T);
     colormap(cmap);
-int_x = zeros(4,2*sx);
-int_y = zeros(4,2*sx);
-A_com = zeros(2*sx,2*sx,4);
-for i = 1:4
+int_x = zeros(length(ind),2*sx);
+int_y = zeros(length(ind),2*sx);
+A_com = zeros(2*sx,2*sx,length(ind));
+for i = 1:length(ind)
     int_x(i,:) = round(cm(ind(i),1)) + (-(sx-1):sx);
     if int_x(i,1)<1
         int_x(i,:) = int_x(i,:) + 1 - int_x(i,1);
@@ -106,7 +106,7 @@ mC = 0.7*max(C_rec(:));
 mB = 0.95*max(C_np(:));
 
 up = zeros(1,4);
-for i = 1:4
+for i = 1:length(ind)
     up(i) = 0.95*max(max(A_com(:,:,i)))*max(C(ind(i),:));
     ff = find(cont{ind(i)}(1,2:end)<0.1);
     cont{ind(i)}(:,ff+1) = [];
@@ -118,7 +118,7 @@ for t = 1:skp:T
         axis equal; axis tight; axis off;
         if sc
             hold on;
-            for i = 1:4
+            for i = 1:length(ind)
                 plot(cont{ind(i)}(1,2:end),cont{ind(i)}(2,2:end),'w'); hold on;
                 text(min(cont{ind(i)}(1,2:end))-2,min(cont{ind(i)}(2,2:end))-2,num2str(ind(i)),'color','w','fontsize',14,'fontweight','bold'); hold on;
             end
@@ -130,7 +130,7 @@ for t = 1:skp:T
         axis equal; axis tight; set(gca,'XTick',[],'YTick',[]);
         if sc
             hold on;
-            for i = 1:4
+            for i = 1:length(ind)
                 plot(cont{ind(i)}(1,2:end),cont{ind(i)}(2,2:end),'w'); hold on;
             end
             hold off;            
