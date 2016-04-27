@@ -70,15 +70,29 @@ if cluster_pixels
     P.active_pixels = (L==ind);
     P.centroids = Cx;
 
-    % [P.W,P.H] = nnmf(sqrt(psdx(:,3:end)),2); %,'h0',H0);
-    % r = sort(rand(1,size(psdx,2)-2),'descend');
-    % H = [r/norm(r); ones(1,length(r))/sqrt(length(r))];
-    % for iter = 1:100
-    %     W = max((H*H')\(H*psdx'),0)';
-    %     H = max((W'*W)\(W'*psdx),0);
-    % end
-    % P.W = W;
-    % P.H = H;
+    if (0) % not necessary at the moment
+        %[P.W,P.H] = nnmf(psdx,2); %,'h0',H0);
+        psdx = psdx(:,1:min(size(psdx,2),600));
+        r = sort(rand(1,size(psdx,2)),'descend');
+        er = ones(1,length(r))/sqrt(length(r));
+        H = [r/norm(r); er];
+        W_ = rand(size(psdx,1),2);
+        for iter = 1:100
+            W = max((H*H')\(H*psdx'),0)';
+            %H = max((W'*W)\(W'*psdx),0);
+            r = max((W(:,1)'*psdx - (W(:,1)'*W(:,2))*er)/norm(W(:,1))^2,0);
+            H = [r/norm(r); er];
+            if norm(W-W_,'fro')/norm(W_,'fro') < 1e-3
+                break;
+            else
+                W_ = W;
+            end
+        end
+        disp(iter)
+        W = max((H*H')\(H*psdx'),0)';
+        P.W = W;
+        P.H = H;
+    end
 end
 %% estimate global time constants
 
