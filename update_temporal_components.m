@@ -147,11 +147,9 @@ else
     AA = (A'*A)/spdiags(nA(:),0,length(nA),length(nA));
     if memmaped
         YA = zeros(T,length(nA));
-        tic;
         for i = 1:step:d
             YA = YA + double(Y.Yr(i:min(i+step-1,d),:))'*A(i:min(i+step-1,d),:);
         end
-        toc
         YA = YA/spdiags(nA(:),0,length(nA),length(nA));
     else
         YA = (Y'*A)/spdiags(nA(:),0,length(nA),length(nA));

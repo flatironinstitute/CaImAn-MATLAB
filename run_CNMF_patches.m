@@ -150,7 +150,6 @@ for i = 1:length(patches)
             else
                 Atemp(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6)) = reshape(RESULTS(i).A(:,k),patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1,patches{i}(6)-patches{i}(5)+1);
             end
-            %A(:,(i-1)*K+k) = sparse(Atemp(:));
             A(:,cnt) = sparse(Atemp(:));
         end
     end
@@ -164,6 +163,9 @@ for i = 1:length(patches)
         IND(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4)) = IND(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4)) + 1;
         P.psdx(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),:) = reshape(RESULTS(i).P.psdx,patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1,[]);
     else
+        b_temp = sparse(sizY(1),sizY(2),sizY(3));
+        b_temp(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6)) = reshape(RESULTS(i).b,patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1,patches{i}(6)-patches{i}(5)+1);
+        MASK(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6)) = MASK(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6)) + 1;
         P.sn(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6)) = reshape(RESULTS(i).P.sn,patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1,patches{i}(6)-patches{i}(5)+1);
         P.active_pixels(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6)) = P.active_pixels(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6)) + ...
             reshape(RESULTS(i).P.active_pixels,patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1,patches{i}(6)-patches{i}(5)+1);
@@ -217,43 +219,19 @@ while Km < Kn
 end
 fprintf(' done. \n');
 %% classify components
-% ff = classify_components(Am,Pm,options);
-% A = Am(:,ff);
-% C = Cm(ff,:);
-A = Am;
-C = Cm;
+ff = classify_components(Am,Pm,options);
+A = Am(:,ff);
+C = Cm(ff,:);
 
-%% update spatial components
-fprintf('Updating spatial components...');
-% FIRST COMPUTE A TEMPORAL BACKGROUND
-% fin = zeros(1,T);
-% %empty_pixels = (sum(Am,2)==0);
-% empty_pixels = (~P.active_pixels);
-% q = diff([0,empty_pixels]);
-% fp = find(q==1);
-% fm = [find(q==-1)-1,T];
-% cnt = 0;
-% for i = 1:length(fp)
-%     fin = cnt*fin/(cnt+fm(i)-fp(i)+1) + (fm(i)-fp(i)+1)*mean(double(squeeze(data.Yr(fp(i):fm(i),:))),1)/(cnt+fm(i)-fp(i)+1);
-%     cnt = cnt + fm(i)-fp(i)+1;
-% end
- 
-% bsum = zeros(length(patches),1);
-% for i = 1:length(patches)
-%     bsum(i) = sum(RESULTS(i).b);
-% end
-% bsum = bsum/sum(bsum);
-% f_p = cell2mat({RESULTS(:).f}');
-% fin = mean(spdiags(bsum,0,length(patches),length(patches))*f_p);
-% fin = medfilt1(fin,11);
+%% compute spatial and temporal background using a rank-1 fit
 
 fin = mean(F);
 for iter = 1:10
     bin = max(B*(F*fin')/norm(fin)^2,0);
     fin = max((bin'*B)*F/norm(bin)^2,0);
 end
-%%
-% PROCESS PATCHES 
+%% update spatial components
+fprintf('Updating spatial components...');
 options.d1 = sizY(1);
 options.d2 = sizY(2);
 if length(sizY) == 4; options.d3 = sizY(3); end
