@@ -199,7 +199,7 @@ if options.temporal_parallel
                 if p == 0   % p = 0 (no dynamics assumed)
                     cc = max(Ytemp(:,jj),0);
                     Ctemp(jj,:) = full(cc');
-                    Stemp(jj,:) = C(jj,:);
+                    Stemp(jj,:) = Ctemp(jj,:);
                 else
                     switch method
                         case 'project'
@@ -279,45 +279,52 @@ else
         for jj = 1:K
             ii = perm(jj);
             if ii<=K
+                ff = find(AA(ii,:));
                 if P.p == 0   % p = 0 (no dynamics assumed)
-                    YrA(:,ii) = YrA(:,ii) + Cin(ii,:)';
-                    cc = max(YrA(:,ii),0);
+                    %YrA(:,ii) = YrA(:,ii) + Cin(ii,:)';
+                    Ytemp = YrA(:,ii) + Cin(ii,:)';
+                    cc = max(Ytemp,0);                                        
+                    YrA(:,ff) = YrA(:,ff) - (cc - C(ii,:)')*AA(ii,ff);
                     C(ii,:) = full(cc');
-                    YrA(:,ii) = YrA(:,ii) - C(ii,:)';
                     S(ii,:) = C(ii,:);
                 else
                     switch method
                         case 'project'
-                            YrA(:,ii) = YrA(:,ii) + Cin(ii,:)';
-                            cc = plain_foopsi(YrA(:,ii),G);
-                            C(ii,:) = full(cc');
-                            YrA(:,ii) = YrA(:,ii) - C(ii,:)';
+                            %YrA(:,ii) = YrA(:,ii) + Cin(ii,:)';
+                            Ytemp = YrA(:,ii) + Cin(ii,:)';
+                            cc = plain_foopsi(Ytemp,G);
+                            YrA(:,ff) = YrA(:,ff) - (cc - C(ii,:)')*AA(ii,ff);
+                            C(ii,:) = full(cc');                            
                             S(ii,:) = C(ii,:)*G';
                         case 'constrained_foopsi'
-                            YrA(:,ii) = YrA(:,ii) + Cin(ii,:)';
+                            %YrA(:,ii) = YrA(:,ii) + Cin(ii,:)';
+                            Ytemp = YrA(:,ii) + Cin(ii,:)';
                             if restimate_g
-                                [cc,cb,c1,gn,sn,spk] = constrained_foopsi(YrA(:,ii),[],[],[],[],options);
+                                [cc,cb,c1,gn,sn,spk] = constrained_foopsi(Ytemp,[],[],[],[],options);
                                 P.gn{ii} = gn;
                             else
-                                [cc,cb,c1,gn,sn,spk] = constrained_foopsi(YrA(:,ii),[],[],P.g,[],options);
+                                [cc,cb,c1,gn,sn,spk] = constrained_foopsi(Ytemp,[],[],P.g,[],options);
                             end
                             gd = max(roots([1,-gn']));  % decay time constant for initial concentration
                             gd_vec = gd.^((0:T-1));
+                            YrA(:,ff) = YrA(:,ff) - (cc(:) + cb + c1*gd_vec' - C(ii,:)')*AA(ii,ff);
                             C(ii,:) = full(cc(:)' + cb + c1*gd_vec);
                             S(ii,:) = spk(:)';
-                            YrA(:,ii) = YrA(:,ii) - C(ii,:)';
+                            %YrA(:,ii) = YrA(:,ii) - C(ii,:)';
                             P.b{ii} = cb;
                             P.c1{ii} = c1;           
                             P.neuron_sn{ii} = sn;
                         case 'MCEM_foopsi'
                             options.p = length(P.g);
-                            YrA(:,ii) = YrA(:,ii) + Cin(ii,:)';
-                            [cc,cb,c1,gn,sn,spk] = MCEM_foopsi(YrA(:,ii),[],[],P.g,[],options);
+                            %YrA(:,ii) = YrA(:,ii) + Cin(ii,:)';
+                            Ytemp = YrA(:,ii) + Cin(ii,:)';
+                            [cc,cb,c1,gn,sn,spk] = MCEM_foopsi(Ytemp,[],[],P.g,[],options);
                             gd = max(roots([1,-gn.g(:)']));
                             gd_vec = gd.^((0:T-1));
+                            YrA(:,ff) = YrA(:,ff) - (cc(:) + cb + c1*gd_vec' - C(ii,:)')*AA(ii,ff);
                             C(ii,:) = full(cc(:)' + cb + c1*gd_vec);
                             S(ii,:) = spk(:)';
-                            YrA(:,ii) = YrA(:,ii) - C(ii,:)';
+                            %YrA(:,ii) = YrA(:,ii) - C(ii,:)';
                             P.b{ii} = cb;
                             P.c1{ii} = c1;           
                             P.neuron_sn{ii} = sn;
@@ -326,11 +333,13 @@ else
                             params.B = 300;
                             params.Nsamples = 400;
                             params.p = P.p; %length(P.g);
-                            YrA(:,ii) = YrA(:,ii) + Cin(ii,:)';
-                            SAMPLES = cont_ca_sampler(YrA(:,ii),params);
-                            C(ii,:) = make_mean_sample(SAMPLES,YrA(:,ii));
+                            %YrA(:,ii) = YrA(:,ii) + Cin(ii,:)';
+                            Ytemp = YrA(:,ii) + Cin(ii,:)';
+                            SAMPLES = cont_ca_sampler(Ytemp,params);
+                            ctemp = make_mean_sample(SAMPLES,Ytemp);
+                            YrA(:,ff) = YrA(:,ff) - (ctemp - C(ii,:))'*AA(ii,ff);
+                            C(ii,:) = ctemp';
                             S(ii,:) = mean(samples_cell2mat(SAMPLES.ss,T));
-                            YrA(:,ii) = YrA(:,ii) - C(ii,:)';
                             P.b{ii} = mean(SAMPLES.Cb);
                             P.c1{ii} = mean(SAMPLES.Cin);
                             P.neuron_sn{ii} = sqrt(mean(SAMPLES.sn2));
@@ -349,10 +358,14 @@ else
                     end
                 end
             else
-                YrA(:,ii) = YrA(:,ii) + Cin(ii,:)';
-                cc = max(YrA(:,ii),0);
+                %YrA(:,ii) = YrA(:,ii) + Cin(ii,:)';
+                %cc = max(YrA(:,ii),0);
+                Ytemp = YrA(:,ii) + Cin(ii,:)';
+                cc = max(Ytemp,0);                                        
+                %YrA(:,ii) = YrA(:,ii) - (cc-C(ii,:))'*AA(ii,:);
+                YrA = YrA - (cc - C(ii,:)')*AA(ii,:);
                 C(ii,:) = full(cc');
-                YrA(:,ii) = YrA(:,ii) - C(ii,:)';
+                %YrA(:,ii) = YrA(:,ii) - C(ii,:)';
             end
             if mod(jj,10) == 0
                 fprintf('%i out of total %i temporal components updated \n',jj,K);
