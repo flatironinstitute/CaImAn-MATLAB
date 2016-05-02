@@ -66,7 +66,7 @@ clear Y;
 %%
 display_merging = 1; % flag for displaying merging example
 if display_merging
-    i = 1; randi(length(merged_ROIs));
+    i = 1; %randi(length(merged_ROIs));
     ln = length(merged_ROIs{i});
     figure;
         set(gcf,'Position',[300,300,(ln+2)*300,300]);

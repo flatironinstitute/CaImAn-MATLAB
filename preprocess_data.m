@@ -64,7 +64,7 @@ if cluster_pixels
     X = psdx(:,1:min(size(psdx,2),1500));
     P.psdx = X;
     X = bsxfun(@minus,X,mean(X,2));     % center
-    X = spdiags(std(X,[],2)+1e-5,0,size(X,1),size(X,1))\X;
+    X = bsxfun(@times,X,1./sqrt(mean(X.^2,2)));
     [L,Cx] = kmeans_pp(X',2);
     [~,ind] = min(sum(Cx(max(1,end-49):end,:),1));
     P.active_pixels = (L==ind);
