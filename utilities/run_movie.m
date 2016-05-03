@@ -7,7 +7,7 @@ function ind_cell=run_movie(Y, A, C, Cn, min_max, Coor, ctr,  Ncell, tskip, save
 %% Author: Pengcheng Zhou, Carnegie Mellon University, 2016
 %% parameters
 [d1,d2] = size(Cn);
-if ismatrix(Y); Y=reshape(Y, d1, d2, []); T=size(Y, 3); end
+if ismatrix(Y); Y=reshape(Y, d1, d2, []); T=size(Y, 3); else T=size(Y, ndims(Y)); end
 if ~exist('save_avi', 'var');    save_avi=false;
 elseif ~exist('avi_name', 'var')
     k=0; avi_name = sprintf('example_movie_%d', k);
@@ -15,7 +15,7 @@ elseif ~exist('avi_name', 'var')
 end
 if ~exist('tskip', 'var')||isempty(tskip);    tskip=1; end
 if ~exist('Ncell', 'var')||isempty(Ncell);    Ncell=5; end
-if ~exist('Corr', 'var')||isempty(Coor); figure; Coor=plot_contours(A, Cn, 0.9, 0); close; end
+if ~exist('Coor', 'var')||isempty(Coor); figure; Coor=plot_contours(A, Cn, 0.9, 0); close; end
 if ~exist('ctr', 'var')|| isempty(ctr); ctr=com(A, d1, d2); end
 if ~exist('min_max', 'var') || (isempty(min_max));
     temp = Y(:, :, randi(T, min(100, T), 1));
