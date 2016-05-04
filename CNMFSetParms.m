@@ -16,11 +16,13 @@ Names = [
     'tsub               ' % temporal downsampling factor (default: 1)
     'init_method        ' % initialization method ('greedy','sparse_NMF') (default: 'greedy')
     % greedyROI parameters (greedyROI2d.m)
+    'min_corr           ' % minimum local correlation for initializing a neuron (default: 0.3)
+    % greedyROI parameters (greedyROI2d.m)
     'gSig               ' % half size of neurons to be found (default: [5,5])
     'gSiz               ' % half size of bounding box for each neuron (default: 2*gSig+1)
     'nb                 ' % number of background components (default: 1)
     'nIter              ' % maximum number of rank-1 NMF iterations during refining
-    'med_app            ' % number of timesteps to be interleaved for fast (approximate) median calculation (default: 1)   
+    'med_app            ' % number of timesteps to be interleaved for fast (approximate) median calculation (default: 1)
     'save_memory        ' % process data sequentially to save memory (default: 0)
     'chunkSiz           ' % filter this number of timesteps each time (default: 100)
     'windowSiz          ' % size of window over which is computed sequentially (default: 32 x 32)
@@ -33,8 +35,8 @@ Names = [
     'bSiz               ' % expand kernel for HALS growing (default: 3)
     'maxIter            ' % maximum number of HALS iterations (default: 5)
     % Noise and AR coefficients calculation (preprocess_data.m)
-    'noise_range        ' % frequency range over which to estimate the noise (default: [0.25,0.5]) 
-    'noise_method       ' % method for which to estimate the noise level (default: 'logmexp')            
+    'noise_range        ' % frequency range over which to estimate the noise (default: [0.25,0.5])
+    'noise_method       ' % method for which to estimate the noise level (default: 'logmexp')
     'flag_g             ' % compute global AR coefficients (default: false)
     'lags               ' % number of extra lags when computing the AR coefficients (default: 5)
     'include_noise      ' % include early lags when computing AR coefs (default: 0)
@@ -96,87 +98,88 @@ names = lower(Names);
 % Combine all leading options structures o1, o2, ... in l1Set(o1,o2,...).
 options = [];
 for j = 1:m
-   eval(['options.' Names(j,:) '= [];']);
+    eval(['options.' Names(j,:) '= [];']);
 end
 i = 1;
 while i <= nargin
-   arg = varargin{i};
-   if ischar(arg), break; end
-   if ~isempty(arg)                      % [] is a valid options argument
-       if ~isa(arg,'struct')
-          error(sprintf(['Expected argument %d to be a string parameter name ' ...
-               'or an options structure\ncreated with OPTIMSET.'], i));
-      end
-      for j = 1:m
-          if any(strcmp(fieldnames(arg),deblank(Names(j,:))))
-             eval(['val = arg.' Names(j,:) ';']);
-          else
-             val = [];
-          end
-          if ~isempty(val)
-             eval(['options.' Names(j,:) '= val;']);
-         end
-      end
-   end
-   i = i + 1;
+    arg = varargin{i};
+    if ischar(arg), break; end
+    if ~isempty(arg)                      % [] is a valid options argument
+        if ~isa(arg,'struct')
+            error(sprintf(['Expected argument %d to be a string parameter name ' ...
+                'or an options structure\ncreated with OPTIMSET.'], i));
+        end
+        for j = 1:m
+            if any(strcmp(fieldnames(arg),deblank(Names(j,:))))
+                eval(['val = arg.' Names(j,:) ';']);
+            else
+                val = [];
+            end
+            if ~isempty(val)
+                eval(['options.' Names(j,:) '= val;']);
+            end
+        end
+    end
+    i = i + 1;
 end
 
 % A finite state machine to parse name-value pairs.
 if rem(nargin-i+1,2) ~= 0
-   error('Arguments must occur in name-value pairs.');
+    error('Arguments must occur in name-value pairs.');
 end
 expectval = 0;                          % start expecting a name, not a value
 while i <= nargin
-   arg = varargin{i};
-   
-   if ~expectval
-      if ~ischar(arg)
-         error(sprintf('Expected argument %d to be a string parameter name.', i));
-      end
-      
-      lowArg = lower(arg);
-      j = strmatch(lowArg,names);
-      if isempty(j)                       % if no matches
-         error(sprintf('Unrecognized parameter name ''%s''.', arg));
-      elseif length(j) > 1                % if more than one match
-         % Check for any exact matches (in case any names are subsets of others)
-         k = strmatch(lowArg,names,'exact');
-         if length(k) == 1
-            j = k;
-         else
-            msg = sprintf('Ambiguous parameter name ''%s'' ', arg);
-            msg = [msg '(' deblank(Names(j(1),:))];
-            for k = j(2:length(j))'
-               msg = [msg ', ' deblank(Names(k,:))];
+    arg = varargin{i};
+    
+    if ~expectval
+        if ~ischar(arg)
+            error(sprintf('Expected argument %d to be a string parameter name.', i));
+        end
+        
+        lowArg = lower(arg);
+        j = strmatch(lowArg,names);
+        if isempty(j)                       % if no matches
+            error(sprintf('Unrecognized parameter name ''%s''.', arg));
+        elseif length(j) > 1                % if more than one match
+            % Check for any exact matches (in case any names are subsets of others)
+            k = strmatch(lowArg,names,'exact');
+            if length(k) == 1
+                j = k;
+            else
+                msg = sprintf('Ambiguous parameter name ''%s'' ', arg);
+                msg = [msg '(' deblank(Names(j(1),:))];
+                for k = j(2:length(j))'
+                    msg = [msg ', ' deblank(Names(k,:))];
+                end
+                msg = sprintf('%s).', msg);
+                error(msg);
             end
-            msg = sprintf('%s).', msg);
-            error(msg);
-         end
-      end
-      expectval = 1;                      % we expect a value next
-      
-   else
-      eval(['options.' Names(j,:) '= arg;']);
-      expectval = 0;
-      
-   end
-   i = i + 1;
+        end
+        expectval = 1;                      % we expect a value next
+        
+    else
+        eval(['options.' Names(j,:) '= arg;']);
+        expectval = 0;
+        
+    end
+    i = i + 1;
 end
 
 if expectval
-   error(sprintf('Expected value for parameter ''%s''.', arg));
+    error(sprintf('Expected value for parameter ''%s''.', arg));
 end
 
 Values = [
-    % dataset info    
+    % dataset info
     {[]}
     {[]}
     {1}
-    % INITIALIZATION  (initialize_components.m)    
+    % INITIALIZATION  (initialize_components.m)
     {1}
     {1}
     {'greedy'}
-    % greedyROI parameters (greedyROI2d.m)    
+    % greedyROI parameters (greedyROI2d.m)
+    {.3}
     {5}
     {[]}
     {1}
@@ -190,10 +193,10 @@ Values = [
     {1e-4}
     {1}
     {.5}
-    % HALS parameters (HALS_2d.m)    
+    % HALS parameters (HALS_2d.m)
     {3}
     {5}
-    % Noise and AR coefficients calculation (preprocess_data.m)    
+    % Noise and AR coefficients calculation (preprocess_data.m)
     {[0.25,0.5]}
     {'logmexp'}
     {false}
@@ -203,19 +206,19 @@ Values = [
     {false}
     {[64,64]}
     {true}
-    % UPDATING SPATIAL COMPONENTS (unpdate_spatial_components.m)    
+    % UPDATING SPATIAL COMPONENTS (unpdate_spatial_components.m)
     {'ellipse'}
     {~isempty(which('parpool'))}
-    % determine_search_location.m    
+    % determine_search_location.m
     {3}
     {8}
     {3}
     {strel('disk',4,0)}
-    % threshold_components.m    
+    % threshold_components.m
     {0.99}
     {strel('square',3)}
     {[3,3]}
-    % UPDATING TEMPORAL COMPONENTS (update_temporal_components.m)    
+    % UPDATING TEMPORAL COMPONENTS (update_temporal_components.m)
     {'constrained_foopsi'}
     {1}
     {2}
@@ -232,7 +235,7 @@ Values = [
     {50}
     {[]}
     % CONTOUR PLOTS (plot_contours.m)
-    {0.9} 
+    {0.9}
     % VIDEO (make_patch_video.m)
     {1:4}
     {1}
