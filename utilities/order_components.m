@@ -40,7 +40,7 @@ CY = C + YrA;
 md = zeros(K,1);
 %bd = zeros(K,1);
 
-for i = 1:size(A2,2)
+for i = 1:K
     [bandwidth,density,xmesh]=kde(CY(i,:),2^floor(log2(T)-1));
     [~,id] = max(density);
     md(i) = xmesh(id);
@@ -49,7 +49,7 @@ end
 
 FF = false(size(CY));
 FF2 = false(size(CY));
-for i = 1:size(A2,2)
+for i = 1:K
     ff = (CY(i,:)>md(i)+options.nsd*sn(i));
     FF(i,:) = ff;
     FF2(i,:) = bwareaopen(ff,options.nfr);
