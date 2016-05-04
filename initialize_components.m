@@ -37,9 +37,9 @@ if nargin < 2 || isempty(K)
     K = 30;
     fprintf('Number of components to be detected not specified. Using the default value 30. \n');
 end
-if nargin < 3 || isempty(tau) 
-    options.gSig = 5; 
-    fprintf('Standard deviation for neuron not specified. Using the default value 5. \n'); 
+if nargin < 3 || isempty(tau)
+    options.gSig = 5;
+    fprintf('Standard deviation for neuron not specified. Using the default value 5. \n');
 else options.gSig = tau;
 end
 
@@ -64,7 +64,7 @@ Ts = floor(T/tsub);         %reduced number of frames
 % spatial downsampling
 fprintf('starting resampling \n')
 if ssub~=1;
-    if ndimsY == 2; Y_ds = imresize(Y, [ds(1), ds(2)], 'box'); end 
+    if ndimsY == 2; Y_ds = imresize(Y, [ds(1), ds(2)], 'box'); end
     if ndimsY == 3;
         Y_ds = zeros([ds(1:2),T,ds(end)]);
         for z = 1:ds(3)
@@ -73,7 +73,7 @@ if ssub~=1;
         Y_ds = permute(Y_ds,[1,2,4,3]);
     end
 else
-    Y_ds = Y; 
+    Y_ds = Y;
 end
 % temporal downsampling
 if tsub~=1
@@ -89,6 +89,9 @@ if strcmpi(options.init_method,'greedy')
     % run greedy method
     fprintf('Initializing components with greedy method \n');
     [Ain, Cin, bin, fin] = greedyROI(Y_ds, K, options);
+elseif strcmpi(options.init_method, 'greedy_corr')
+    fprintf('Initializing components with greedy_corr method \n');
+    [Ain, Cin, bin, fin] = greedyROI_corr(Y_ds, K, options);
 elseif strcmpi(options.init_method,'sparse_NMF')
     % run sparse_NMF method
     fprintf('Initializing components with sparse NMF \n');
@@ -99,14 +102,14 @@ end
 
 % refine with HALS
 fprintf('Refining initial estimates with HALS...');
-[Ain, Cin, bin, fin] = HALS(Y_ds, full(Ain), Cin, bin, fin, options); 
+[Ain, Cin, bin, fin] = HALS(Y_ds, full(Ain), Cin, bin, fin, options);
 fprintf('  done \n');
 %% upsample Ain, Cin, bin, fin
 if ndimsY == 2; center = ssub*com(Ain,ds(1),ds(2)); else center = ssub*com(Ain,ds(1),ds(2),ds(3)); end
 %Ain = imresize(reshape(Ain, ds(1), ds(2), sum(K)), d);
 %Ain = imresize(reshape(full(Ain), [ds, sum(K)]), d);
 Ain = imresize(reshape(full(Ain), [ds(1),ds(2), sum(K)*prod(ds)/ds(1)/ds(2)]),[d(1),d(2)]); %,prod(d)/d(1)/d(2)*sum(K)]);
-Ain = sparse(reshape(Ain, prod(d), [])); 
+Ain = sparse(reshape(Ain, prod(d), []));
 %bin_temp = reshape(bin, ds(1), ds(2), options.nb);
 %bin = zeros(d(1),d(2),options.nb);
 bin = imresize(reshape(bin,[ds(1),ds(2), options.nb*prod(ds)/ds(1)/ds(2)]),[d(1),d(2)]);
@@ -116,10 +119,10 @@ bin = reshape(bin,prod(d),[]);
 % for i = 1:options.nb
 %     bin(:,:,i) = imresize(bin_temp(:,:,i), d);
 % end
-%bin = reshape(bin, [], options.nb); 
+%bin = reshape(bin, [], options.nb);
 Cin = imresize(Cin, [sum(K), Ts*tsub]);
 fin = imresize(fin, [options.nb, Ts*tsub]);
 if T ~= Ts*tsub
-    Cin = padarray(Cin, [0, T-Ts*tsub], 'post'); 
-    fin = padarray(fin, [0, T-Ts*tsub], fin(end), 'post');   
+    Cin = padarray(Cin, [0, T-Ts*tsub], 'post');
+    fin = padarray(fin, [0, T-Ts*tsub], fin(end), 'post');
 end

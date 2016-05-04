@@ -1,7 +1,8 @@
-function [A_or,C_or,S_or,P_or,srt] = order_ROIs(A,C,S,P)
+function [A_or,C_or,S_or,P_or,srt] = order_ROIs(A,C,S,P, srt)
 
 % ordering of the found components based on their maximum temporal
 % activation and their size (through their l_inf norm)
+% you can also pre-specify the ordering sequence
 
 nA = sqrt(sum(A.^2));
 nr = length(nA);
@@ -10,11 +11,13 @@ C = spdiags(nA(:),0,nr,nr)*C;
 mA = sum(A.^4).^(1/4);
 %sA = sum(A);
 mC = max(C,[],2);
-[~,srt] = sort(mC.*mA','descend');
+if ~exist('srt', 'var')||isempty(srt)
+    [~,srt] = sort(mC.*mA','descend');
+end
 A_or = A(:,srt);
 C_or = C(srt,:);
 
-if nargin < 4 
+if nargin < 4
     P_or = [];
 else
     P_or = P;
@@ -28,4 +31,4 @@ if nargin < 3 || isempty(S)
     S_or = [];
 else
     S_or = S(srt,:);
-end 
+end

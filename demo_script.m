@@ -35,7 +35,7 @@ options = CNMFSetParms(...
 [P,Y] = preprocess_data(Y,p);
 
 %% fast initialization of spatial components using greedyROI and HALS
-
+options.init_method = 'greedy_corr'; 
 [Ain,Cin,bin,fin,center] = initialize_components(Y,K,tau,options);  % initialize
 
 % display centers of found components
@@ -65,7 +65,7 @@ clear Y;
 
 %%
 display_merging = 1; % flag for displaying merging example
-if display_merging
+if and(display_merging, ~isempty(merged_ROIs))
     i = 1; %randi(length(merged_ROIs));
     ln = length(merged_ROIs{i});
     figure;
@@ -105,3 +105,7 @@ plot_components_GUI(Yr,A_or,C_or,b2,f2,Cn,options)
 %% make movie
 
 make_patch_video(A_or,C_or,b2,f2,Yr,Coor,options)
+
+%% paly movies together with calcium traces for visually checking the results
+corr_img = correlation_image(Yr, 8, d1, d2); 
+run_movie(Yr, Ain, Cin, corr_img, [0,4000]) 
