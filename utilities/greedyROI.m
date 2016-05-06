@@ -45,12 +45,27 @@ elseif length(params.gSig) == 1, params.gSig = params.gSig + zeros(1,dimY);
     if dimY == 3; params.gSig(3) = params.gSig(3)/2; end
 end
 
-if ~isfield(params, 'gSiz') || isempty(params.gSiz); params.gSiz = ceil(2*params.gSig + 1);
+if ~isfield(params, 'gSiz') || isempty(params.gSiz); 
+    if ~iscell(params.gSig)
+        params.gSiz = ceil(2*params.gSig + 1);
+    else
+        for j = 1:length(params.gSig)
+            params.gSiz{j,1} = 2*params.gSig{j}+1; %cellfun(@times,params.gSig{j},num2cell(ones(size(params.gSig{j}))*2));
+        end
+    end
 elseif length(params.gSiz) == 1, params.gSiz = params.gSiz + zeros(1,dimY);
     if dimY == 3; params.gSiz(3) = ceil(params.gSiz(3)/2); end
 end
 
-if isfield(params,'ssub'); params.gSig(1:2) = params.gSig(1:2)/params.ssub; params.gSiz(1:2) = ceil(params.gSiz(1:2)/params.ssub); end
+if isfield(params,'ssub'); 
+    if ~iscell(params.gSig); params.gSig(1:2) = params.gSig(1:2)/params.ssub; params.gSiz(1:2) = ceil(params.gSiz(1:2)/params.ssub); 
+    else
+        for j = 1:length(params.gSig)
+            params.gSig{j,1} = params.gSig{j}/params.ssub; %cellfun(@times,params.gSig{j},num2cell(ones(size(params.gSig{j}))/params.ssub));
+            params.gSiz{j,1} = params.gSiz{j}/params.ssub; %cellfun(@times,params.gSiz{j},num2cell(ones(size(params.gSiz{j}))/params.ssub));
+        end
+    end
+end
 
 if ~isfield(params,'nb'), nb = 1; else nb = params.nb; end
 
@@ -92,7 +107,11 @@ if length(K) > 1  % order size of components to be found in descending order
     params.gSiz = params.gSiz(ord,:);
 end
 
-Ain = spalloc(d,sum(K),K(:)'*ceil(prod(params.gSiz))); %zeros(M*N,sum(K));
+if ~iscell(params.gSiz)
+    Ain = spalloc(d,sum(K),K(:)'*ceil(params.gSiz(:,1).^2)); %zeros(M*N,sum(K));
+else
+    Ain = sparse(d,sum(K));
+end
 Cin = zeros(sum(K),T);
 center = zeros(sum(K),dimY);
 
