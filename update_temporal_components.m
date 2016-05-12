@@ -144,17 +144,23 @@ if strcmpi(method,'noise_constrained')
 else
     step = 5e3;
     nA = sum(A.^2);
-    AA = (A'*A)/spdiags(nA(:),0,length(nA),length(nA));
+    %AA = (A'*A)/spdiags(nA(:),0,length(nA),length(nA));
+    AA = spdiags(nA(:),0,length(nA),length(nA))\(A'*A);
     if memmaped
-        YA = zeros(T,length(nA));
+        %YA = zeros(T,length(nA));
+        AY = zeros(length(nA),T);
         for i = 1:step:d
-            YA = YA + double(Y.Yr(i:min(i+step-1,d),:))'*A(i:min(i+step-1,d),:);
+            %YA = YA + double(Y.Yr(i:min(i+step-1,d),:))'*A(i:min(i+step-1,d),:);
+            AY = AY + A(i:min(i+step-1,d),:)'*double(Y.Yr(i:min(i+step-1,d),:));
         end
-        YA = YA/spdiags(nA(:),0,length(nA),length(nA));
+        %YA = YA/spdiags(nA(:),0,length(nA),length(nA));
+        AY = spdiags(nA(:),0,length(nA),length(nA))\AY;
     else
-        YA = (Y'*A)/spdiags(nA(:),0,length(nA),length(nA));
+        %YA = (Y'*A)/spdiags(nA(:),0,length(nA),length(nA));
+        AY = spdiags(nA(:),0,length(nA),length(nA))\(A'*Y);
     end
-    YrA = (YA - Cin'*AA);
+    %YrA = (YA - Cin'*AA);
+    %YrA = AY - AA*Cin;
     if strcmpi(method,'constrained_foopsi') || strcmpi(method,'MCEM_foopsi')
         P.gn = cell(K,1);
         P.b = cell(K,1);
@@ -174,14 +180,15 @@ if options.temporal_parallel
     for iter = 1:ITER
         [O,lo] = update_order(A(:,1:K));
         for jo = 1:length(O)
-            Ytemp = YrA(:,O{jo}(:)) + Cin(O{jo},:)';
+            %Ytemp = YrA(:,O{jo}(:)) + Cin(O{jo},:)';
+            %Ytemp = YrA(O{jo}(:),:) + Cin(O{jo},:);
+            Ytemp = C(O{jo},:) + AY(O{jo}(:),:) - AA(O{jo}(:),:)*C;
             Ctemp = zeros(length(O{jo}),T);
             Stemp = zeros(length(O{jo}),T);
             btemp = zeros(length(O{jo}),1);
             sntemp = btemp;
             c1temp = btemp;
             gtemp = cell(length(O{jo}),1);
-            % FN added the part below in order to save SAMPLES as a field of P
             if strcmpi(method,'MCMC')
                 clear samples_mcmc
                 samples_mcmc(length(O{jo})) = struct();
@@ -197,18 +204,21 @@ if options.temporal_parallel
             end
             parfor jj = 1:length(O{jo})
                 if p == 0   % p = 0 (no dynamics assumed)
-                    cc = max(Ytemp(:,jj),0);
+                    %cc = max(Ytemp(:,jj),0);
+                    cc = max(Ytemp(jj,:),0);
                     Ctemp(jj,:) = full(cc');
                     Stemp(jj,:) = Ctemp(jj,:);
                 else
                     switch method
                         case 'project'
-                            cc = plain_foopsi(Ytemp(:,jj),G);
+                            %cc = plain_foopsi(Ytemp(:,jj),G);
+                            cc = plain_foopsi(Ytemp(jj,:),G);
                             Ctemp(jj,:) = full(cc');
                             Stemp(jj,:) = Ctemp(jj,:)*G';
                         case 'constrained_foopsi'
                             %if restimate_g
-                            [cc,cb,c1,gn,sn,spk] = constrained_foopsi(Ytemp(:,jj),[],[],[],[],options);
+                            %[cc,cb,c1,gn,sn,spk] = constrained_foopsi(Ytemp(:,jj),[],[],[],[],options);
+                            [cc,cb,c1,gn,sn,spk] = constrained_foopsi(Ytemp(jj,:),[],[],[],[],options);
                             %else
                             %    [cc,cb,c1,gn,sn,spk] = constrained_foopsi(Ytemp(:,jj)/nA(jj),[],[],P.g,[],options);
                             %end
@@ -216,14 +226,16 @@ if options.temporal_parallel
                             gd_vec = gd.^((0:T-1));
                             Ctemp(jj,:) = full(cc(:)' + cb + c1*gd_vec);
                             Stemp(jj,:) = spk(:)';
-                            Ytemp(:,jj) = Ytemp(:,jj) - Ctemp(jj,:)';
+                            %Ytemp(:,jj) = Ytemp(:,jj) - Ctemp(jj,:)';
+                            Ytemp(jj,:) = Ytemp(jj,:) - Ctemp(jj,:);
                             btemp(jj) = cb;
                             c1temp(jj) = c1;
                             sntemp(jj) = sn;
                             gtemp{jj} = gn(:)';
                         case 'MCMC'
-                            SAMPLES = cont_ca_sampler(Ytemp(:,jj),params);
-                            Ctemp(jj,:) = make_mean_sample(SAMPLES,Ytemp(:,jj));
+                            %SAMPLES = cont_ca_sampler(Ytemp(:,jj),params);
+                            SAMPLES = cont_ca_sampler(Ytemp(jj,:),params);
+                            Ctemp(jj,:) = make_mean_sample(SAMPLES,Ytemp(jj,:));
                             Stemp(jj,:) = mean(samples_cell2mat(SAMPLES.ss,T));
                             btemp(jj) = mean(SAMPLES.Cb);
                             c1temp(jj) = mean(SAMPLES.Cin);
@@ -233,6 +245,8 @@ if options.temporal_parallel
                     end
                 end
             end
+            C(O{jo}(:),:) = Ctemp;
+            S(O{jo}(:),:) = Stemp; 
             if p > 0
                 if strcmpi(method,'constrained_foopsi') || strcmpi(method,'MCMC');
                     P.b(O{jo}) = num2cell(btemp);
@@ -241,30 +255,21 @@ if options.temporal_parallel
                     for jj = 1:length(O{jo})
                         P.gn(O{jo}(jj)) = gtemp(jj);
                     end
-                    YrA = YrA - (Ctemp-C(O{jo}(:),:))'*AA(O{jo}(:),:);
-                    C(O{jo}(:),:) = Ctemp;
-                    S(O{jo}(:),:) = Stemp;                   
+                                      
                     if strcmpi(method,'MCMC');
                         P.samples_mcmc(O{jo}) = samples_mcmc; % FN added, a useful parameter to have.
                     end                
                 end
-            else
-                YrA = YrA - (Ctemp-C(O{jo}(:),:))'*AA(O{jo}(:),:);
-                C(O{jo}(:),:) = Ctemp;
-                S(O{jo}(:),:) = Stemp;
-                %YrA = (YA - C'*AA)/spdiags(nA(:),0,length(nA),length(nA));
             end
             fprintf('%i out of %i components updated \n',sum(lo(1:jo)),K);
         end
         for ii = K + 1:size(C,1)
-            %YrA(:,ii) = YrA(:,ii) + Cin(ii,:)';
-            cc = full(max(YrA(:,ii)'+Cin(ii,:),0));
-            YrA = YrA - (cc-C(ii,:))'*AA(ii,:);
+            cc = max(C(ii,:) + AY(ii,:) - AA(ii,:)*C,0);
+            %cc = full(max(AY(ii,:)+Cin(ii,:),0));
+            %YrA = YrA - AA(:,ii)*(cc-C(ii,:));
             C(ii,:) = cc; %full(cc');
-            %YrA(:,ii) = YrA(:,ii) - C(ii,:)';
-            %YrA(:,end) = (YA(:,end) - C'*AA(:,end)); %/nA(end); %spdiags(nA(:),0,length(nA),length(nA));
         end
-        
+        %YrA = YrA - AA*(Cin-C);
         %YrA = (YA - Cin'*AA)/spdiags(nA(:),0,length(nA),length(nA));
         if norm(Cin - C,'fro')/norm(C,'fro') <= 1e-3
             % stop if the overall temporal component does not change by much
@@ -278,27 +283,29 @@ else
     perm = randperm(K+size(b,2));
         for jj = 1:K
             ii = perm(jj);
+            Ytemp = C(ii,:) + AY(ii,:) - AA(ii,:)*C;
             if ii<=K
-                ff = find(AA(ii,:));
+                %ff = find(AA(ii,:));
+                
                 if P.p == 0   % p = 0 (no dynamics assumed)
                     %YrA(:,ii) = YrA(:,ii) + Cin(ii,:)';
-                    Ytemp = YrA(:,ii) + Cin(ii,:)';
+                    %Ytemp = YrA(:,ii) + Cin(ii,:)';
                     cc = max(Ytemp,0);                                        
-                    YrA(:,ff) = YrA(:,ff) - (cc - C(ii,:)')*AA(ii,ff);
+                    %YrA(:,ff) = YrA(:,ff) - (cc - C(ii,:)')*AA(ii,ff);
                     C(ii,:) = full(cc');
                     S(ii,:) = C(ii,:);
                 else
                     switch method
                         case 'project'
                             %YrA(:,ii) = YrA(:,ii) + Cin(ii,:)';
-                            Ytemp = YrA(:,ii) + Cin(ii,:)';
+                            %Ytemp = YrA(:,ii) + Cin(ii,:)';
                             cc = plain_foopsi(Ytemp,G);
-                            YrA(:,ff) = YrA(:,ff) - (cc - C(ii,:)')*AA(ii,ff);
+                            %YrA(:,ff) = YrA(:,ff) - (cc - C(ii,:)')*AA(ii,ff);
                             C(ii,:) = full(cc');                            
                             S(ii,:) = C(ii,:)*G';
                         case 'constrained_foopsi'
                             %YrA(:,ii) = YrA(:,ii) + Cin(ii,:)';
-                            Ytemp = YrA(:,ii) + Cin(ii,:)';
+                            %Ytemp = YrA(:,ii) + Cin(ii,:)';
                             if restimate_g
                                 [cc,cb,c1,gn,sn,spk] = constrained_foopsi(Ytemp,[],[],[],[],options);
                                 P.gn{ii} = gn;
@@ -307,24 +314,21 @@ else
                             end
                             gd = max(roots([1,-gn']));  % decay time constant for initial concentration
                             gd_vec = gd.^((0:T-1));
-                            YrA(:,ff) = YrA(:,ff) - (cc(:) + cb + c1*gd_vec' - C(ii,:)')*AA(ii,ff);
+                            %YrA(:,ff) = YrA(:,ff) - (cc(:) + cb + c1*gd_vec' - C(ii,:)')*AA(ii,ff);
                             C(ii,:) = full(cc(:)' + cb + c1*gd_vec);
                             S(ii,:) = spk(:)';
-                            %YrA(:,ii) = YrA(:,ii) - C(ii,:)';
                             P.b{ii} = cb;
                             P.c1{ii} = c1;           
                             P.neuron_sn{ii} = sn;
                         case 'MCEM_foopsi'
                             options.p = length(P.g);
-                            %YrA(:,ii) = YrA(:,ii) + Cin(ii,:)';
-                            Ytemp = YrA(:,ii) + Cin(ii,:)';
+                            %Ytemp = YrA(:,ii) + Cin(ii,:)';
                             [cc,cb,c1,gn,sn,spk] = MCEM_foopsi(Ytemp,[],[],P.g,[],options);
                             gd = max(roots([1,-gn.g(:)']));
                             gd_vec = gd.^((0:T-1));
-                            YrA(:,ff) = YrA(:,ff) - (cc(:) + cb + c1*gd_vec' - C(ii,:)')*AA(ii,ff);
+                            %YrA(:,ff) = YrA(:,ff) - (cc(:) + cb + c1*gd_vec' - C(ii,:)')*AA(ii,ff);
                             C(ii,:) = full(cc(:)' + cb + c1*gd_vec);
                             S(ii,:) = spk(:)';
-                            %YrA(:,ii) = YrA(:,ii) - C(ii,:)';
                             P.b{ii} = cb;
                             P.c1{ii} = c1;           
                             P.neuron_sn{ii} = sn;
@@ -334,10 +338,10 @@ else
                             params.Nsamples = 400;
                             params.p = P.p; %length(P.g);
                             %YrA(:,ii) = YrA(:,ii) + Cin(ii,:)';
-                            Ytemp = YrA(:,ii) + Cin(ii,:)';
+                            %Ytemp = YrA(:,ii) + Cin(ii,:)';
                             SAMPLES = cont_ca_sampler(Ytemp,params);
                             ctemp = make_mean_sample(SAMPLES,Ytemp);
-                            YrA(:,ff) = YrA(:,ff) - (ctemp - C(ii,:))'*AA(ii,ff);
+                            %YrA(:,ff) = YrA(:,ff) - (ctemp - C(ii,:))'*AA(ii,ff);
                             C(ii,:) = ctemp';
                             S(ii,:) = mean(samples_cell2mat(SAMPLES.ss,T));
                             P.b{ii} = mean(SAMPLES.Cb);
@@ -360,10 +364,10 @@ else
             else
                 %YrA(:,ii) = YrA(:,ii) + Cin(ii,:)';
                 %cc = max(YrA(:,ii),0);
-                Ytemp = YrA(:,ii) + Cin(ii,:)';
+                %Ytemp = YrA(:,ii) + Cin(ii,:)';
                 cc = max(Ytemp,0);                                        
                 %YrA(:,ii) = YrA(:,ii) - (cc-C(ii,:))'*AA(ii,:);
-                YrA = YrA - (cc - C(ii,:)')*AA(ii,:);
+                %YrA = YrA - (cc - C(ii,:)')*AA(ii,:);
                 C(ii,:) = full(cc');
                 %YrA(:,ii) = YrA(:,ii) - C(ii,:)';
             end
@@ -379,6 +383,7 @@ else
         end
     end
 end
+YrA = AY - AA*C;
 f = C(K+1:end,:);
 C = C(1:K,:);
-YrA = YrA(:,1:K)';
+YrA = YrA(1:K,:);
