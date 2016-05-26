@@ -219,7 +219,8 @@ while Km < Kn
 end
 fprintf(' done. \n');
 %% classify components
-ff = classify_components(Am,Pm,options);
+%ff = classify_components(Am,Pm,options);
+ff = true(size(Am,2),1);
 A = Am(:,ff);
 C = Cm(ff,:);
 

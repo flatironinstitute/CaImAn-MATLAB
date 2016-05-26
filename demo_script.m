@@ -35,7 +35,7 @@ options = CNMFSetParms(...
 [P,Y] = preprocess_data(Y,p);
 
 %% fast initialization of spatial components using greedyROI and HALS
-options.init_method = 'greedy_corr'; 
+
 [Ain,Cin,bin,fin,center] = initialize_components(Y,K,tau,options);  % initialize
 
 % display centers of found components
@@ -58,6 +58,7 @@ clear Y;
 [A,b,Cin] = update_spatial_components(Yr,Cin,fin,Ain,P,options);
 
 %% update temporal components
+P.p = 0;    % set AR temporarily to zero for speed
 [C,f,P,S] = update_temporal_components(Yr,A,b,Cin,fin,P,options);
 
 %% merge found components
@@ -84,6 +85,7 @@ if and(display_merging, ~isempty(merged_ROIs))
 end
 
 %% repeat
+P.p = p;    % restore AR value
 [A2,b2,Cm] = update_spatial_components(Yr,Cm,f,Am,P,options);
 [C2,f2,P,S2] = update_temporal_components(Yr,A2,b2,Cm,f,P,options);
 
@@ -96,7 +98,6 @@ K_m = size(C_or,1);
 contour_threshold = 0.95;                       % amount of energy used for each component to construct contour plot
 figure;
 [Coor,json_file] = plot_contours(A_or,reshape(P.sn,d1,d2),contour_threshold,1); % contour plot of spatial footprints
-pause; 
 %savejson('jmesh',json_file,'filename');        % optional save json file with component coordinates (requires matlab json library)
 %% display components
 
@@ -105,7 +106,3 @@ plot_components_GUI(Yr,A_or,C_or,b2,f2,Cn,options)
 %% make movie
 
 make_patch_video(A_or,C_or,b2,f2,Yr,Coor,options)
-
-%% paly movies together with calcium traces for visually checking the results
-corr_img = correlation_image(Yr, 8, d1, d2); 
-run_movie(Yr, Ain, Cin, corr_img, [0,4000]) 

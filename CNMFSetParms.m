@@ -15,9 +15,9 @@ Names = [
     'ssub               ' % spatial downsampling factor (default: 1)
     'tsub               ' % temporal downsampling factor (default: 1)
     'init_method        ' % initialization method ('greedy','sparse_NMF') (default: 'greedy')
-    % greedyROI parameters (greedyROI2d.m)
+    % greedy_corr parameters (greedyROI_corr.m)
     'min_corr           ' % minimum local correlation for initializing a neuron (default: 0.3)
-    % greedyROI parameters (greedyROI2d.m)
+    % greedyROI parameters (greedyROI.m)
     'gSig               ' % half size of neurons to be found (default: [5,5])
     'gSiz               ' % half size of bounding box for each neuron (default: 2*gSig+1)
     'nb                 ' % number of background components (default: 1)
@@ -90,6 +90,9 @@ Names = [
     'pause_time         ' % time to pause between each component (default: Inf, user has to click)
     % CLASSIFY COMPONENTS (classify components.m)
     'cl_thr             ' % overlap threshold for energy for a component to be classified as true (default: 0.8)
+    % ORDER COMPONENTS (order_components.m)
+    'nsd                ' % number of standard deviations (default: 3)
+    'nfr                ' % number of consecutive frames (default: 3)
     ];
 
 [m,n] = size(Names);
@@ -178,8 +181,9 @@ Values = [
     {1}
     {1}
     {'greedy'}
-    % greedyROI parameters (greedyROI2d.m)
+    % greedy_corr parameters (greedyROI_corr.m)
     {.3}
+    % greedyROI parameters (greedyROI.m)
     {5}
     {[]}
     {1}
@@ -252,6 +256,9 @@ Values = [
     {Inf}
     % CLASSIFY COMPONENTS (classify_components.m)
     {0.8}
+    % ORDER COMPONENTS (order_components.m)
+    {3}
+    {5}
     ];
 
 for j = 1:m
