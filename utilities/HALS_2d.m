@@ -16,7 +16,7 @@ function [A, C, b, f] = HALS_2d(Y, A, C, b, f, params)
 %       forced to be 0.
 %       maxIter: maximum iteration of iterating HALS.
 
-% Author: Pengcheng Zhou, Columbia University, based on a python
+% Author: Pengcheng Zhou, Carnegie Mellon University, based on a python
 % implementation from Johannes Friedrich, Columbia University, 2015.
 
 %% parameters
@@ -25,6 +25,7 @@ if isfield(params, 'search_method'); method=params.search_method; else method='e
 if and(isfield(params, 'bSiz'), strcmpi(method, 'dilate'))
     params.se = strel('disk', params.bSiz);
 end
+Y = reshape(Y, size(A, 1), []); 
 % search locations
 IND = determine_search_location(A, method, params);
 

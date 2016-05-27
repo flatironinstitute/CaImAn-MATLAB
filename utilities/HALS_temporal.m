@@ -17,6 +17,7 @@ if nargin<4;    maxIter=1; end
 
 %% initialization 
 K = size(A, 2);     % number of components 
+A = full(A); 
 U = A'*Y; 
 V = A'*A; 
 aa = diag(V);   % squares of l2 norm all all components 

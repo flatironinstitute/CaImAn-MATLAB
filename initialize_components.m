@@ -101,8 +101,9 @@ else
 end
 
 % refine with HALS
-fprintf('Refining initial estimates with HALS...');
+fprintf('Refining the initial estimations with HALS...');
 [Ain, Cin, bin, fin] = HALS(Y_ds, full(Ain), Cin, bin, fin, options);
+K = size(Cin, 1); 
 fprintf('  done \n');
 %% upsample Ain, Cin, bin, fin
 if ndimsY == 2; center = ssub*com(Ain,ds(1),ds(2)); else center = ssub*com(Ain,ds(1),ds(2),ds(3)); end
