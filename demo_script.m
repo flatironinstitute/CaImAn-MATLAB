@@ -93,7 +93,7 @@ P.p = p;    % restore AR value
 
 [A_or,C_or,S_or,P] = order_ROIs(A2,C2,S2,P); % order components
 K_m = size(C_or,1);
-[C_df,~,S_df] = extract_DF_F(Yr,[A_or,b2],[C_or;f2],S_or,K_m+1); % extract DF/F values (optional)
+[C_df,~] = extract_DF_F(Yr,[A_or,b2],[C_or;f2],S_or,K_m+1); % extract DF/F values (optional)
 
 contour_threshold = 0.95;                       % amount of energy used for each component to construct contour plot
 figure;
