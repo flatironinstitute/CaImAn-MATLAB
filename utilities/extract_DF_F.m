@@ -1,10 +1,9 @@
-function [C_df,Df] = extract_DF_F(Y,A,C,S,ind,options)
+function [C_df,Df] = extract_DF_F(Y,A,C,ind,options)
 
 % extract DF/F signals after performing NMF
 % inputs:  Y raw data (d X T matrix, d # number of pixels, T # of timesteps)
 %          A matrix of spatial components (d x K matrix, K # of components)
 %          C matrix of temporal components (K x T matrix)
-%          S matrix of deconvolved activity ((K-1) x T matrix) (optional)
 %          ind index of component that represent the background (optional, if not
 %          given it's estimated)
 %          options structure used for specifying method for determining DF
