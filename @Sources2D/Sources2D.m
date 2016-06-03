@@ -86,17 +86,16 @@ classdef Sources2D < handle
         end
         
         %% extract DF/F signal after performing NMF
-        function [C_df, Df, S_df] = extractDF_F(obj, Y, i)
+        function [C_df, Df] = extractDF_F(obj, Y, i)
             if ~exist('i', 'var')
                 i = size(obj.A, 2) + 1;
             end
             
-            [obj.C_df, obj.Df, obj.S_df] = extract_DF_F(Y, [obj.A, obj.b],...
-                [obj.C; obj.f], obj.S, i);
+            [obj.C_df, obj.Df] = extract_DF_F(Y, [obj.A, obj.b],...
+                [obj.C; obj.f], i);
             
             C_df =  obj.C_df;
             Df = obj.Df;
-            S_df = obj.S_df;
             
         end
         

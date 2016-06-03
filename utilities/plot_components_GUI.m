@@ -42,7 +42,7 @@ nb = size(f,1);     % number of background components
 Y_r = (A'*Y- (A'*A)*C - (A'*full(b))*f) + C;
 
 if plot_df
-    [~,Df] = extract_DF_F(Y,[A,b],[C;f],[],size(A,2)+1);
+    [~,Df] = extract_DF_F(Y,[A,b],[C;f],size(A,2)+1);
 else
     Df = ones(size(A,2)+1,1);
 end
@@ -52,7 +52,7 @@ if save_avi
     set(vidObj,'FrameRate',1);
     open(vidObj);
 end
-thr = 0.9;
+thr = 0.95;
 fig = figure('Visible','off');
 set(gcf,'Position',2*[300,300,960,480]);
 set(gcf,'PaperPosition',2*[300,300,960,480]);
