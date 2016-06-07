@@ -1,4 +1,4 @@
-function C = HALS_temporal(Y, A, C, maxIter)
+function C = HALS_deconv(Y, A, C, maxIter)
 %% run HALS by fixating all spatial components 
 % input: 
 %   Y:  d*T, fluorescence data
@@ -17,7 +17,6 @@ if nargin<4;    maxIter=1; end
 
 %% initialization 
 K = size(A, 2);     % number of components 
-A = full(A); 
 U = A'*Y; 
 V = A'*A; 
 aa = diag(V);   % squares of l2 norm all all components 
