@@ -19,7 +19,7 @@ function [C_df,Df] = extract_DF_F(Y,A,C,ind,options)
 
 memmaped = isobject(Y);
 defoptions = CNMFSetParms;
-if nargin < 6 || isempty(options)
+if nargin < 5 || isempty(options)
     options = defoptions;
 end
 if ~isfield(options,'df_prctile') || isempty(options.df_prctile)
