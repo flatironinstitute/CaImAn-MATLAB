@@ -63,7 +63,12 @@ if isempty(options.df_window) || (options.df_window > size(C,2))
     C_df = spdiags(Df,0,K,K)\C;
 else
     if options.df_prctile == 50
-        Df = medfilt1(Yf,options.df_window,[],2,'truncate');
+        if verLessThan('matlab','2015b')
+            warning('Median filtering at the boundaries might be inaccurate due to zero padding.')
+            Df = medfilt1(Yf,options.df_window,[],2);
+        else
+            Df = medfilt1(Yf,options.df_window,[],2,'truncate');
+        end
     else
         Df = zeros(size(Yf));
         for i = 1:size(Df,1);
