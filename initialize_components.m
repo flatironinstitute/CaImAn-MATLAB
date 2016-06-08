@@ -96,6 +96,9 @@ elseif strcmpi(options.init_method,'sparse_NMF')
     % run sparse_NMF method
     fprintf('Initializing components with sparse NMF \n');
     [Ain,Cin,bin,fin] = sparse_NMF_initialization(Y_ds,K,options_ds);
+elseif strcmpi(options.init_method,'HALS')
+    fprintf('Initializing components with HALS \n');
+    [Ain,Cin,bin,fin] = HALS_initialization(Y_ds,K,options_ds);
 else
     error('Unknown initialization method')
 end
@@ -105,21 +108,16 @@ fprintf('Refining initial estimates with HALS...');
 [Ain, Cin, bin, fin] = HALS(Y_ds, full(Ain), Cin, bin, fin, options);
 fprintf('  done \n');
 %% upsample Ain, Cin, bin, fin
-if ndimsY == 2; center = ssub*com(Ain,ds(1),ds(2)); else center = ssub*com(Ain,ds(1),ds(2),ds(3)); end
-%Ain = imresize(reshape(Ain, ds(1), ds(2), sum(K)), d);
-%Ain = imresize(reshape(full(Ain), [ds, sum(K)]), d);
+if nargout == 5
+    if ndimsY == 2; center = ssub*com(Ain,ds(1),ds(2)); else center = ssub*com(Ain,ds(1),ds(2),ds(3)); end
+end
+
 Ain = imresize(reshape(full(Ain), [ds(1),ds(2), sum(K)*prod(ds)/ds(1)/ds(2)]),[d(1),d(2)]); %,prod(d)/d(1)/d(2)*sum(K)]);
 Ain = sparse(reshape(Ain, prod(d), []));
-%bin_temp = reshape(bin, ds(1), ds(2), options.nb);
-%bin = zeros(d(1),d(2),options.nb);
+
 bin = imresize(reshape(bin,[ds(1),ds(2), options.nb*prod(ds)/ds(1)/ds(2)]),[d(1),d(2)]);
 bin = reshape(bin,prod(d),[]);
-% bin_temp = reshape(bin, [ds, options.nb]);
-% bin = zeros([d,options.nb]);
-% for i = 1:options.nb
-%     bin(:,:,i) = imresize(bin_temp(:,:,i), d);
-% end
-%bin = reshape(bin, [], options.nb);
+
 Cin = imresize(Cin, [sum(K), Ts*tsub]);
 fin = imresize(fin, [options.nb, Ts*tsub]);
 if T ~= Ts*tsub
