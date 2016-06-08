@@ -16,72 +16,42 @@ function [A, C, b, f] = HALS(Y, A, C, b, f, params)
 %       forced to be 0. 
 %       maxIter: maximum iteration of iterating HALS. 
 
-% Author: Pengcheng Zhou, Columbia University, based on a python
+% Author: Pengcheng Zhou, Carnegie Mellon University, based on a python
 % implementation from Johannes Friedrich, Columbia University, 2015.
 
-%[d1, d2, ~] = size(Y);
-dimY = ndims(Y)-1;
-sizY = size(Y);
-d = sizY(1:dimY);
-
-if nargin < 6; params = []; end
-if isfield(params, 'bSiz'), bSiz = params.bSiz; else bSiz=3; end
+%% parameters
 if isfield(params, 'maxIter'), maxIter = params.maxIter; else maxIter=5; end
-
-blur_kernel = ones(bSiz);
-if dimY == 3; blur_kernel(:,:,3:end) = []; end
-blur_kernel = blur_kernel/numel(blur_kernel);
-if ismatrix(A)
-    A = reshape(A,[d,size(A,2)]);
-    ind_A = (imfilter(A,blur_kernel)>0);
+if isfield(params, 'search_method'); method=params.search_method; else method='ellipse'; end
+if and(isfield(params, 'bSiz'), strcmpi(method, 'dilate'))
+    params.se = strel('disk', params.bSiz);
 end
-A = sparse(reshape(A,prod(d),[]));
-ind_A = sparse(reshape(ind_A,prod(d),[]));
-K = size(A,2);
-% if ndims(A)==3
-%     ind_A = (imfilter(A, blur_kernel)>0); 
-%     A = reshape(A, d1*d2, []);
-%     ind_A = reshape(ind_A, d1*d2, []); 
-% else 
-%     ind_A = (imfilter(reshape(A, d1,d2,[]), blur_kernel)>0); 
-%     ind_A = reshape(ind_A, d1*d2, []); 
-% end
-% ind_A = sparse(ind_A);  %indicator of nonnero pixels 
-% K = size(A, 2);         %number of neurons 
-
+Y = reshape(Y,size(A,1),[]);
+% search locations
+%IND = determine_search_location(A,method,params);
+IND = true(size(A));
 %% update spatial and temporal components neuron by neurons
-%Yres = reshape(Y, d1*d2, []) - A*C - b*f;
-Yres = reshape(Y, prod(d), []) - A*C - b*f;
 
 for miter=1:maxIter
-    for mcell = 1:K
-        ind_pixels = ind_A(:, mcell);
-        tmp_Yres = Yres(ind_pixels, :);
-        
-        % update temporal component of the neuron
-        c0 = C(mcell, :);
-        a0 = A(ind_pixels, mcell);
-        norm_a2 = norm(a0, 2)^2;
-        C(mcell, :) = max(0, c0 + a0'*tmp_Yres/norm_a2);
-        tmp_Yres = tmp_Yres + a0*(c0-C(mcell,:));
-        
-        % update spatial component of the neuron
-        norm_c2 = norm(C(mcell,:),2)^2;
-        tmp_a = max(0, a0 + tmp_Yres*C(mcell, :)'/norm_c2);
-        A(ind_pixels, mcell) = tmp_a; 
-        Yres(ind_pixels,:) = tmp_Yres + (a0-tmp_a)*C(mcell,:);
-    end
+    % update neurons
+    Yac = Y - b*f;
+    ind_del = find(std(A,0,1)==0); 
+    A(:, ind_del) = []; 
+    C(ind_del, :) = []; 
+    IND(:, ind_del) = []; 
+    %   temporal
+    C = HALS_temporal(Yac, A, C, 5);
     
-    % update temporal component of the background
-    f0 = f;
-    b0 = b;
-    norm_b2 = norm(b0,2)^2;
-    f = max(0, f0 + b0'*Yres/norm_b2);
-    Yres = Yres + b0*(f0-f);
-    % update spatial component of the background
-    norm_f2 = norm(f, 2)^2;
-    b = max(0, b0 + Yres*f'/norm_f2);
-    Yres = Yres + (b0-b)*f;
+    ind_del = find(std(C,0,2)==0); 
+    A(:, ind_del) = []; 
+    C(ind_del, :) = []; 
+    IND(:, ind_del) = []; 
+    %   spatial
+    A = HALS_spatial(Yac, A, C, IND, 5);
     
-    %fprintf('Iteration %d, the norm of  residual is %.4f\n', miter, norm(Yres, 'fro'));
+    % update background
+    Ybg = Y-A*C;
+    % temporal
+    f = HALS_temporal(Ybg, b, f, 5);
+    % spatial 
+    b = HALS_spatial(Ybg, b, f, [], 5);     
 end
