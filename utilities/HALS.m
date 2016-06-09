@@ -30,10 +30,9 @@ Y = reshape(Y,size(A,1),[]);
 IND = determine_search_location(A,method,params);
 %IND = true(size(A));
 %% update spatial and temporal components neuron by neurons
-
+Yac = Y - b*f;
 for miter=1:maxIter
     % update neurons
-    Yac = Y - b*f;
     ind_del = find(std(A,0,1)==0); 
     A(:, ind_del) = []; 
     C(ind_del, :) = []; 
@@ -47,9 +46,11 @@ for miter=1:maxIter
     IND(:, ind_del) = []; 
     %   spatial
     A = HALS_spatial(Yac, A, C, IND, 5);
-    
-    % update background
-    Ybg = Y-A*C;
+end    
+
+% update background
+Ybg = Y-A*C;
+for miter = 1:maxIter
     % temporal
     f = HALS_temporal(Ybg, b, f, 5);
     % spatial 
