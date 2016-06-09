@@ -105,7 +105,7 @@ end
 
 % refine with HALS
 fprintf('Refining initial estimates with HALS...');
-[Ain, Cin, bin, fin] = HALS(Y_ds, full(Ain), Cin, bin, fin, options);
+[Ain, Cin, bin, fin] = HALS(Y_ds, full(Ain), Cin, bin, fin, options_ds);
 fprintf('  done \n');
 %% upsample Ain, Cin, bin, fin
 if nargout == 5
