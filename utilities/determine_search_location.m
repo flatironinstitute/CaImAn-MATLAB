@@ -59,7 +59,7 @@ switch method
                cm = [cm,ones(nr,1)];
            end
            Vr = cell(nr,1);
-           IND = zeros(d,nr);       % indicator for distance								   
+           IND = false(d,nr);       % indicator for distance								   
            %cm(:,1) = Coor.x'*A(:,1:nr)./sum(A(:,1:nr)); 
            %cm(:,2) = Coor.y'*A(:,1:nr)./sum(A(:,1:nr));          % center of mass for each components
            parfor i = 1:nr            % calculation of variance for each component and construction of ellipses

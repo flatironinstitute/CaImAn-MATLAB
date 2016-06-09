@@ -27,8 +27,8 @@ if and(isfield(params, 'bSiz'), strcmpi(method, 'dilate'))
 end
 Y = reshape(Y,size(A,1),[]);
 % search locations
-%IND = determine_search_location(A,method,params);
-IND = true(size(A));
+IND = determine_search_location(A,method,params);
+%IND = true(size(A));
 %% update spatial and temporal components neuron by neurons
 
 for miter=1:maxIter
