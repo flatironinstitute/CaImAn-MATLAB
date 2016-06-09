@@ -30,5 +30,6 @@ end
 if nargin < 3 || isempty(S)
     S_or = [];
 else
+    S = spdiags(nA(:),0,nr,nr)*S;
     S_or = S(srt,:);
 end
