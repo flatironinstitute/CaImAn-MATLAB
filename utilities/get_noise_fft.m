@@ -11,10 +11,19 @@
         block_size = options.block_size;
         if ~isfield(options,'split_data'); options.split_data = defoptions.split_data; end
         split_data = options.split_data;
+        if ~isfield(options,'max_timesteps') || isempty(options.max_timesteps); 
+            options.max_timesteps = defoptions.max_timesteps;
+        end
         
         dims = ndims(Y);
         sizY = size(Y);
-        N = sizY(end);
+        N = min(sizY(end),options.max_timesteps);
+        if N < sizY(end)
+           %Y = reshape(Y,prod(sizY(1:end-1)),[]);
+           Y(prod(sizY(1:end-1))*N+1:end) = [];
+           Y = reshape(Y,sizY(1:end-1),[]);
+        end
+        
         Fs = 1;        
         ff = 0:Fs/N:Fs/2;
         indf=ff>range_ff(1);
