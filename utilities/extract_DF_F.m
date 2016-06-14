@@ -35,7 +35,7 @@ d = size(A,1);
 A = A/spdiags(nA,0,K,K);    % normalize spatial components to unit energy
 C = spdiags(nA,0,K,K)*C;
 
-if nargin < 5 || isempty(ind)
+if nargin < 4 || isempty(ind)
     [~,ind] = min(sum(A.^6)); % identify background component
 end
 
