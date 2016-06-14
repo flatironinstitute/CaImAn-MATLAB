@@ -14,7 +14,8 @@ Names = [
     % INITIALIZATION  (initialize_components.m)
     'ssub               ' % spatial downsampling factor (default: 1)
     'tsub               ' % temporal downsampling factor (default: 1)
-    'init_method        ' % initialization method ('greedy','sparse_NMF') (default: 'greedy')
+    'init_method        ' % initialization method ('greedy','greedy_corr','sparse_NMF','HALS') (default: 'greedy')
+    'noise_norm         ' % normalization by noise estimate prior to initialization (default: true)
     % greedy_corr parameters (greedyROI_corr.m)
     'min_corr           ' % minimum local correlation for initializing a neuron (default: 0.3)
     % greedyROI parameters (greedyROI.m)
@@ -37,6 +38,7 @@ Names = [
     % Noise and AR coefficients calculation (preprocess_data.m)
     'noise_range        ' % frequency range over which to estimate the noise (default: [0.25,0.5])
     'noise_method       ' % method for which to estimate the noise level (default: 'logmexp')
+    'max_timesteps      ' % maximum number of timesteps over which to estimate noise (default: 3000)
     'flag_g             ' % compute global AR coefficients (default: false)
     'lags               ' % number of extra lags when computing the AR coefficients (default: 5)
     'include_noise      ' % include early lags when computing AR coefs (default: 0)
@@ -181,6 +183,7 @@ Values = [
     {1}
     {1}
     {'greedy'}
+    {true}
     % greedy_corr parameters (greedyROI_corr.m)
     {.3}
     % greedyROI parameters (greedyROI.m)
@@ -203,6 +206,7 @@ Values = [
     % Noise and AR coefficients calculation (preprocess_data.m)
     {[0.25,0.5]}
     {'logmexp'}
+    {3000}
     {false}
     {5}
     {false}

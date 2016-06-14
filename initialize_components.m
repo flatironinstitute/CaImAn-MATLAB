@@ -1,4 +1,4 @@
-function [Ain, Cin, bin, fin, center] = initialize_components(Y, K, tau, options)
+function [Ain, Cin, bin, fin, center] = initialize_components(Y, K, tau, options, P)
 
 % Initalize components using a greedy approach followed by hierarchical
 % alternative least squares (HALS) NMF. Optional use of spatio-temporal
@@ -20,6 +20,9 @@ function [Ain, Cin, bin, fin, center] = initialize_components(Y, K, tau, options
 %           options.windowSiz: size of spatial window when computing the median (default 32 x 32)
 %           options.chunkSiz: number of timesteps to be processed simultaneously if on save_memory mode (default: 100)
 %           options.med_app: number of timesteps to be interleaved for fast (approximate) median calculation (default: 1, no approximation)
+%           
+
+% P         parameter struct used for normalization by noise (optional)
 
 %
 %Output:
@@ -32,7 +35,9 @@ function [Ain, Cin, bin, fin, center] = initialize_components(Y, K, tau, options
 %
 %Authors: Eftychios A. Pnevmatikakis and Pengchen Zhou
 
-if nargin < 4 || isempty(options); options = CNMFSetParms; end
+
+defoptions = CNMFSetParms;
+if nargin < 4 || isempty(options); options = defoptions; end
 if nargin < 2 || isempty(K)
     K = 30;
     fprintf('Number of components to be detected not specified. Using the default value 30. \n');
@@ -51,10 +56,26 @@ if ssub == 1; fprintf('No spatial downsampling is performed. Consider spatial do
 if ~isfield(options, 'tsub'), options.tsub = 1; end; tsub = options.tsub;
 if tsub == 1; fprintf('No temporal downsampling is performed. Consider temporal downsampling if the recording is very long. \n'); end
 
+if ~isfield(options,'noise_norm') || isempty(options.noise_norm)
+    options.noise_norm = defoptions.noise_norm; % normalization by noise (true if P is present)
+end
+
+if nargin < 5
+    if options.noise_norm
+        warning('Normalization by noise value is not performed since noise values are not provided. \n');
+    end
+    options.noise_norm = false;
+end
+
 ndimsY = ndims(Y)-1;
 sY = size(Y);
 d = sY(1:ndimsY);
 T = sY(end);
+
+if options.noise_norm
+    min_noise = prctile(P.sn(P.sn>0),2);
+    Y = bsxfun(@times,Y,reshape(1./max(P.sn,min_noise),d));
+end
 
 ds = d;
 ds(1:2) = ceil(d(1:2)/ssub); % do not subsample along z axis
@@ -117,6 +138,11 @@ Ain = sparse(reshape(Ain, prod(d), []));
 
 bin = imresize(reshape(bin,[ds(1),ds(2), options.nb*prod(ds)/ds(1)/ds(2)]),[d(1),d(2)]);
 bin = reshape(bin,prod(d),[]);
+
+if options.noise_norm
+    Ain = bsxfun(@times,Ain,max(P.sn(:),min_noise));
+    bin = bsxfun(@times,bin,max(P.sn(:),min_noise));
+end
 
 Cin = imresize(Cin, [sum(K), Ts*tsub]);
 fin = imresize(fin, [options.nb, Ts*tsub]);
