@@ -21,7 +21,7 @@
         if N < sizY(end)
            %Y = reshape(Y,prod(sizY(1:end-1)),[]);
            Y(prod(sizY(1:end-1))*N+1:end) = [];
-           Y = reshape(Y,sizY(1:end-1),[]);
+           Y = reshape(Y,[sizY(1:end-1),N]);
         end
         
         Fs = 1;        
