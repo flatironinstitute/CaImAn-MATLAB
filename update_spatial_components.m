@@ -73,6 +73,7 @@ Cf = [C;f];
 
 if use_parallel         % solve BPDN problem for each pixel
     Nthr = max(20*maxNumCompThreads,round(d*T/2^24));
+    Nthr = min(Nthr,round(d/1e3));
     siz_row = [floor(d/Nthr)*ones(Nthr-mod(d,Nthr),1);(floor(d/Nthr)+1)*ones(mod(d,Nthr),1)];
     indeces = [0;cumsum(siz_row)];
 %     if ~memmaped
@@ -112,7 +113,9 @@ if use_parallel         % solve BPDN problem for each pixel
                 Atemp(px,:) = a_sparse';
             end
         end
-        fprintf('%2.1f%% of pixels completed \n', indeces(nthr+1)*100/d);
+        if mod(nthr,50) == 0
+            fprintf('%2.1f%% of pixels completed \n', indeces(nthr+1)*100/d);
+        end
         %Acell{nthr} = Atemp;
         A(indeces(nthr)+1:indeces(nthr+1),:) = Atemp;
     end
