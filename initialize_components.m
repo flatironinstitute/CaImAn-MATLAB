@@ -22,7 +22,7 @@ function [Ain, Cin, bin, fin, center] = initialize_components(Y, K, tau, options
 %           options.med_app: number of timesteps to be interleaved for fast (approximate) median calculation (default: 1, no approximation)
 %           
 
-% P         parameter struct used for normalization by noise (optional)
+% P         parameter struct used for normalization by noise and user feed component centroids (optional)
 
 %
 %Output:
@@ -33,7 +33,7 @@ function [Ain, Cin, bin, fin, center] = initialize_components(Y, K, tau, options
 %fin        nb X T matrix, initalization of temporal background
 %res        d1 x d2 x T movie, residual
 %
-%Authors: Eftychios A. Pnevmatikakis and Pengchen Zhou
+%Authors: Eftychios A. Pnevmatikakis and Pengchen Zhou, with inputs from Weijian Yang
 
 
 defoptions = CNMFSetParms;
@@ -108,8 +108,14 @@ options_ds.d2 = ds(2);
 
 if strcmpi(options.init_method,'greedy')
     % run greedy method
+    if nargin < 5 || ~isfield(P,'ROI_list')
+        ROI_list = [];
+    else
+        ROI_list = round(P.ROI_list/ssub);
+        K = size(ROI_list,1);
+    end
     fprintf('Initializing components with greedy method \n');
-    [Ain, Cin, bin, fin] = greedyROI(Y_ds, K, options);
+    [Ain, Cin, bin, fin] = greedyROI(Y_ds, K, options, ROI_list);
 elseif strcmpi(options.init_method, 'greedy_corr')
     fprintf('Initializing components with greedy_corr method \n');
     [Ain, Cin, bin, fin] = greedyROI_corr(Y_ds, K, options);

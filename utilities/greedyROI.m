@@ -1,4 +1,4 @@
-function [Ain, Cin, b_in, f_in, center, res] = greedyROI(Y, K, params)
+function [Ain, Cin, b_in, f_in, center, res] = greedyROI(Y, K, params, ROI_list)
 % component initialization using a greedy algorithm to identify neurons in 2d or 3d calcium imaging movies
 %
 % Usage:     [Ain, Cin, bin, fin, center, res] = greedyROI2d(data, K, params)
@@ -15,16 +15,24 @@ function [Ain, Cin, b_in, f_in, center, res] = greedyROI(Y, K, params)
 %            params.windowSiz: size of spatial window when computing the median (default 32 x 32)
 %            params.chunkSiz: number of timesteps to be processed simultaneously if on save_memory mode (default: 100)
 %            params.med_app: number of timesteps to be interleaved for fast (approximate) median calculation (default: 1, no approximation)
+% ROI_list   Kn x 2 (or 3) matrix with user specified centroids. If this are present, then the algorithm only finds components around these centroids
 
 %Output:
 % Ain        (d) x K matrix, location of each neuron
 % Cin        T x K matrix, calcium activity of each neuron
-% center     K x 2 matrix, inferred center of each neuron
+% center     K x 2 (or 3) matrix, inferred center of each neuron
 % bin        (d) X nb matrix, initialization of spatial background
 % fin        nb X T matrix, initalization of temporal background
 % res        d1 x d2 x (d3 x) T movie, residual
 %
-% Author: Yuanjun Gao with modifications from Eftychios A. Pnevmatikakis
+% Author: Yuanjun Gao with modifications from Eftychios A. Pnevmatikakis and Weijian Yang
+
+if nargin < 4 || isempty(ROI_list)
+    user_ROIs = 0;
+else
+    user_ROIs = 1;
+    K = size(ROI_list,1);
+end
 
 dimY = ndims(Y) - 1;  % dimensionality of imaged data (2d or 3d)
 sizY = size(Y);
@@ -133,12 +141,15 @@ for r = 1:length(K)
     v = sum(rho.^2, dimY+1); %variance explained
 
     for k = 1:K(r),    
-        [~, ind] = max(v(:));
-        %[iHat, jHat] = ind2sub([M, N], ind);
-        iHat = zeros(1,dimY);
-        if dimY == 2; [iHat(1),iHat(2)] = ind2sub(dx,ind); else [iHat(1),iHat(2),iHat(3)] = ind2sub(dx,ind); end 
-        %centers(k, 1) = iHat; centers(k, 2) = jHat;
-        centers(k,:) = iHat;
+        if user_ROIs
+            iHat = ROI_list(k,:);
+        else
+            [~, ind] = max(v(:));
+            %[iHat, jHat] = ind2sub([M, N], ind);
+            iHat = zeros(1,dimY);
+            if dimY == 2; [iHat(1),iHat(2)] = ind2sub(dx,ind); else [iHat(1),iHat(2),iHat(3)] = ind2sub(dx,ind); end 
+        end
+        centers(k,:) = round(iHat);
 
         %iSig = [max(iHat - gHalf(1), 1), min(iHat + gHalf(1), M)]; iSigLen = iSig(2) - iSig(1) + 1;
         %jSig = [max(jHat - gHalf(2), 1), min(jHat + gHalf(2), N)]; jSigLen = jSig(2) - jSig(1) + 1;
