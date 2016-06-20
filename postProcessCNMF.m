@@ -6,7 +6,7 @@
 % signalExtraction: extract the raw, filtered, and inferred signal (dfof, F, df)
 % plotActivityTrace: plot the signal
 
-addpath(genpath('postProcessingTools'));
+addpath(genpath('utilities'));
 
 %% plot ROI contour
 % [ CC, info ] = plotROIContour( A, d1, d2, plotControl )
