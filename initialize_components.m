@@ -139,7 +139,7 @@ if nargout == 5
     if ndimsY == 2; center = ssub*com(Ain,ds(1),ds(2)); else center = ssub*com(Ain,ds(1),ds(2),ds(3)); end
 end
 
-Ain = imresize(reshape(full(Ain), [ds(1),ds(2), sum(K)*prod(ds)/ds(1)/ds(2)]),[d(1),d(2)]); %,prod(d)/d(1)/d(2)*sum(K)]);
+Ain = imresize(reshape(full(Ain), [ds(1),ds(2), size(Ain,2)*prod(ds)/ds(1)/ds(2)]),[d(1),d(2)]); %,prod(d)/d(1)/d(2)*sum(K)]);
 Ain = sparse(reshape(Ain, prod(d), []));
 
 bin = imresize(reshape(bin,[ds(1),ds(2), options.nb*prod(ds)/ds(1)/ds(2)]),[d(1),d(2)]);
