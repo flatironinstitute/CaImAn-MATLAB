@@ -79,4 +79,4 @@ else
     C_df = C./Df;
 end
             
-C_df(ind,:) = 0;
+C_df(ind,:) = []; % 0; % FN modified so C_df does not include the background components and it has the same size as C.
