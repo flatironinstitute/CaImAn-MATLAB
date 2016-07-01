@@ -55,6 +55,8 @@ function Ath = threshold_components(A,options)
         end
     end   
     for i = 1:nr-options.nb
-        Ath(indf{i},i) = valf{i};
+        if ~isempty(indf{i}) % FN added
+            Ath(indf{i},i) = valf{i};
+        end
     end
 end
