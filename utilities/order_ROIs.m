@@ -1,4 +1,4 @@
-function [A_or,C_or,S_or,P_or,srt] = order_ROIs(A,C,S,P, srt)
+function [A_or,C_or,S_or,P_or,srt,srt_val] = order_ROIs(A,C,S,P, srt)
 
 % ordering of the found components based on their maximum temporal
 % activation and their size (through their l_inf norm)
@@ -12,7 +12,7 @@ mA = sum(A.^4).^(1/4);
 %sA = sum(A);
 mC = max(C,[],2);
 if ~exist('srt', 'var')||isempty(srt)
-    [~,srt] = sort(mC.*mA','descend');
+    [srt_val,srt] = sort(mC.*mA','descend');
 end
 A_or = A(:,srt);
 C_or = C(srt,:);
