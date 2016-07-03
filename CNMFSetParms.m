@@ -16,6 +16,7 @@ Names = [
     'tsub               ' % temporal downsampling factor (default: 1)
     'init_method        ' % initialization method ('greedy','greedy_corr','sparse_NMF','HALS') (default: 'greedy')
     'noise_norm         ' % normalization by noise estimate prior to initialization (default: true)
+    'noise_norm_prctile ' % minimum noise level (as percentile of P.sn) used in the normalization prior to initialization (default: 2)
     % greedy_corr parameters (greedyROI_corr.m)
     'min_corr           ' % minimum local correlation for initializing a neuron (default: 0.3)
     % greedyROI parameters (greedyROI.m)
@@ -65,7 +66,7 @@ Names = [
     'temporal_parallel  ' % flag for parallel updating of temporal components (default: true if present)
     % CONSTRAINED DECONVOLUTION (constrained_foopsi.m)
     'method             ' % methods for performing spike inference ('dual','cvx','spgl1','lars') (default:'cvx')
-    'bas_nonneg         ' % flag for setting the baseline lower bound. if 1, then b >= 0 else b >= min(y) (default 0)
+    'bas_nonneg         ' % flag for setting the baseline lower bound. if 1, then b >= 0 else b >= min(y) (default 1)
     'fudge_factor       ' % scaling constant to reduce bias in the time constant estimation (default 1 - no scaling)
     'resparse           ' % number of times that the solution is resparsened (default: 0)
     % MERGING (merge_ROIs.m)
@@ -184,6 +185,7 @@ Values = [
     {1}
     {'greedy'}
     {true}
+    {2}
     % greedy_corr parameters (greedyROI_corr.m)
     {.3}
     % greedyROI parameters (greedyROI.m)
