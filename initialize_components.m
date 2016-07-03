@@ -73,7 +73,7 @@ d = sY(1:ndimsY);
 T = sY(end);
 
 if options.noise_norm
-    min_noise = prctile(P.sn(P.sn>0),2);
+    min_noise = prctile(P.sn(P.sn>0),options.noise_norm_prctile);
     Y = bsxfun(@times,Y,reshape(1./max(P.sn,min_noise),d));
 end
 
