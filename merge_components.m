@@ -36,35 +36,46 @@ nr = size(A,2);
 %[d,T] = size(Y);
 d = size(A,1);
 T = size(C,2);
-C_corr = corr(full(C(1:nr,:)'));
-FF1 = triu(C_corr)>= thr;                           % find graph of strongly correlated temporal components
 
-A_corr = triu(A(:,1:nr)'*A(:,1:nr));                
-A_corr(1:nr+1:nr^2) = 0;
-FF2 = A_corr > 0;                                   % find graph of overlapping spatial components
-
-FF3 = and(FF1,FF2);                                 % intersect the two graphs
-[l,c] = graph_connected_comp(sparse(FF3+FF3'));     % extract connected components
-MC = [];
-for i = 1:c
-    if length(find(l==i))>1
-        MC = [MC,(l==i)'];
-    end
-end
-
-cor = zeros(size(MC,2),1);
-for i = 1:length(cor)
-    fm = find(MC(:,i));
-    for j1 = 1:length(fm)
-        for j2 = j1+1:length(fm)
-            cor(i) = cor(i) + C_corr(fm(j1),fm(j2));
+if ~isfield(options, 'merged_ROIs')
+    C_corr = corr(full(C(1:nr,:)'));
+    FF1 = triu(C_corr)>= thr;                           % find graph of strongly correlated temporal components
+    
+    A_corr = triu(A(:,1:nr)'*A(:,1:nr));                
+    A_corr(1:nr+1:nr^2) = 0;
+    FF2 = A_corr > 0;                                   % find graph of overlapping spatial components
+    
+    FF3 = and(FF1,FF2);                                 % intersect the two graphs
+    [l,c] = graph_connected_comp(sparse(FF3+FF3'));     % extract connected components
+    MC = [];
+    for i = 1:c
+        if length(find(l==i))>1
+            MC = [MC,(l==i)'];
         end
     end
+    
+    cor = zeros(size(MC,2),1);
+    for i = 1:length(cor)
+        fm = find(MC(:,i));
+        for j1 = 1:length(fm)
+            for j2 = j1+1:length(fm)
+                cor(i) = cor(i) + C_corr(fm(j1),fm(j2));
+            end
+        end
+    end
+    
+    [~,ind] = sort(cor,'descend');
+    nm = min(length(ind),mx);   % number of merging operations
+    merged_ROIs = cell(nm,1);
+    for i = 1:nm
+        merged_ROIs{i} = find(MC(:,ind(i)));
+    end
+
+else % merged_ROIs is provided as a field in options, allowing for custom defining merged_ROIs.
+    merged_ROIs = options.merged_ROIs;
+    nm = length(merged_ROIs);
 end
 
-[~,ind] = sort(cor,'descend');
-nm = min(length(ind),mx);   % number of merging operations
-merged_ROIs = cell(nm,1);
 A_merged = zeros(d,nm);
 C_merged = zeros(nm,T);
 S_merged = zeros(nm,T);
@@ -79,7 +90,7 @@ if ~options.fast_merge
 end
 
 for i = 1:nm
-    merged_ROIs{i} = find(MC(:,ind(i)));
+    % merged_ROIs{i} = find(MC(:,ind(i)));
     nC = sqrt(sum(C(merged_ROIs{i},:).^2,2));
     if options.fast_merge
         aa = sum(A(:,merged_ROIs{i})*spdiags(nC,0,length(nC),length(nC)),2);
