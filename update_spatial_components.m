@@ -72,38 +72,54 @@ end
 Cf = [C;f];
 
 if use_parallel         % solve BPDN problem for each pixel
-    Nthr = max(2*maxNumCompThreads,round(d*T/2^24));
-    siz_row = [floor(d/Nthr)*ones(Nthr-1,1);d-floor(d/Nthr)*(Nthr-1)];
+    Nthr = max(20*maxNumCompThreads,round(d*T/2^24));
+    Nthr = min(Nthr,round(d/1e3));
+    siz_row = [floor(d/Nthr)*ones(Nthr-mod(d,Nthr),1);(floor(d/Nthr)+1)*ones(mod(d,Nthr),1)];
     indeces = [0;cumsum(siz_row)];
-    if ~memmaped
-        Ycell = mat2cell(Y,siz_row,T);
-    else
-        Ycell = cell(Nthr,1);
-    end
-    INDc =  mat2cell(IND,siz_row,K);
-    Acell = cell(Nthr,1);
-    Psnc = mat2cell(options.sn(:),siz_row,1); 
+%     if ~memmaped
+%         Ycell = mat2cell(Y,siz_row,T);
+%     else
+%         Ycell = cell(Nthr,1);
+%     end
+%    INDc =  mat2cell(IND,siz_row,K);
+%    Acell = cell(Nthr,1);
+%    Psnc = mat2cell(options.sn(:),siz_row,1); 
     Yf = cell(Nthr,1);
-    parfor nthr = 1:Nthr
-        Acell{nthr} = zeros(siz_row(nthr),size(Cf,1));
+    A = spalloc(d,size(Cf,1),nnz(IND)+size(Cf,1)*d);
+    for nthr = 1:Nthr
+        %IND_temp = INDc{nthr};
+        %Acell{nthr} = spalloc(siz_row(nthr),size(Cf,1),nnz(IND_temp));        
         if memmaped
             Ytemp = double(Y.Yr(indeces(nthr)+1:indeces(nthr+1),:));
         else
-            Ytemp = Ycell{nthr};
+            %Ytemp = Ycell{nthr};
+            Ytemp = Y(indeces(nthr)+1:indeces(nthr+1),:);
+            %Ycell{nthr} = [];
         end
-        Yf{nthr} = Ytemp*f';
-        for px = 1:siz_row(nthr)
+        IND_temp = IND(indeces(nthr)+1:indeces(nthr+1),:);
+        Atemp = spalloc(siz_row(nthr),size(Cf,1),nnz(IND_temp));
+        Yf{nthr} = Ytemp*f'; 
+        %Atemp = Acell{nthr};
+        sn_temp = options.sn(indeces(nthr)+1:indeces(nthr+1));
+        parfor px = 1:siz_row(nthr)
             fn = ~isnan(Ytemp(px,:));       % identify missing data
-            ind = find(INDc{nthr}(px,:));
+            ind = find(IND_temp(px,:));
             if ~isempty(ind);
                 ind2 = [ind,K+(1:size(f,1))];
                 %[~, ~, a, ~] = lars_regression_noise(Ycell{nthr}(px,fn)', Cf(ind2,fn)', 1, Psnc{nthr}(px)^2*T);
-                [~, ~, a, ~] = lars_regression_noise(Ytemp(px,fn)', Cf(ind2,fn)', 1, Psnc{nthr}(px)^2*T);
-                Acell{nthr}(px,ind2) = a';
+                %[~, ~, a, ~] = lars_regression_noise(Ytemp(px,fn)', Cf(ind2,fn)', 1, Psnc{nthr}(px)^2*T);
+                [~, ~, a, ~] = lars_regression_noise(Ytemp(px,fn)', Cf(ind2,fn)', 1, sn_temp(px)^2*T);
+                a_sparse = sparse(1,ind2,a');
+                Atemp(px,:) = a_sparse';
             end
         end
+        if mod(nthr,50) == 0
+            fprintf('%2.1f%% of pixels completed \n', indeces(nthr+1)*100/d);
+        end
+        %Acell{nthr} = Atemp;
+        A(indeces(nthr)+1:indeces(nthr+1),:) = Atemp;
     end
-    A = cell2mat(Acell);
+    %A = cell2mat(Acell);
     Yf = cell2mat(Yf);
 else
     A = [zeros(d,K),zeros(d,size(f,1))];

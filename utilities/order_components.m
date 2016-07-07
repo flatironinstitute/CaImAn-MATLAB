@@ -33,7 +33,7 @@ if nargin < 4 || isempty(options)
 end
 
 if ~isfield(options,'nsd') || isempty(options.nsd); options.nsd = defoptions.nsd; end  % number of sd above the mode
-if ~isfield(options,'nfr') || isempty(options.nfr); options.nsd = defoptions.nfr; end  % number of consecutive frames
+if ~isfield(options,'nfr') || isempty(options.nfr); options.nfr = defoptions.nfr; end  % number of consecutive frames
 
 [K,T] = size(C);
 CY = C + YrA;

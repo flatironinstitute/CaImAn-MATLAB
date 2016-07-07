@@ -25,6 +25,7 @@ if isfield(params, 'search_method'); method=params.search_method; else method='e
 if and(isfield(params, 'bSiz'), strcmpi(method, 'dilate'))
     params.se = strel('disk', params.bSiz);
 end
+<<<<<<< HEAD
 Y = reshape(Y, size(A, 1), []); 
 % search locations
 IND = determine_search_location(A, method, params);
@@ -34,12 +35,23 @@ IND = determine_search_location(A, method, params);
 for miter=1:maxIter
     %% update neurons
     Yac = Y - b*f;
+=======
+Y = reshape(Y,size(A,1),[]);
+% search locations
+IND = determine_search_location(A,method,params);
+%IND = true(size(A));
+%% update spatial and temporal components neuron by neurons
+Yac = Y - b*f;
+for miter=1:maxIter
+    % update neurons
+>>>>>>> epnev/master
     ind_del = find(std(A,0,1)==0); 
     A(:, ind_del) = []; 
     C(ind_del, :) = []; 
     IND(:, ind_del) = []; 
     %   temporal
     C = HALS_temporal(Yac, A, C, 5);
+<<<<<<< HEAD
     
     ind_del = find(std(C,0,2)==0); 
     A(:, ind_del) = []; 
@@ -54,4 +66,22 @@ for miter=1:maxIter
     f = HALS_temporal(Ybg, b, f, 5);
     % spatial 
     b = HALS_spatial(Ybg, b, f, [], 5); 
+=======
+    
+    ind_del = find(std(C,0,2)==0); 
+    A(:, ind_del) = []; 
+    C(ind_del, :) = []; 
+    IND(:, ind_del) = []; 
+    %   spatial
+    A = HALS_spatial(Yac, A, C, IND, 5);
+end    
+
+% update background
+Ybg = Y-A*C;
+for miter = 1:maxIter
+    % temporal
+    f = HALS_temporal(Ybg, b, f, 5);
+    % spatial 
+    b = HALS_spatial(Ybg, b, f, [], 5);     
+>>>>>>> epnev/master
 end

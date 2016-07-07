@@ -19,7 +19,7 @@ function [C_df,Df] = extract_DF_F(Y,A,C,ind,options)
 
 memmaped = isobject(Y);
 defoptions = CNMFSetParms;
-if nargin < 6 || isempty(options)
+if nargin < 5 || isempty(options)
     options = defoptions;
 end
 if ~isfield(options,'df_prctile') || isempty(options.df_prctile)
@@ -35,7 +35,7 @@ d = size(A,1);
 A = A/spdiags(nA,0,K,K);    % normalize spatial components to unit energy
 C = spdiags(nA,0,K,K)*C;
 
-if nargin < 5 || isempty(ind)
+if nargin < 4 || isempty(ind)
     [~,ind] = min(sum(A.^6)); % identify background component
 end
 
@@ -63,7 +63,12 @@ if isempty(options.df_window) || (options.df_window > size(C,2))
     C_df = spdiags(Df,0,K,K)\C;
 else
     if options.df_prctile == 50
-        Df = medfilt1(Yf,options.df_window,[],2,'truncate');
+        if verLessThan('matlab','2015b')
+            warning('Median filtering at the boundaries might be inaccurate due to zero padding.')
+            Df = medfilt1(Yf,options.df_window,[],2);
+        else
+            Df = medfilt1(Yf,options.df_window,[],2,'truncate');
+        end
     else
         Df = zeros(size(Yf));
         for i = 1:size(Df,1);
@@ -74,4 +79,4 @@ else
     C_df = C./Df;
 end
             
-C_df(ind,:) = 0;
+C_df(ind,:) = []; % 0; % FN modified so C_df does not include the background components and it has the same size as C.

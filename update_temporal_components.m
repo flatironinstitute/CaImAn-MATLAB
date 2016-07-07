@@ -163,9 +163,9 @@ else
     %YrA = AY - AA*Cin;
     if strcmpi(method,'constrained_foopsi') || strcmpi(method,'MCEM_foopsi')
         P.gn = cell(K,1);
-        P.b = cell(K,1);
-        P.c1 = cell(K,1);           
-        P.neuron_sn = cell(K,1);
+        P.b = num2cell(zeros(K,1));
+        P.c1 = num2cell(zeros(K,1));           
+        P.neuron_sn = num2cell(zeros(K,1));
     end
     if strcmpi(method,'MCMC')        
         params.B = 300;

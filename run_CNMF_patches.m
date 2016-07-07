@@ -72,6 +72,12 @@ if nargin < 2 || isempty(K)
     K = 10;
 end
 
+if ~isfield(options,'gnb') || isempty(options.gnb)
+    gnb = 1;
+else
+    gnb = options.gnb;
+end
+    
 if ~isfield(options,'cl_thr') || isempty(options.cl_thr)
     cl_thr = 0.8;
 else
@@ -225,11 +231,11 @@ A = Am(:,ff);
 C = Cm(ff,:);
 
 %% compute spatial and temporal background using a rank-1 fit
-
-fin = mean(F);
-for iter = 1:10
-    bin = max(B*(F*fin')/norm(fin)^2,0);
-    fin = max((bin'*B)*F/norm(bin)^2,0);
+fin = [mean(F);rand(gnb-1,length(F))];
+for iter = 1:150
+    fin = diag(sqrt(sum(fin.^2,2)))\fin;
+    bin = max(B*(F*fin')/(fin*fin'),0);
+    fin = max((bin'*bin)\(bin'*B)*F,0);
 end
 %% update spatial components
 fprintf('Updating spatial components...');

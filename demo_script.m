@@ -36,7 +36,7 @@ options = CNMFSetParms(...
 
 %% fast initialization of spatial components using greedyROI and HALS
 
-[Ain,Cin,bin,fin,center] = initialize_components(Y,K,tau,options);  % initialize
+[Ain,Cin,bin,fin,center] = initialize_components(Y,K,tau,options,P);  % initialize
 
 % display centers of found components
 Cn =  reshape(P.sn,d1,d2); %correlation_image(Y); %max(Y,[],3); %std(Y,[],3); % image statistic (only for display purposes)
