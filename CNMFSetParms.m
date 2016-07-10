@@ -46,9 +46,9 @@ Names = [
     'pixels             ' % pixels to include when computing the AR coefs (default: 1:numel(Y)/size(Y,ndims(Y)))
     'split_data         ' % split data into patches for memory reasons (default: 0)
     'block_size         ' % block size for estimating noise std in patches (default: [64,64])
-    'cluster_pixels     ' % cluster pixels to active/inactive based on the PSD density (default: true)
+    'cluster_pixels     ' % cluster pixels to active/inactive based on the PSD density (default: false)
     % UPDATING SPATIAL COMPONENTS (unpdate_spatial_components.m)
-    'search_method      ' % method for determining footprint of spatial components 'ellipse' or 'dilate' (default: 'ellipse')
+    'search_method      ' % method for determining footprint of spatial components 'ellipse' or 'dilate' (default: 'dilate')
     'use_parallel       ' % update pixels in parallel (default: 1 if present)
     % determine_search_location.m
     'min_size           ' % minimum size of ellipse axis (default: 3)
@@ -215,9 +215,9 @@ Values = [
     {[]}
     {false}
     {[64,64]}
-    {true}
+    {false}
     % UPDATING SPATIAL COMPONENTS (unpdate_spatial_components.m)
-    {'ellipse'}
+    {'dilate'}
     {~isempty(which('parpool'))}
     % determine_search_location.m
     {3}
@@ -225,7 +225,7 @@ Values = [
     {3}
     {strel('disk',4,0)}
     % threshold_components.m
-    {0.99}
+    {0.995}
     {strel('square',3)}
     {[3,3]}
     % UPDATING TEMPORAL COMPONENTS (update_temporal_components.m)
