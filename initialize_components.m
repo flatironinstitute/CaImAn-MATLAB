@@ -143,10 +143,10 @@ Ain = imresize(reshape(full(Ain), [ds(1),ds(2), size(Ain,2)*prod(ds)/ds(1)/ds(2)
 Ain = sparse(reshape(Ain, prod(d), []));
 
 bin = imresize(reshape(bin,[ds(1),ds(2), options.nb*prod(ds)/ds(1)/ds(2)]),[d(1),d(2)]);
-bin = reshape(bin,prod(d),[]);
+bin = double(reshape(bin,prod(d),[]));
 
 if options.noise_norm
-    Ain = bsxfun(@times,Ain,max(P.sn(:),min_noise));
+    Ain = bsxfun(@times,Ain,double(max(P.sn(:),min_noise)));
     bin = bsxfun(@times,bin,max(P.sn(:),min_noise));
 end
 Cin = imresize(Cin, [size(Cin, 1), Ts*tsub]);
