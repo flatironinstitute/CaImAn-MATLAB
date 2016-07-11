@@ -149,8 +149,7 @@ if options.noise_norm
     Ain = bsxfun(@times,Ain,max(P.sn(:),min_noise));
     bin = bsxfun(@times,bin,max(P.sn(:),min_noise));
 end
-
-Cin = imresize(Cin, [sum(K), Ts*tsub]);
+Cin = imresize(Cin, [size(Cin, 1), Ts*tsub]);
 fin = imresize(fin, [options.nb, Ts*tsub]);
 if T ~= Ts*tsub
     Cin = padarray(Cin, [0, T-Ts*tsub], 'post');

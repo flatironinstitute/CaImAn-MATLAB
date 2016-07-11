@@ -37,8 +37,7 @@ end
 Y_std = Y_std(:);
 if ~exist('debug_on', 'var'); debug_on = false; end
 
-d1 = options.d1;
-d2 = options.d2;
+[d1,d2, ~] = size(Y);
 gSig = options.gSig;
 gSiz = options.gSiz;
 if and(isempty(gSiz), isempty(gSig)); gSig = 3; gSiz = 10; end
@@ -53,7 +52,6 @@ psf = ones(gSig)/(gSig^2);
 min_snr = 3;        % minimum value of (peak-median)/sig 
 maxIter = 5;            % iterations for refining results
 sz = 4;            %distance of neighbouring pixels for computing local correlation
-
 if ~ismatrix(Y); Y = reshape(Y, d1*d2, []); end;
 [~, T] = size(Y);       % number of frames
 Ain = zeros(d1*d2, K);  % spatial components
