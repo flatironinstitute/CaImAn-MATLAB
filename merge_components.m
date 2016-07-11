@@ -87,7 +87,7 @@ for i = 1:nm
             cc = (aa'*A(:,merged_ROIs{i}))*C(merged_ROIs{i},:)/sum(aa.^2);
             aa = A(:,merged_ROIs{i})*(C(merged_ROIs{i},:)*cc')/norm(cc)^2;
         end
-        na = sqrt(sum(aa.^2));
+        na = sqrt(sum(aa.^2)/max(sum(A(:,merged_ROIs{i}).^2)));
         aa = aa/na;
         %[cc,b_temp,c1_temp,g_temp,sn_temp,ss] = constrained_foopsi(cc);
         cc = na*cc';
