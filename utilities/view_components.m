@@ -13,6 +13,7 @@ function view_components(Y,A,C,b,f,Cn,options)
 % Eftychios A. Pnevmatikakis, Simons Foundation, 2015
 
 defoptions = CNMFSetParms;
+memmaped = isobject(Y);
 if nargin < 7 || isempty(options); options = defoptions; end
 if ~isfield(options,'d1') || isempty(options.d1); d1 = input('What is the total number of rows? \n'); else d1 = options.d1; end          % # of rows
 if ~isfield(options,'d2') || isempty(options.d2); d2 = input('What is the total number of columns? \n'); else d2 = options.d2; end          % # of columns
@@ -33,7 +34,8 @@ if isfield(options,'name') && ~isempty(options.name);
 else
     name = [defoptions.name,'_components'];
 end  
-    
+if ~isfield(options,'full_A') || isempty(options.full_A); full_A = defoptions.full_A; else full_A = options.full_A; end
+
 T = size(C,2);
 if ndims(Y) == 3
     Y = reshape(Y,d1*d2,T);
@@ -51,7 +53,24 @@ nr = size(A,2);     % number of ROIs
 nb = size(f,1);     % number of background components
 %nA = full(sum(A.^2))';  % energy of each row
 %Y_r = spdiags(nA,0,nr,nr)\(A'*Y- (A'*A)*C - (A'*full(b))*f) + C; 
-Y_r = (A'*Y- (A'*A)*C - (A'*full(b))*f) + C;
+step = 5e3;
+if memmaped
+    AY = zeros(K,T);
+    for i = 1:step:d
+        AY = AY + A(i:min(i+step-1,d),:)'*double(Y.Yr(i:min(i+step-1,d),:));
+    end
+else
+    if issparse(A) && isa(Y,'single')  
+        if full_A
+            AY = full(A)'*Y;
+        else
+            AY = A'*double(Y);
+        end
+    else
+        AY = A'*Y;
+    end
+end
+Y_r = (AY- (A'*A)*C - full(A'*double(b))*f) + C;
 
 if plot_df
     [~,Df] = extract_DF_F(Y,[A,b],[C;f],size(A,2)+1);

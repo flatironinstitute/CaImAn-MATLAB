@@ -28,6 +28,7 @@ end
 if ~isfield(options,'df_window') || isempty(options.df_window)
     options.df_window = defoptions.df_window;
 end
+if ~isfield(options,'full_A') || isempty(options.full_A); full_A = defoptions.full_A; else full_A = options.full_A; end
 
 nA = sqrt(sum(A.^2))';
 [K,T] = size(C);
@@ -49,7 +50,15 @@ if memmaped
         AY = AY + A(i:min(i+step-1,d),:)'*double(Y.Yr(i:min(i+step-1,d),:));
     end
 else
-    AY = (A'*Y);
+    if issparse(A) && isa(Y,'single')  
+        if full_A
+            AY = bsxfun(@times,full(A)'*Y,1./nA(:));
+        else
+            AY = spdiags(nA(:),0,length(nA),length(nA))\(A'*double(Y));
+        end
+    else
+        AY = spdiags(nA(:),0,length(nA),length(nA))\(A'*Y);
+    end
 end
 
 Yf = AY - (A'*A(:,non_bg))*C(non_bg,:);

@@ -156,5 +156,5 @@ if ~isempty(ff)
     C(ff,:) = [];
 end
 
-b = max((Yf - A(:,1:K)*(C(1:K,:)*f'))/(f*f'),0);
+b = double(max((Yf - A(:,1:K)*double(C(1:K,:)*f'))/(f*f'),0));
 A = A(:,1:K);

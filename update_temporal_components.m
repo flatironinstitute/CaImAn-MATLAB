@@ -64,13 +64,14 @@ if ~isfield(options,'temporal_iter') || isempty(options.temporal_iter); ITER = d
 if ~isfield(options,'bas_nonneg'); options.bas_nonneg = defoptions.bas_nonneg; end
 if ~isfield(options,'fudge_factor'); options.fudge_factor = defoptions.fudge_factor; end
 if ~isfield(options,'temporal_parallel'); options.temporal_parallel = defoptions.temporal_parallel; end
+if ~isfield(options,'full_A') || isempty(options.full_A); full_A = defoptions.full_A; else full_A = options.full_A; end
 
 if isfield(P,'interp'); Y_interp = P.interp; else Y_interp = sparse(d,T); end        % missing data
 if isfield(P,'unsaturatedPix'); unsaturatedPix = P.unsaturatedPix; else unsaturatedPix = 1:d; end   % saturated pixels
 
 mis_data = find(Y_interp);              % interpolate any missing data before deconvolution
-if ~memmaped
-    Y(mis_data) = Y_interp(mis_data);
+if ~memmaped && ~isempty(mis_data)
+    Y(mis_data) = full(Y_interp(mis_data));
 end
 
 if (strcmpi(method,'noise_constrained') || strcmpi(method,'project')) && ~isfield(P,'g')
@@ -132,7 +133,7 @@ if ~memmaped
 end
 
 K = size(A,2);
-A = [A,b];
+A = [A,double(b)];
 S = zeros(size(Cin));
 Cin = [Cin;fin];
 C = Cin;
@@ -156,8 +157,15 @@ else
         %YA = YA/spdiags(nA(:),0,length(nA),length(nA));
         AY = spdiags(nA(:),0,length(nA),length(nA))\AY;
     else
-        %YA = (Y'*A)/spdiags(nA(:),0,length(nA),length(nA));
-        AY = spdiags(nA(:),0,length(nA),length(nA))\(A'*Y);
+        if issparse(A) && isa(Y,'single')  
+            if full_A
+                AY = bsxfun(@times,full(A)'*Y,1./nA(:));
+            else
+                AY = spdiags(nA(:),0,length(nA),length(nA))\(A'*double(Y));
+            end
+        else
+            AY = spdiags(nA(:),0,length(nA),length(nA))\(A'*Y);
+        end
     end
     %YrA = (YA - Cin'*AA);
     %YrA = AY - AA*Cin;
@@ -177,6 +185,7 @@ else
 end
 p = P.p;
 if options.temporal_parallel
+    C = double(C);
     for iter = 1:ITER
         [O,lo] = update_order(A(:,1:K));
         for jo = 1:length(O)

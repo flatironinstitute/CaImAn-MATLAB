@@ -64,6 +64,7 @@ Names = [
     'restimate_g        '    % flag for updating the time constants for each component (default: 1)
     'temporal_iter      '    % number of block-coordinate descent iterations (default: 2)
     'temporal_parallel  ' % flag for parallel updating of temporal components (default: true if present)
+    'full_A             ' % if true turn A into full matrix. If false turn Y into double precision (default: false)
     % CONSTRAINED DECONVOLUTION (constrained_foopsi.m)
     'method             ' % methods for performing spike inference ('dual','cvx','spgl1','lars') (default:'cvx')
     'bas_nonneg         ' % flag for setting the baseline lower bound. if 1, then b >= 0 else b >= min(y) (default 1)
@@ -233,6 +234,7 @@ Values = [
     {1}
     {2}
     {~isempty(which('parpool'))}
+    {false}
     % CONSTRAINED DECONVOLUTION (constrained_foopsi.m)
     {'cvx'}
     {1}
