@@ -54,7 +54,7 @@ nb = size(f,1);     % number of background components
 Y_r = (A'*Y- (A'*A)*C - (A'*full(b))*f) + C;
 
 if plot_df
-    [~,Df] = extract_DF_F(Y,[A,b],[C;f],size(A,2)+1);
+    [~,Df] = extract_DF_F(Y,[A,b],[C;f]);
 else
     Df = ones(size(A,2)+1,1);
 end
