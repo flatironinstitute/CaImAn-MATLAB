@@ -108,8 +108,27 @@ if isempty(fin) || nargin < 5   % temporal background missing
     end
 end
 
-if isempty(Cin) || nargin < 4    % estimate temporal components if missing
-    Cin = max((A'*A)\(A'*Y - (A'*b)*fin),0);
+% construct product A'*Y
+step = 5e3;
+if memmaped
+    AY = zeros(length(nA),T);
+    for i = 1:step:d
+        AY = AY + A(i:min(i+step-1,d),:)'*double(Y.Yr(i:min(i+step-1,d),:));
+    end
+else
+    if issparse(A) && isa(Y,'single')  
+        if full_A
+            AY = full(A)'*Y;            
+        else
+            AY = A'*double(Y);
+        end
+    else
+        AY = A'*Y;
+    end
+end  
+
+if isempty(Cin) || nargin < 4    % estimate temporal components if missing    
+    Cin = max((A'*A)\double(AY - (A'*b)*fin),0);  
     ITER = max(ITER,3);
 end
 
@@ -143,32 +162,11 @@ if strcmpi(method,'noise_constrained')
     mc = min(d,15);  % number of constraints to be considered
     LD = 10*ones(mc,K);
 else
-    step = 5e3;
     nA = sum(A.^2);
-    %AA = (A'*A)/spdiags(nA(:),0,length(nA),length(nA));
     AA = spdiags(nA(:),0,length(nA),length(nA))\(A'*A);
-    if memmaped
-        %YA = zeros(T,length(nA));
-        AY = zeros(length(nA),T);
-        for i = 1:step:d
-            %YA = YA + double(Y.Yr(i:min(i+step-1,d),:))'*A(i:min(i+step-1,d),:);
-            AY = AY + A(i:min(i+step-1,d),:)'*double(Y.Yr(i:min(i+step-1,d),:));
-        end
-        %YA = YA/spdiags(nA(:),0,length(nA),length(nA));
-        AY = spdiags(nA(:),0,length(nA),length(nA))\AY;
-    else
-        if issparse(A) && isa(Y,'single')  
-            if full_A
-                AY = bsxfun(@times,full(A)'*Y,1./nA(:));
-            else
-                AY = spdiags(nA(:),0,length(nA),length(nA))\(A'*double(Y));
-            end
-        else
-            AY = spdiags(nA(:),0,length(nA),length(nA))\(A'*Y);
-        end
-    end
-    %YrA = (YA - Cin'*AA);
-    %YrA = AY - AA*Cin;
+    AY = [AY;b'*Y];
+    AY = double(bsxfun(@times,AY,1./nA(:)));
+
     if strcmpi(method,'constrained_foopsi') || strcmpi(method,'MCEM_foopsi')
         P.gn = cell(K,1);
         P.b = num2cell(zeros(K,1));
