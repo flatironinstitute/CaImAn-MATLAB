@@ -33,6 +33,8 @@ Names = [
     'err_thr            ' % relative change threshold for stopping sparse_NMF
     'eta                ' % frobenious norm factor *max(Y(:))^2
     'beta               ' % sparsity factor
+    % HALS initialization parameters (HALS_initialization.m)
+    'max_iter_hals_in   ' % maximum number of HALS iterations
     % HALS parameters (HALS_2d.m)
     'bSiz               ' % expand kernel for HALS growing (default: 3)
     'maxIter            ' % maximum number of HALS iterations (default: 5)
@@ -203,6 +205,8 @@ Values = [
     {1e-4}
     {1}
     {.5}
+    % HALS initialization parameters (HALS_initialization.m)
+    {5}
     % HALS parameters (HALS_2d.m)
     {3}
     {5}
