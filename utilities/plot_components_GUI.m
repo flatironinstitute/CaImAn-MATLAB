@@ -32,11 +32,13 @@ end
 if nargin < 6 || isempty(Cn);
     Cn = reshape(mean(Y,2),d1,d2);
 end
-
-nA = sqrt(sum(A.^2))';
+b = double(b);
+C = double(C);
+f = double(f);
+nA = full(sqrt(sum(A.^2))');
 [K,~] = size(C);
 A = A/spdiags(nA,0,K,K);    % normalize spatial components to unit energy
-C = spdiags(nA,0,K,K)*C;
+C = bsxfun(@times,C,nA(:)); %spdiags(nA,0,K,K)*C;
 
 nr = size(A,2);     % number of ROIs
 nb = size(f,1);     % number of background components
@@ -80,11 +82,6 @@ set(gcf,'PaperPosition',2*[300,300,960,480]);
 int_x = zeros(nr,2*sx);
 int_y = zeros(nr,2*sx);
 cm = com(A,d1,d2);
-
-
-
-
-
 
 
 
