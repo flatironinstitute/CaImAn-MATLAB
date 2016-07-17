@@ -112,8 +112,11 @@ end
 step = 5e3;
 if memmaped
     AY = zeros(length(nA),T);
+    bY = zeros(length(nA),T);
     for i = 1:step:d
-        AY = AY + A(i:min(i+step-1,d),:)'*double(Y.Yr(i:min(i+step-1,d),:));
+        Y_temp = double(Y.Yr(i:min(i+step-1,d),:))
+        AY = AY + A(i:min(i+step-1,d),:)'*Y_temp;
+        bY = bY + b'*Ytemp;
     end
 else
     if issparse(A) && isa(Y,'single')  
@@ -125,6 +128,7 @@ else
     else
         AY = A'*Y;
     end
+    bY = b'*Y;
 end  
 
 if isempty(Cin) || nargin < 4    % estimate temporal components if missing    
@@ -164,7 +168,7 @@ if strcmpi(method,'noise_constrained')
 else
     nA = sum(A.^2);
     AA = spdiags(nA(:),0,length(nA),length(nA))\(A'*A);
-    AY = [AY;b'*Y];
+    AY = [AY;bY];
     AY = double(bsxfun(@times,AY,1./nA(:)));
 
     if strcmpi(method,'constrained_foopsi') || strcmpi(method,'MCEM_foopsi')
