@@ -111,12 +111,12 @@ end
 % construct product A'*Y
 step = 5e3;
 if memmaped
-    AY = zeros(length(nA),T);
-    bY = zeros(length(nA),T);
+    AY = zeros(size(A,2),T);
+    bY = zeros(1,T);
     for i = 1:step:d
-        Y_temp = double(Y.Yr(i:min(i+step-1,d),:))
+        Y_temp = double(Y.Yr(i:min(i+step-1,d),:));
         AY = AY + A(i:min(i+step-1,d),:)'*Y_temp;
-        bY = bY + b'*Ytemp;
+        bY = bY + b(i:min(i+step-1,d))'*Y_temp;
     end
 else
     if issparse(A) && isa(Y,'single')  
