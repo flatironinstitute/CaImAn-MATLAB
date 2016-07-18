@@ -219,7 +219,7 @@ if flag == 0
             minimize(sum(W_lam));
             subject to
                 W_lam >= 0;
-                norm(Y-X*W_lam)<= sqrt(noise);
+                norm(double(Y)-double(X)*W_lam)<= sqrt(double(noise));
         cvx_end
         lam = 10;
     end

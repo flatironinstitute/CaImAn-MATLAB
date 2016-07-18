@@ -96,12 +96,13 @@ parfor i = 1:length(patches)
         Y = data.Y(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6),:);
         [d1,d2,d3,T] = size(Y);
     end
+    if ~(isa(Y,'single') || isa(Y,'double'));    Y = single(Y);  end
     d = d1*d2*d3;
     options_temp = options;
     options_temp.d1 = d1; options_temp.d2 = d2; options_temp.d3 = d3;
     options_temp.nb = 1;
-    [P,Y] = preprocess_data(double(Y),p);
-    [Ain,Cin,bin,fin,center] = initialize_components(Y,K,tau,options_temp);  % initialize
+    [P,Y] = preprocess_data(Y,p);
+    [Ain,Cin,bin,fin,center] = initialize_components(Y,K,tau,options_temp,P);  % initialize
     Yr = reshape(Y,d,T);
     %clear Y;
     options_temp.use_parallel = 0; % turn off parallel updating for spatial components

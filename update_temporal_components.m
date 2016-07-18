@@ -186,8 +186,8 @@ else
     end
 end
 p = P.p;
+C = double(C);
 if options.temporal_parallel
-    C = double(C);
     for iter = 1:ITER
         [O,lo] = update_order(A(:,1:K));
         for jo = 1:length(O)
