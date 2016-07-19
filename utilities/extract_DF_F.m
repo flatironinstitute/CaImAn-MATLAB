@@ -52,12 +52,12 @@ if memmaped
 else
     if issparse(A) && isa(Y,'single')  
         if full_A
-            AY = bsxfun(@times,full(A)'*Y,1./nA(:));
+            AY = full(A)'*Y;
         else
-            AY = spdiags(nA(:),0,length(nA),length(nA))\(A'*double(Y));
+            AY = A'*double(Y);
         end
     else
-        AY = spdiags(nA(:),0,length(nA),length(nA))\(A'*Y);
+        AY = A'*Y;
     end
 end
 
