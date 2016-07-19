@@ -85,7 +85,7 @@ else
 end
 
 RESULTS(length(patches)) = struct();
-
+%%
 %parfor_progress(length(patches)); %monitor parfor progress (requires parfor_progress from mathworks file exchange)
 parfor i = 1:length(patches)
     if length(sizY) == 3
@@ -102,15 +102,15 @@ parfor i = 1:length(patches)
     options_temp.d1 = d1; options_temp.d2 = d2; options_temp.d3 = d3;
     options_temp.nb = 1;
     [P,Y] = preprocess_data(Y,p);
-    [Ain,Cin,bin,fin,center] = initialize_components(Y,K,tau,options_temp,P);  % initialize
+    [Ain,Cin,~,fin] = initialize_components(Y,K,tau,options_temp,P);  % initialize
     Yr = reshape(Y,d,T);
     %clear Y;
-    options_temp.use_parallel = 0; % turn off parallel updating for spatial components
+    options_temp.spatial_parallel = 0;              % turn off parallel updating for spatial components
     [A,b,Cin,P] = update_spatial_components(Yr,Cin,fin,Ain,P,options_temp);
     P.p = 0;
     options_temp.temporal_parallel = 0;
-    [C,f,P,S] = update_temporal_components(Yr,A,b,Cin,fin,P,options_temp);
-    [Am,Cm,K_m,merged_ROIs,P,Sm] = merge_components(Yr,A,b,C,f,P,S,options_temp);
+    [C,f,P,S] = update_temporal_components(Yr,A,b,Cin,fin,P,options_temp); % turn off parallel updating for temporal components
+    [Am,Cm,~,~,P] = merge_components(Yr,A,b,C,f,P,S,options_temp);
     [A2,b2,Cm,P] = update_spatial_components(Yr,Cm,f,Am,P,options_temp);
     P.p = p;
     [C2,f2,P2,S2] = update_temporal_components(Yr,A2,b2,Cm,f,P,options_temp);
@@ -130,6 +130,7 @@ fprintf('Combining results from different patches...');
 d = prod(sizY(1:end-1));
 A = sparse(d,length(patches)*K);
 P.sn = zeros(sizY(1:end-1));
+if isfield(RESULTS(1).P,'sn_ds'); P.sn_ds = zeros(sizY(1:end-1)); end
 P.active_pixels = zeros(sizY(1:end-1));
 IND = zeros(sizY(1:end-1));
 P.b = {};
@@ -155,7 +156,7 @@ for i = 1:length(patches)
             if length(sizY) == 3
                 Atemp(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4)) = reshape(RESULTS(i).A(:,k),patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1);            
             else
-                Atemp(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6)) = reshape(RESULTS(i).A(:,k),patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1,patches{i}(6)-patches{i}(5)+1);
+                Atemp(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6)) = reshape(full(RESULTS(i).A(:,k)),patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1,patches{i}(6)-patches{i}(5)+1);
             end
             A(:,cnt) = sparse(Atemp(:));
         end
@@ -165,24 +166,27 @@ for i = 1:length(patches)
         b_temp(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4)) = reshape(RESULTS(i).b,patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1);
         MASK(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4)) = MASK(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4)) + 1;
         P.sn(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4)) = reshape(RESULTS(i).P.sn,patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1);
+        if isfield(RESULTS(i).P,'sn_ds'); P.sn_ds(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4)) = reshape(RESULTS(i).P.sn_ds,patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1); end
         P.active_pixels(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4)) = P.active_pixels(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4)) + ...
             reshape(RESULTS(i).P.active_pixels,patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1);
         IND(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4)) = IND(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4)) + 1;
         P.psdx(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),:) = reshape(RESULTS(i).P.psdx,patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1,[]);
     else
-        b_temp = sparse(sizY(1),sizY(2),sizY(3));
-        b_temp(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6)) = reshape(RESULTS(i).b,patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1,patches{i}(6)-patches{i}(5)+1);
+        b_temp = zeros(sizY(1),sizY(2),sizY(3));
+        b_temp(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6)) = reshape(full(RESULTS(i).b),patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1,patches{i}(6)-patches{i}(5)+1);
         MASK(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6)) = MASK(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6)) + 1;
         P.sn(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6)) = reshape(RESULTS(i).P.sn,patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1,patches{i}(6)-patches{i}(5)+1);
+        if isfield(RESULTS(i).P,'sn_ds'); P.sn_ds(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6)) = reshape(RESULTS(i).P.sn_ds,patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1,patches{i}(6)-patches{i}(5)+1);  end      
         P.active_pixels(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6)) = P.active_pixels(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6)) + ...
             reshape(RESULTS(i).P.active_pixels,patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1,patches{i}(6)-patches{i}(5)+1);
         IND(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6)) = IND(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6)) + 1;
+        P.psdx(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6), :) = reshape(RESULTS(i).P.psdx,patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1, patches{i}(6)-patches{i}(5)+1,[]);
     end
     P.b = [P.b;RESULTS(i).P.b];
     P.c1 = [P.c1;RESULTS(i).P.c1];
     P.gn = [P.gn;RESULTS(i).P.gn];
     P.neuron_sn = [P.neuron_sn;RESULTS(i).P.neuron_sn];
-    B(:,i) = b_temp(:);
+    B(:,i) = sparse(b_temp(:));
     F(i,:) = RESULTS(i).f;
 end
 A(:,cnt+1:end) = [];
@@ -198,9 +202,9 @@ fprintf(' done. \n');
 %% estimate active pixels
 fprintf('Classifying pixels...')
 if length(sizY) == 3
-    X = P.psdx(:,:,1:min(size(P.psdx,2),500));
+    X = P.psdx(:,:,1:min(size(P.psdx,3),500));
 else
-    X = P.psdx(:,:,:,1:min(size(P.psdx,2),500));
+    X = P.psdx(:,:,:,1:min(size(P.psdx,4),500));
 end
 X = reshape(X,[],size(X,ndims(X)));
 X = bsxfun(@minus,X,mean(X,2));     % center
