@@ -51,7 +51,7 @@ Names = [
     'cluster_pixels     ' % cluster pixels to active/inactive based on the PSD density (default: false)
     % UPDATING SPATIAL COMPONENTS (unpdate_spatial_components.m)
     'search_method      ' % method for determining footprint of spatial components 'ellipse' or 'dilate' (default: 'dilate')
-    'use_parallel       ' % update pixels in parallel (default: 1 if present)
+    'spatial_parallel   ' % update pixels in parallel (default: 1 if present)
     % determine_search_location.m
     'min_size           ' % minimum size of ellipse axis (default: 3)
     'max_size           ' % maximum size of ellipse axis (default: 8)
