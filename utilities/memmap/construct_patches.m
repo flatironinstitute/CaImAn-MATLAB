@@ -3,7 +3,7 @@ function patches = construct_patches(sizY,siz,overlap,min_size)
 % constructs the coordinates of the different patches for batch processing
 % INPUTS
 % sizY:     size of input data (excluding time dimension)        
-% siz:      size of each patch  (default: [34,34,8], if third spatial dimension is present)
+% siz:      size of each patch  (default: [32,32,4], if third spatial dimension is present)
 % overlap:  amount of overlap in each direction (default: [4,4,2], if third spatial dimension is present)
 % min_size: minimum patch size is each direction, otherwise merge with previous patch (defalt: [4,4,2])
 
@@ -30,14 +30,14 @@ if any(siz<=overlap); error('Size of patch must be greater than the amount of ov
 
 x_start = 1:siz(1)-overlap(1):sizY(1);
 x_end   = min(x_start + siz(1) - 1,sizY(1));
-if x_end(end) - x_start(end) + 1 < min_size(1)
+if (x_end(end) - x_start(end) + 1 < min_size(1)) || (x_end(end) - x_end(end-1) < min_size(1))
     x_start(end) = [];
     x_end(end-1) = [];
 end
 
 y_start = 1:siz(2)-overlap(2):sizY(2);
 y_end   = min(y_start + siz(2) - 1,sizY(2));
-if y_end(end) - y_start(end) + 1 < min_size(2)
+if (y_end(end) - y_start(end) + 1 < min_size(2)) || (y_end(end) - y_end(end-1) < min_size(2))
     y_start(end) = [];
     y_end(end-1) = [];
 end
