@@ -21,7 +21,7 @@ Y = bsxfun(@minus, Y, med);
 if strcmpi(init_hals_method,'random');
     A = rand(d,K);
     Y = reshape(Y,d,T);
-    C = max(A\Y,0);
+    C = HALS_temporal(Y,A,rand(K,T),10);
 elseif strcmpi(init_hals_method,'cor_im');
     sk = max(round(T/1000),1);
     Cn = correlation_image(Y(:,:,1:sk:T));
