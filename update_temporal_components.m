@@ -186,6 +186,7 @@ else
     end
 end
 p = P.p;
+options.p = P.p;
 C = double(C);
 if options.temporal_parallel
     for iter = 1:ITER
