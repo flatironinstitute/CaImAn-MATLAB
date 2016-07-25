@@ -1,4 +1,4 @@
-function [A,C,nr,merged_ROIs,P,S] = merge_components(Y,A,b,C,f,P,S,options)
+function [A,C,nr,merged_ROIs,P,S] = merge_components(Y,A,b,C,f,P,S,options,merged_ROIs)
 
 % merging of spatially overlapping components that have highly correlated tmeporal activity
 % The correlation threshold for merging overlapping components is user specified in P.merge_thr (default value 0.85)
@@ -37,7 +37,7 @@ nr = size(A,2);
 d = size(A,1);
 T = size(C,2);
 
-if ~isfield(options, 'merged_ROIs')
+if nargin < 9
     C_corr = corr(full(C(1:nr,:)'));
     FF1 = triu(C_corr)>= thr;                           % find graph of strongly correlated temporal components
     
@@ -71,8 +71,7 @@ if ~isfield(options, 'merged_ROIs')
         merged_ROIs{i} = find(MC(:,ind(i)));
     end
 
-else % merged_ROIs is provided as a field in options, allowing for custom defining merged_ROIs.
-    merged_ROIs = options.merged_ROIs;
+else % merged_ROIs is provided, allowing for custom defining merged_ROIs.
     nm = length(merged_ROIs);
 end
 
