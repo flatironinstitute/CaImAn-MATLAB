@@ -181,6 +181,7 @@ else
         params.B = 300;
         params.Nsamples = 400;
         params.p = P.p;
+        params.bas_nonneg = options.bas_nonneg;
     else
         params = [];
     end
