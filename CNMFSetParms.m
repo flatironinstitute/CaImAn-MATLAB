@@ -58,7 +58,9 @@ Names = [
     'dist               ' % expansion factor of ellipse (default: 3)
     'se                 ' % morphological element for dilation (default: strel('disk',4,0))
     % threshold_components.m
-    'nrgthr             ' % energy threshold (default: 0.9999)
+    'thr_method         ' % method to threshold ('max' or 'nrg', default 'max')
+    'maxthr             ' % threshold of max value below which values are discarded (default: 0.1)
+    'nrgthr             ' % energy threshold (default: 0.995)
     'clos_op            ' % morphological element for closing (default: strel('square',3))
     'medw               ' % size of median filter (default: [3,3])
     % UPDATING TEMPORAL COMPONENTS (update_temporal_components.m)
@@ -230,6 +232,8 @@ Values = [
     {3}
     {strel('disk',4,0)}
     % threshold_components.m
+    {'max'}
+    {0.1}
     {0.995}
     {strel('square',3)}
     {[3,3]}
