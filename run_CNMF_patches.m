@@ -199,6 +199,8 @@ A(:,ff) = [];
 C(ff,:) = [];
 S(ff,:) = [];
 fprintf(' done. \n');
+
+%RESULTS = remove_boundaries(RESULTS,patches,0.05);
 %% estimate active pixels
 fprintf('Classifying pixels...')
 if length(sizY) == 3
