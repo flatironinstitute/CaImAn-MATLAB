@@ -64,13 +64,14 @@ if ~isfield(options,'temporal_iter') || isempty(options.temporal_iter); ITER = d
 if ~isfield(options,'bas_nonneg'); options.bas_nonneg = defoptions.bas_nonneg; end
 if ~isfield(options,'fudge_factor'); options.fudge_factor = defoptions.fudge_factor; end
 if ~isfield(options,'temporal_parallel'); options.temporal_parallel = defoptions.temporal_parallel; end
+if ~isfield(options,'full_A') || isempty(options.full_A); full_A = defoptions.full_A; else full_A = options.full_A; end
 
 if isfield(P,'interp'); Y_interp = P.interp; else Y_interp = sparse(d,T); end        % missing data
 if isfield(P,'unsaturatedPix'); unsaturatedPix = P.unsaturatedPix; else unsaturatedPix = 1:d; end   % saturated pixels
 
 mis_data = find(Y_interp);              % interpolate any missing data before deconvolution
-if ~memmaped
-    Y(mis_data) = Y_interp(mis_data);
+if ~memmaped && ~isempty(mis_data)
+    Y(mis_data) = full(Y_interp(mis_data));
 end
 
 if (strcmpi(method,'noise_constrained') || strcmpi(method,'project')) && ~isfield(P,'g')
@@ -107,8 +108,31 @@ if isempty(fin) || nargin < 5   % temporal background missing
     end
 end
 
-if isempty(Cin) || nargin < 4    % estimate temporal components if missing
-    Cin = max((A'*A)\(A'*Y - (A'*b)*fin),0);
+% construct product A'*Y
+step = 5e3;
+if memmaped
+    AY = zeros(size(A,2),T);
+    bY = zeros(1,T);
+    for i = 1:step:d
+        Y_temp = double(Y.Yr(i:min(i+step-1,d),:));
+        AY = AY + A(i:min(i+step-1,d),:)'*Y_temp;
+        bY = bY + b(i:min(i+step-1,d))'*Y_temp;
+    end
+else
+    if issparse(A) && isa(Y,'single')  
+        if full_A
+            AY = full(A)'*Y;            
+        else
+            AY = A'*double(Y);
+        end
+    else
+        AY = A'*Y;
+    end
+    bY = b'*Y;
+end  
+
+if isempty(Cin) || nargin < 4    % estimate temporal components if missing    
+    Cin = max((A'*A)\double(AY - (A'*b)*fin),0);  
     ITER = max(ITER,3);
 end
 
@@ -132,7 +156,7 @@ if ~memmaped
 end
 
 K = size(A,2);
-A = [A,b];
+A = [A,double(b)];
 S = zeros(size(Cin));
 Cin = [Cin;fin];
 C = Cin;
@@ -142,25 +166,11 @@ if strcmpi(method,'noise_constrained')
     mc = min(d,15);  % number of constraints to be considered
     LD = 10*ones(mc,K);
 else
-    step = 5e3;
     nA = sum(A.^2);
-    %AA = (A'*A)/spdiags(nA(:),0,length(nA),length(nA));
     AA = spdiags(nA(:),0,length(nA),length(nA))\(A'*A);
-    if memmaped
-        %YA = zeros(T,length(nA));
-        AY = zeros(length(nA),T);
-        for i = 1:step:d
-            %YA = YA + double(Y.Yr(i:min(i+step-1,d),:))'*A(i:min(i+step-1,d),:);
-            AY = AY + A(i:min(i+step-1,d),:)'*double(Y.Yr(i:min(i+step-1,d),:));
-        end
-        %YA = YA/spdiags(nA(:),0,length(nA),length(nA));
-        AY = spdiags(nA(:),0,length(nA),length(nA))\AY;
-    else
-        %YA = (Y'*A)/spdiags(nA(:),0,length(nA),length(nA));
-        AY = spdiags(nA(:),0,length(nA),length(nA))\(A'*Y);
-    end
-    %YrA = (YA - Cin'*AA);
-    %YrA = AY - AA*Cin;
+    AY = [AY;bY];
+    AY = double(bsxfun(@times,AY,1./nA(:)));
+
     if strcmpi(method,'constrained_foopsi') || strcmpi(method,'MCEM_foopsi')
         P.gn = cell(K,1);
         P.b = num2cell(zeros(K,1));
@@ -171,11 +181,14 @@ else
         params.B = 300;
         params.Nsamples = 400;
         params.p = P.p;
+        params.bas_nonneg = options.bas_nonneg;
     else
         params = [];
     end
 end
 p = P.p;
+options.p = P.p;
+C = double(C);
 if options.temporal_parallel
     for iter = 1:ITER
         [O,lo] = update_order(A(:,1:K));

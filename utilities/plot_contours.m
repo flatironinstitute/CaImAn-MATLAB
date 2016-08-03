@@ -1,8 +1,28 @@
-function [CC,jsf] = plot_contours(Aor,Cn,thr,display_numbers,max_number,Coor)
+function [CC,jsf] = plot_contours(Aor,Cn,options,display_numbers,max_number,Coor)
 
-% save and plot the contour traces of the found spatial components againsts
-% specified background image. The contour is drawn around the value above
-% which a specified fraction of energy is explained (default 99%)
+% save and plot the contour traces of the found spatial components against
+% a specified background image. The contour can be determined in two ways:
+% options.thr_method = 'max': For every component pixel values below
+%       options.thr_method are discarded
+% options.thr_method = 'nrg': The contour is drawn around the value above
+%        which a specified fraction of energy is explained (default 99%)
+
+% INPUTS:
+% Aor:              set of spatial components (matrix d x K)
+% Cn:               background image (matrix d1 x d2)
+% options:          options structure (optional)
+% display_number:   flag for displaying the numbers of the components (optional, default: 0)
+% max_number:       specify the maximum number of components to be displayed (optional, default: display all)
+% Coor:             Pass contour plots to be displayed (optional)
+
+% OUTPUTS:
+% CC:               contour plots coordinates
+% jsf:              Output saved in struct format (to be saved in json format)
+
+% Author: Eftychios A. Pnevmatikakis
+%           Simons Foundation, 2016
+
+defoptions = CNMFSetParms;
 
 if nargin < 5 || isempty(max_number)
     max_number = size(Aor,2);
@@ -12,35 +32,29 @@ end
 if nargin < 4 || isempty(display_numbers)
     display_numbers = 0;
 end
-if nargin < 3 || isempty(thr)
-    thr = 0.995;
+if nargin < 3 || isempty(options) || isscalar(options)
+    if isnumeric(options)    % compatibility with previous version
+        nrgthr = options;
+        clear options
+        options.thr_method = 'nrg';
+        options.nrgthr = nrgthr;
+        warning('plot_contours function input arguments have changed. See the file for more info.');
+    else
+        options = defoptions;
+    end
 end
 
-units = 'centimeters';
+if ~isfield(options,'thr_method') || isempty(options.thr_method); options.thr_method = defoptions.thr_method; end
+if ~isfield(options,'nrgthr') || isempty(options.nrgthr); options.nrgthr = defoptions.nrgthr; end
+if ~isfield(options,'maxthr') || isempty(options.maxthr); options.maxthr = defoptions.maxthr; end
+
 fontname = 'helvetica';
 
-%fig3 = figure;
-%     set(gcf, 'PaperUnits', units,'Units', units)           
-%     set(gcf, 'PaperPosition',[5, 5, 12, 12])
-%     set(gcf, 'Position',3*[5, 5, 12, 12])
     [d1,d2] = size(Cn);
     imagesc(Cn,[min(Cn(:)),max(Cn(:))]);
     axis tight; axis equal; 
-    %set(gca,'XTick',[],'YTick',[]);
     posA = get(gca,'position');
     set(gca,'position',posA);
-    %cbar = colorbar('south','TickDirection','out');
-    if (0)
-        cbar = colorbar('TickDirection','out');
-        cpos = get(cbar,'position');
-        %cpos = [posA(1),posA(2)-cpos(4)-0.01,posA(3),cpos(4)];
-        ylabel(cbar,'Average neighbor correlation');
-        set(cbar,'position',cpos,'TickDirection','in');
-        set(cbar,'fontweight','bold','fontsize',14,'fontname',fontname);
-    end
-    %hold on; scatter(cm(:,2),cm(:,1),'ko'); hold off; 
-    %v = axis;
-    %handle = title('Correlation image and identified spatial footprints','fontweight','bold','fontsize',14,'fontname',fontname);
     hold on;
     
     cmap = hot(3*size(Aor,2));
@@ -55,21 +69,43 @@ fontname = 'helvetica';
     else
         CC = cell(size(Aor,2),1);
         CR = cell(size(Aor,2),2);
-        for i = 1:size(Aor,2)
-            A_temp = full(reshape(Aor(:,i),d1,d2));
-            A_temp = medfilt2(A_temp,[3,3]);
-            A_temp = A_temp(:);
-            [temp,ind] = sort(A_temp(:).^2,'ascend'); 
-            temp =  cumsum(temp);
-            ff = find(temp > (1-thr)*temp(end),1,'first');
-            if ~isempty(ff)
-                CC{i} = contour(reshape(A_temp,d1,d2),[0,0]+A_temp(ind(ff)),'LineColor',cmap(i+size(Aor,2),:));
-                fp = find(A_temp >= A_temp(ind(ff)));
+        if strcmpi(options.thr_method,'nrg')
+            thr = options.nrgthr;
+            for i = 1:size(Aor,2)
+                A_temp = full(reshape(Aor(:,i),d1,d2));
+                A_temp = medfilt2(A_temp,[3,3]);
+                A_temp = A_temp(:);
+                [temp,ind] = sort(A_temp(:).^2,'ascend'); 
+                temp =  cumsum(temp);
+                ff = find(temp > (1-thr)*temp(end),1,'first');
+                if ~isempty(ff)
+                    CC{i} = contour(reshape(A_temp,d1,d2),[0,0]+A_temp(ind(ff)),'LineColor',cmap(i+size(Aor,2),:));
+                    fp = find(A_temp >= A_temp(ind(ff)));
+                    [ii,jj] = ind2sub([d1,d2],fp);
+                    CR{i,1} = [ii,jj]';
+                    CR{i,2} = A_temp(fp)';
+                end
+                hold on;
+            end       
+        elseif strcmpi(options.thr_method,'max');  
+            thr = options.maxthr;
+            for i = 1:size(Aor,2)
+                A_temp = full(reshape(Aor(:,i),d1,d2));
+                A_temp = medfilt2(A_temp,[3,3]);
+                A_temp(A_temp<thr*max(A_temp(:))) = 0;
+                BW = bwareafilt(A_temp>0,1);
+                BW2 = bwboundaries(BW);
+                for ii = 1:length(BW2)
+                    BW2{ii} = fliplr(BW2{ii});
+                    plot(BW2{ii}(:,1),BW2{ii}(:,2),'Color',cmap(i+size(Aor,2),:));
+                end
+                CC{i} = BW2{1}';
+                fp = find(BW);
                 [ii,jj] = ind2sub([d1,d2],fp);
                 CR{i,1} = [ii,jj]';
                 CR{i,2} = A_temp(fp)';
+                hold on;
             end
-            hold on;
         end
     end
     cm = com(Aor(:,1:end),d1,d2);

@@ -146,18 +146,17 @@ if nargout == 5
 end
 
 Ain = imresize(reshape(full(Ain), [ds(1),ds(2), size(Ain,2)*prod(ds)/ds(1)/ds(2)]),[d(1),d(2)]); %,prod(d)/d(1)/d(2)*sum(K)]);
-Ain = sparse(reshape(Ain, prod(d), []));
+Ain = max(sparse(reshape(Ain, prod(d), [])),0);
 
 bin = imresize(reshape(bin,[ds(1),ds(2), options.nb*prod(ds)/ds(1)/ds(2)]),[d(1),d(2)]);
-bin = reshape(bin,prod(d),[]);
+bin = max(double(reshape(bin,prod(d),[])),0);
 
 if options.noise_norm
-    Ain = bsxfun(@times,Ain,max(P.sn(:),min_noise));
+    Ain = bsxfun(@times,Ain,double(max(P.sn(:),min_noise)));
     bin = bsxfun(@times,bin,max(P.sn(:),min_noise));
 end
-
-Cin = imresize(Cin, [sum(K), Ts*tsub]);
-fin = imresize(fin, [options.nb, Ts*tsub]);
+Cin = max(imresize(Cin, [size(Cin, 1), Ts*tsub]),0);
+fin = max(imresize(fin, [options.nb, Ts*tsub]),0);
 if T ~= Ts*tsub
     Cin = padarray(Cin, [0, T-Ts*tsub], 'post');
     fin = padarray(fin, [0, T-Ts*tsub], fin(end), 'post');

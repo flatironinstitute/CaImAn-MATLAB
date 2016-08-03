@@ -1,4 +1,4 @@
-function [A,b,C] = update_spatial_components(Y,C,f,A_,P,options)
+function [A,b,C,P] = update_spatial_components(Y,C,f,A_,P,options)
 
 % update spatial footprints and background through Basis Pursuit Denoising
 % for each pixel i solve the problem 
@@ -35,10 +35,12 @@ end
 if nargin < 6 || isempty(options); options = []; end
 if ~isfield(options,'d1') || isempty(options.d1); d1 = input('What is the total number of rows? \n'); options.d1 = d1; else d1 = options.d1; end          % # of rows
 if ~isfield(options,'d2') || isempty(options.d2); d2 = input('What is the total number of columns? \n'); options.d2 = d2; else d2 = options.d2; end          % # of columns
+if ~isfield(options,'d3') || isempty(options.d3); d3 = input('What is the total number of z-planes? \n'); options.d3 = d3; else d3 = options.d3; end          % # of columns
 if ~isfield(options,'show_sum'); show_sum = 0; else show_sum = options.show_sum; end            % do some plotting while calculating footprints
 if ~isfield(options,'interp'); Y_interp = sparse(d,T); else Y_interp = options.interp; end      % identify missing data
-if ~isfield(options,'use_parallel'); use_parallel = ~isempty(which('parpool')); else use_parallel = options.use_parallel; end % use parallel toolbox if present
+if ~isfield(options,'spatial_parallel'); spatial_parallel = ~isempty(which('parpool')); else spatial_parallel = options.spatial_parallel; end % use parallel toolbox if present
 if ~isfield(options,'search_method'); method = []; else method = options.search_method; end     % search method for determining footprint of spatial components
+if ~isfield(options,'tsub') || isempty(options.tsub); tsub = 1; else tsub = options.tsub; end  % downsample temporally to estimate A and b
 
 if nargin < 2 || (isempty(A_) && isempty(C))  % at least either spatial or temporal components should be provided
     error('Not enough input arguments')
@@ -64,52 +66,64 @@ else
     end
 end
 
+Cf = [C;f];
+
+if tsub ~= 1
+    P.sn_ds = zeros(d,1);
+    Ts = floor(T/tsub);
+    Cf = squeeze(mean(reshape(Cf(:,1:Ts*tsub),[],tsub,Ts),2));        
+    f = Cf(end-size(f,1)+1:end,:);
+    T = Ts;
+end 
+
 options.sn = P.sn;
 if ~memmaped
     Y(P.mis_entries) = NaN; % remove interpolated values
+    if tsub~=1        
+        Y = squeeze(mean(reshape(Y(:,1:Ts*tsub),[],tsub,Ts),2));    % downsample
+        if ~isfield(P,'sn_ds');
+            [P_ds,Y] = preprocess_data(Y);            
+            P.sn_ds = P_ds.sn;        
+        end
+        options.sn = P.sn_ds;
+    end
 end
 
-Cf = [C;f];
-
-if use_parallel         % solve BPDN problem for each pixel
+if spatial_parallel         % solve BPDN problem for each pixel
     Nthr = max(20*maxNumCompThreads,round(d*T/2^24));
     Nthr = min(Nthr,round(d/1e3));
     siz_row = [floor(d/Nthr)*ones(Nthr-mod(d,Nthr),1);(floor(d/Nthr)+1)*ones(mod(d,Nthr),1)];
     indeces = [0;cumsum(siz_row)];
-%     if ~memmaped
-%         Ycell = mat2cell(Y,siz_row,T);
-%     else
-%         Ycell = cell(Nthr,1);
-%     end
-%    INDc =  mat2cell(IND,siz_row,K);
-%    Acell = cell(Nthr,1);
-%    Psnc = mat2cell(options.sn(:),siz_row,1); 
     Yf = cell(Nthr,1);
     A = spalloc(d,size(Cf,1),nnz(IND)+size(Cf,1)*d);
-    for nthr = 1:Nthr
-        %IND_temp = INDc{nthr};
-        %Acell{nthr} = spalloc(siz_row(nthr),size(Cf,1),nnz(IND_temp));        
+    for nthr = 1:Nthr     
         if memmaped
             Ytemp = double(Y.Yr(indeces(nthr)+1:indeces(nthr+1),:));
+            if tsub ~= 1;
+                Ytemp = squeeze(mean(reshape(Ytemp(:,1:Ts*tsub),[],tsub,Ts),2));
+                if ~isfield(P,'sn_ds')
+                    [P_ds,Ytemp] = preprocess_data(Ytemp);
+                    P.sn_ds(indeces(nthr)+1:indeces(nthr+1)) = P_ds.sn;
+                end
+                sn_temp = P.sn_ds(indeces(nthr)+1:indeces(nthr+1));
+            else
+                sn_temp = P.sn(indeces(nthr)+1:indeces(nthr+1));
+            end
         else
-            %Ytemp = Ycell{nthr};
             Ytemp = Y(indeces(nthr)+1:indeces(nthr+1),:);
-            %Ycell{nthr} = [];
+            sn_temp = options.sn(indeces(nthr)+1:indeces(nthr+1));
         end
         IND_temp = IND(indeces(nthr)+1:indeces(nthr+1),:);
         Atemp = spalloc(siz_row(nthr),size(Cf,1),nnz(IND_temp));
         Yf{nthr} = Ytemp*f'; 
-        %Atemp = Acell{nthr};
-        sn_temp = options.sn(indeces(nthr)+1:indeces(nthr+1));
+        
         parfor px = 1:siz_row(nthr)
             fn = ~isnan(Ytemp(px,:));       % identify missing data
             ind = find(IND_temp(px,:));
             if ~isempty(ind);
                 ind2 = [ind,K+(1:size(f,1))];
-                %[~, ~, a, ~] = lars_regression_noise(Ycell{nthr}(px,fn)', Cf(ind2,fn)', 1, Psnc{nthr}(px)^2*T);
-                %[~, ~, a, ~] = lars_regression_noise(Ytemp(px,fn)', Cf(ind2,fn)', 1, Psnc{nthr}(px)^2*T);
                 [~, ~, a, ~] = lars_regression_noise(Ytemp(px,fn)', Cf(ind2,fn)', 1, sn_temp(px)^2*T);
-                a_sparse = sparse(1,ind2,a');
+                a_sparse = sparse(1,ind2,double(a'));
                 Atemp(px,:) = a_sparse';
             end
         end
@@ -123,7 +137,7 @@ if use_parallel         % solve BPDN problem for each pixel
     Yf = cell2mat(Yf);
 else
     A = [zeros(d,K),zeros(d,size(f,1))];
-    sA = zeros(d1,d2);
+    sA = zeros(d1,d2,d3);
     Yf = Y*f';
     for px = 1:d   % estimate spatial components
         fn = ~isnan(Y(px,:));       % identify missing data
@@ -136,7 +150,7 @@ else
         end
         if show_sum
             if mod(px,d1) == 0;
-               figure(20); imagesc(sA); axis square;  
+               figure(20); imagesc(max(sA,[],3)); axis square;  
                title(sprintf('Sum of spatial components (%i out of %i columns done)',round(px/d1),d2)); drawnow;
             end
         end
@@ -154,7 +168,8 @@ if ~isempty(ff)
     K = K - length(ff);
     A(:,ff) = [];
     C(ff,:) = [];
+    Cf(ff,:) = [];
 end
 
-b = max((Yf - A(:,1:K)*(C(1:K,:)*f'))/(f*f'),0);
+b = double(max((Yf - A(:,1:K)*double(Cf(1:K,:)*f'))/(f*f'),0));
 A = A(:,1:K);

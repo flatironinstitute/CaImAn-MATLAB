@@ -9,7 +9,7 @@ num2read=2000;					% user input: how many frames to read   (optional, default un
 
 Y = bigread2(nam,sframe,num2read);
 Y = Y - min(Y(:)); 
-if ~isa(Y,'double');    Y = double(Y);  end         % convert to double
+if ~isa(Y,'single');    Y = single(Y);  end         % convert to single
 
 [d1,d2,T] = size(Y);                                % dimensions of dataset
 d = d1*d2;                                          % total number of pixels
@@ -95,9 +95,9 @@ P.p = p;    % restore AR value
 K_m = size(C_or,1);
 [C_df,~] = extract_DF_F(Yr,[A_or,b2],[C_or;f2],K_m+1); % extract DF/F values (optional)
 
-contour_threshold = 0.95;                       % amount of energy used for each component to construct contour plot
+%contour_threshold = 0.95;                       % amount of energy used for each component to construct contour plot
 figure;
-[Coor,json_file] = plot_contours(A_or,reshape(P.sn,d1,d2),contour_threshold,1); % contour plot of spatial footprints
+[Coor,json_file] = plot_contours(A_or,reshape(P.sn,d1,d2),options,1); % contour plot of spatial footprints
 %savejson('jmesh',json_file,'filename');        % optional save json file with component coordinates (requires matlab json library)
 %% display components
 

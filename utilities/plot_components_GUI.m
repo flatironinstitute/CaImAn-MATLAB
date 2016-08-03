@@ -1,5 +1,7 @@
 %%
 function plot_components_GUI(Y,A,C,b,f,Cn,options)
+
+memmaped = isobject(Y);
 defoptions = CNMFSetParms;
 if nargin < 7 || isempty(options); options = []; end
 if ~isfield(options,'d1') || isempty(options.d1); d1 = input('What is the total number of rows? \n'); else d1 = options.d1; end          % # of rows
@@ -21,6 +23,7 @@ if isfield(options,'name') && ~isempty(options.name);
 else
     name = [defoptions.name,'_components'];
 end
+if ~isfield(options,'full_A') || isempty(options.full_A); full_A = defoptions.full_A; else full_A = options.full_A; end
 
 T = size(C,2);
 if ndims(Y) == 3
@@ -29,20 +32,40 @@ end
 if nargin < 6 || isempty(Cn);
     Cn = reshape(mean(Y,2),d1,d2);
 end
-
-nA = sqrt(sum(A.^2))';
+b = double(b);
+C = double(C);
+f = double(f);
+nA = full(sqrt(sum(A.^2))');
 [K,~] = size(C);
 A = A/spdiags(nA,0,K,K);    % normalize spatial components to unit energy
-C = spdiags(nA,0,K,K)*C;
+C = bsxfun(@times,C,nA(:)); %spdiags(nA,0,K,K)*C;
 
 nr = size(A,2);     % number of ROIs
 nb = size(f,1);     % number of background components
 %nA = full(sum(A.^2))';  % energy of each row
 %Y_r = spdiags(nA,0,nr,nr)\(A'*Y- (A'*A)*C - (A'*full(b))*f) + C; 
-Y_r = (A'*Y- (A'*A)*C - (A'*full(b))*f) + C;
+
+step = 5e3;
+if memmaped
+    AY = zeros(K,T);
+    for i = 1:step:d
+        AY = AY + A(i:min(i+step-1,d),:)'*double(Y.Yr(i:min(i+step-1,d),:));
+    end
+else
+    if issparse(A) && isa(Y,'single')  
+        if full_A
+            AY = full(A)'*Y;
+        else
+            AY = A'*double(Y);
+        end
+    else
+        AY = A'*Y;
+    end
+end
+Y_r = (AY- (A'*A)*C - full(A'*double(b))*f) + C;
 
 if plot_df
-    [~,Df] = extract_DF_F(Y,[A,b],[C;f],size(A,2)+1);
+    [~,Df] = extract_DF_F(Y,[A,double(b)],[C;f],size(A,2)+1);
 else
     Df = ones(size(A,2)+1,1);
 end
@@ -59,11 +82,6 @@ set(gcf,'PaperPosition',2*[300,300,960,480]);
 int_x = zeros(nr,2*sx);
 int_y = zeros(nr,2*sx);
 cm = com(A,d1,d2);
-
-
-
-
-
 
 
 

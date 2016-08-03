@@ -1,6 +1,7 @@
 function [A,C,b,f] = HALS_initialization(Y,K,options)
 
-
+defoptions = CNMFSetParms;
+if ~isfield(options,'max_iter_hals_in') || isempty(options.max_iter_hals_in); options.max_iter_hals_in = defoptions.max_iter_hals_in; end
 
 init_hals_method = 'random';
 
@@ -20,7 +21,7 @@ Y = bsxfun(@minus, Y, med);
 if strcmpi(init_hals_method,'random');
     A = rand(d,K);
     Y = reshape(Y,d,T);
-    C = max(A\Y,0);
+    C = HALS_temporal(Y,A,rand(K,T),10);
 elseif strcmpi(init_hals_method,'cor_im');
     sk = max(round(T/1000),1);
     Cn = correlation_image(Y(:,:,1:sk:T));
@@ -32,8 +33,7 @@ elseif strcmpi(init_hals_method,'cor_im');
     K = sum(BW(:));
 end
 
-max_iter_hals_in = 1;%50;
-for iter = 1:max_iter_hals_in
+for iter = 1:options.max_iter_hals_in
     A = HALS_spatial(Y, A, C);
     C = HALS_temporal(Y, A, C);
 end
@@ -44,7 +44,7 @@ C(ind_del, :) = [];
 
 Y = bsxfun(@plus,Y-A*C,med(:));
 b = med(:);
-for iter = 1:max_iter_hals_in
+for iter = 1:options.max_iter_hals_in
     f = max(b'*Y/norm(b)^2,0);
     b = max(Y*f'/norm(f)^2,0);
 end

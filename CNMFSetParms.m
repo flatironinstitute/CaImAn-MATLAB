@@ -33,6 +33,8 @@ Names = [
     'err_thr            ' % relative change threshold for stopping sparse_NMF
     'eta                ' % frobenious norm factor *max(Y(:))^2
     'beta               ' % sparsity factor
+    % HALS initialization parameters (HALS_initialization.m)
+    'max_iter_hals_in   ' % maximum number of HALS iterations
     % HALS parameters (HALS_2d.m)
     'bSiz               ' % expand kernel for HALS growing (default: 3)
     'maxIter            ' % maximum number of HALS iterations (default: 5)
@@ -46,17 +48,19 @@ Names = [
     'pixels             ' % pixels to include when computing the AR coefs (default: 1:numel(Y)/size(Y,ndims(Y)))
     'split_data         ' % split data into patches for memory reasons (default: 0)
     'block_size         ' % block size for estimating noise std in patches (default: [64,64])
-    'cluster_pixels     ' % cluster pixels to active/inactive based on the PSD density (default: true)
+    'cluster_pixels     ' % cluster pixels to active/inactive based on the PSD density (default: false)
     % UPDATING SPATIAL COMPONENTS (unpdate_spatial_components.m)
-    'search_method      ' % method for determining footprint of spatial components 'ellipse' or 'dilate' (default: 'ellipse')
-    'use_parallel       ' % update pixels in parallel (default: 1 if present)
+    'search_method      ' % method for determining footprint of spatial components 'ellipse' or 'dilate' (default: 'dilate')
+    'spatial_parallel   ' % update pixels in parallel (default: 1 if present)
     % determine_search_location.m
     'min_size           ' % minimum size of ellipse axis (default: 3)
     'max_size           ' % maximum size of ellipse axis (default: 8)
     'dist               ' % expansion factor of ellipse (default: 3)
     'se                 ' % morphological element for dilation (default: strel('disk',4,0))
     % threshold_components.m
-    'nrgthr             ' % energy threshold (default: 0.9999)
+    'thr_method         ' % method to threshold ('max' or 'nrg', default 'max')
+    'maxthr             ' % threshold of max value below which values are discarded (default: 0.1)
+    'nrgthr             ' % energy threshold (default: 0.995)
     'clos_op            ' % morphological element for closing (default: strel('square',3))
     'medw               ' % size of median filter (default: [3,3])
     % UPDATING TEMPORAL COMPONENTS (update_temporal_components.m)
@@ -64,6 +68,7 @@ Names = [
     'restimate_g        '    % flag for updating the time constants for each component (default: 1)
     'temporal_iter      '    % number of block-coordinate descent iterations (default: 2)
     'temporal_parallel  ' % flag for parallel updating of temporal components (default: true if present)
+    'full_A             ' % if true turn A into full matrix. If false turn Y into double precision (default: false)
     % CONSTRAINED DECONVOLUTION (constrained_foopsi.m)
     'method             ' % methods for performing spike inference ('dual','cvx','spgl1','lars') (default:'cvx')
     'bas_nonneg         ' % flag for setting the baseline lower bound. if 1, then b >= 0 else b >= min(y) (default 1)
@@ -202,6 +207,8 @@ Values = [
     {1e-4}
     {1}
     {.5}
+    % HALS initialization parameters (HALS_initialization.m)
+    {5}
     % HALS parameters (HALS_2d.m)
     {3}
     {5}
@@ -215,9 +222,9 @@ Values = [
     {[]}
     {false}
     {[64,64]}
-    {true}
+    {false}
     % UPDATING SPATIAL COMPONENTS (unpdate_spatial_components.m)
-    {'ellipse'}
+    {'dilate'}
     {~isempty(which('parpool'))}
     % determine_search_location.m
     {3}
@@ -225,7 +232,9 @@ Values = [
     {3}
     {strel('disk',4,0)}
     % threshold_components.m
-    {0.99}
+    {'max'}
+    {0.1}
+    {0.995}
     {strel('square',3)}
     {[3,3]}
     % UPDATING TEMPORAL COMPONENTS (update_temporal_components.m)
@@ -233,6 +242,7 @@ Values = [
     {1}
     {2}
     {~isempty(which('parpool'))}
+    {false}
     % CONSTRAINED DECONVOLUTION (constrained_foopsi.m)
     {'cvx'}
     {1}
