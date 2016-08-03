@@ -67,7 +67,7 @@ mmY = max(Y(:));
 fig = figure; 
 rm_pix = find(max(C(:,ind(1:end-1)),[],2)>0.1);
 set(gcf, 'Units', 'pixels')           
-set(gcf, 'Position',[100,100, 960, 960])
+set(gcf, 'Position',[100,100, 960, 960]/1.2)
 if make_avi
     vidObj = VideoWriter(name);
     set(vidObj,'FrameRate',10);
