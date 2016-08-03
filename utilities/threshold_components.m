@@ -26,6 +26,7 @@ function Ath = threshold_components(A,options)
     if ~isfield(options,'nrgthr') || isempty(options.nrgthr); options.nrgthr = defoptions.nrgthr; end
     if ~isfield(options,'maxthr') || isempty(options.maxthr); options.nrgthr = defoptions.maxthr; end
     if ~isfield(options,'clos_op') || isempty(options.clos_op); options.clos_op = defoptions.clos_op; end
+    if ~isfield(options,'conn_comp') || isempty(options.conn_comp); options.conn_comp = defoptions.conn_comp; end % extract largest connected component
     if ~isfield(options,'medw') || isempty(options.medw); options.medw = defoptions.medw; end
     if ~isfield(options,'d3') || isempty(options.d3); options.d3 = 1; end
     
@@ -70,7 +71,9 @@ function Ath = threshold_components(A,options)
             end
             A_temp(A_temp<options.maxthr*max(A_temp(:))) = 0;
             BW = imclose(A_temp>0,options.clos_op);
-            BW = bwareafilt(BW,1);            
+            if options.conn_comp;
+                BW = bwareafilt(BW,1);            
+            end
             ff = find(BW>0);            
             indf{i} = ff;
             if ~isempty(ff)

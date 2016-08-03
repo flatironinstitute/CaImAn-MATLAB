@@ -63,6 +63,7 @@ Names = [
     'nrgthr             ' % energy threshold (default: 0.995)
     'clos_op            ' % morphological element for closing (default: strel('square',3))
     'medw               ' % size of median filter (default: [3,3])
+    'conn_comp          ' % extract largest connected component (binary, default: true)
     % UPDATING TEMPORAL COMPONENTS (update_temporal_components.m)
     'deconv_method      '    % method for spike deconvolution (default: 'constrained_foopsi')
     'restimate_g        '    % flag for updating the time constants for each component (default: 1)
@@ -237,6 +238,7 @@ Values = [
     {0.995}
     {strel('square',3)}
     {[3,3]}
+    {true}
     % UPDATING TEMPORAL COMPONENTS (update_temporal_components.m)
     {'constrained_foopsi'}
     {1}
