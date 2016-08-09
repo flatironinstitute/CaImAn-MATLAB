@@ -45,7 +45,7 @@
                         case 'mean'
                             SN{ind}=sqrt(mean(psdx(:,indf)/2,2));
                         case 'median'
-                            SN{ind}=sqrt(median(psdx(:,indf)/2),2);
+                            SN{ind}=sqrt(median(psdx(:,indf)/2,2));
                         case 'logmexp'
                             SN{ind} = sqrt(exp(mean(log(psdx(:,indf)/2),2)));
                     end
@@ -64,7 +64,7 @@
                         case 'mean'
                             SN{ind}=sqrt(mean(psdx(:,indf)/2,2));
                         case 'median'
-                            SN{ind}=sqrt(median(psdx(:,indf)/2),2);
+                            SN{ind}=sqrt(median(psdx(:,indf)/2,2));
                         case 'logmexp'
                             SN{ind} = sqrt(exp(mean(log(psdx(:,indf)/2),2)));
                     end
@@ -81,7 +81,7 @@
                 case 'mean'
                     sn = sqrt(mean(psdx(:,indf)/2,2));
                 case 'median'
-                    sn = sqrt(median(psdx(:,indf)/2),2);
+                    sn = sqrt(median(psdx(:,indf)/2,2));
                 case 'logmexp'
                     sn = sqrt(exp(mean(log(psdx(:,indf)/2),2)));
             end
