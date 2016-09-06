@@ -24,7 +24,7 @@ function Ath = threshold_components(A,options)
     
     if ~isfield(options,'thr_method') || isempty(options.thr_method); options.thr_method = defoptions.thr_method; end
     if ~isfield(options,'nrgthr') || isempty(options.nrgthr); options.nrgthr = defoptions.nrgthr; end
-    if ~isfield(options,'maxthr') || isempty(options.maxthr); options.nrgthr = defoptions.maxthr; end
+    if ~isfield(options,'maxthr') || isempty(options.maxthr); options.maxthr = defoptions.maxthr; end
     if ~isfield(options,'clos_op') || isempty(options.clos_op); options.clos_op = defoptions.clos_op; end
     if ~isfield(options,'conn_comp') || isempty(options.conn_comp); options.conn_comp = defoptions.conn_comp; end % extract largest connected component
     if ~isfield(options,'medw') || isempty(options.medw); options.medw = defoptions.medw; end
