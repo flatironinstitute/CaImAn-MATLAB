@@ -95,7 +95,7 @@ if spatial_parallel         % solve BPDN problem for each pixel
     siz_row = [floor(d/Nthr)*ones(Nthr-mod(d,Nthr),1);(floor(d/Nthr)+1)*ones(mod(d,Nthr),1)];
     indeces = [0;cumsum(siz_row)];
     Yf = cell(Nthr,1);
-    A = spalloc(d,size(Cf,1),nnz(IND)+size(Cf,1)*d);
+    A = spalloc(d,size(Cf,1),nnz(IND)+size(f,1)*d);
     for nthr = 1:Nthr     
         if memmaped
             Ytemp = double(Y.Yr(indeces(nthr)+1:indeces(nthr+1),:));

@@ -46,7 +46,7 @@ elseif strcmpi(method,'dilate'); method = 'dilate';
 else fprintf('Method not recongnized. Search location equals the entire field of view. \n');
 end
 
-IND = false(d,nr);
+IND = logical(sparse(d,nr));
 switch method 
     case 'ellipse'
         Coor.x = kron(ones(d2*d3,1),(1:d1)'); 
@@ -59,7 +59,6 @@ switch method
                cm = [cm,ones(nr,1)];
            end
            Vr = cell(nr,1);
-           IND = false(d,nr);       % indicator for distance								   
            %cm(:,1) = Coor.x'*A(:,1:nr)./sum(A(:,1:nr)); 
            %cm(:,2) = Coor.y'*A(:,1:nr)./sum(A(:,1:nr));          % center of mass for each components
            parfor i = 1:nr            % calculation of variance for each component and construction of ellipses
