@@ -233,7 +233,7 @@ end
             [psd_Y,ff]=pwelch(Y,round(L/8),[],1000,1);
         else
             xdft = fft(Y);
-            xdft = xdft(:,1:round(L/2)+1);
+            xdft = xdft(1:round(L/2)+1);
             psd_Y = (1/L) * abs(xdft).^2;
             ff = 0:1/L:1/2;
             psd_Y(2:end-1) = 2*psd_Y(2:end-1);
