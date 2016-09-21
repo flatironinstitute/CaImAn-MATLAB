@@ -2,3 +2,7 @@
 *.m~
 *.gif
 *.mat
+
+utilities/.DS_Store
+
+.DS_Store
