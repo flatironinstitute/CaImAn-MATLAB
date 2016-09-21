@@ -1,7 +1,14 @@
 clear;
 %% load file (courtesy of C. Lacefield and R. Bruno, Columbia University)
 
-nam = '2014-04-05-003.tif';          % insert path to tiff stack here
+addpath(genpath('../../ca_source_extraction'));
+nam = 'dendritic_demo.tif';
+if ~exist(nam,'file')  % download file if it doesn't exist in the directory
+    url = 'https://www.dropbox.com/s/wykkq4lwoo85ml5/dendritic_demo.tif.zip?dl=1';
+    filename = 'dendritic_demo.zip';
+    outfilename = websave(filename,url);
+    unzip(filename);
+end
 
 Y = bigread2(nam);
 Y = Y - min(Y(:)); 
