@@ -39,13 +39,13 @@
                     xdft = fft(Y((ind-1)*Nb+1:min(ind*Nb,d),:),[],2); 
                     xdft = xdft(:,1: floor(N/2)+1); % FN: floor added.
                     psdx = (1/(Fs*N)) * abs(xdft).^2;
-                    psdx(:,2:end-1) = 2*psdx(:,2:end-1);
+                    psdx(:,2:end-1) = 2*psdx(:,2:end-1) + eps;
                     %SN{ind} = mean_psd(psdx(:,indf),method);
                     switch method
                         case 'mean'
                             SN{ind}=sqrt(mean(psdx(:,indf)/2,2));
                         case 'median'
-                            SN{ind}=sqrt(median(psdx(:,indf)/2),2);
+                            SN{ind}=sqrt(median(psdx(:,indf)/2,2));
                         case 'logmexp'
                             SN{ind} = sqrt(exp(mean(log(psdx(:,indf)/2),2)));
                     end
@@ -58,13 +58,13 @@
                     xdft = fft(Yc{ind},[],2); 
                     xdft = xdft(:,1:floor(N/2)+1);
                     psdx = (1/(Fs*N)) * abs(xdft).^2;
-                    psdx(:,2:end-1) = 2*psdx(:,2:end-1);
+                    psdx(:,2:end-1) = 2*psdx(:,2:end-1) + eps;
                     Yc{ind} = [];
                     switch method
                         case 'mean'
                             SN{ind}=sqrt(mean(psdx(:,indf)/2,2));
                         case 'median'
-                            SN{ind}=sqrt(median(psdx(:,indf)/2),2);
+                            SN{ind}=sqrt(median(psdx(:,indf)/2,2));
                         case 'logmexp'
                             SN{ind} = sqrt(exp(mean(log(psdx(:,indf)/2),2)));
                     end
@@ -76,12 +76,12 @@
             xdft = fft(Y);
             xdft = xdft(:,1:floor(N/2)+1);
             psdx = (1/(Fs*N)) * abs(xdft).^2;
-            psdx(:,2:end-1) = 2*psdx(:,2:end-1);
+            psdx(:,2:end-1) = 2*psdx(:,2:end-1) + eps;
             switch method
                 case 'mean'
                     sn = sqrt(mean(psdx(:,indf)/2,2));
                 case 'median'
-                    sn = sqrt(median(psdx(:,indf)/2),2);
+                    sn = sqrt(median(psdx(:,indf)/2,2));
                 case 'logmexp'
                     sn = sqrt(exp(mean(log(psdx(:,indf)/2),2)));
             end
