@@ -2,4 +2,11 @@
 *.m~
 *.gif
 *.mat
+utilities/.DS_Store
+.DS_Store
 *.asv
+CSHL16/dendritic_demo.zip
+
+CSHL16/__MACOSX/._dendritic_demo.tif
+
+CSHL16/dendritic_demo.tif

@@ -49,6 +49,9 @@ Names = [
     'split_data         ' % split data into patches for memory reasons (default: 0)
     'block_size         ' % block size for estimating noise std in patches (default: [64,64])
     'cluster_pixels     ' % cluster pixels to active/inactive based on the PSD density (default: false)
+    'extract_max        ' % extract the maximum activity intervals for each pixel (default: false)
+    'max_nlocs          ' % number of local maxima to be extracted (default: 10)
+    'max_width          ' % length of each interval (default: 11)
     % UPDATING SPATIAL COMPONENTS (unpdate_spatial_components.m)
     'search_method      ' % method for determining footprint of spatial components 'ellipse' or 'dilate' (default: 'dilate')
     'spatial_parallel   ' % update pixels in parallel (default: 1 if present)
@@ -224,6 +227,9 @@ Values = [
     {false}
     {[64,64]}
     {false}
+    {false}
+    {30}
+    {21}
     % UPDATING SPATIAL COMPONENTS (unpdate_spatial_components.m)
     {'dilate'}
     {~isempty(which('parpool'))}
