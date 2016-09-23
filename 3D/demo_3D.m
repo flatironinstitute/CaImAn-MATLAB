@@ -1,5 +1,5 @@
 clear;
-%% load file (courtesy of D. Pachedo and M. Murthy, Princeton University)
+%% load file (courtesy of D. Pacheco and M. Murthy, Princeton University)
 
 addpath(genpath('../../ca_source_extraction'));
 nam = 'data3D.mat';
