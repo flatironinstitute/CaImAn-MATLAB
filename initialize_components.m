@@ -73,8 +73,12 @@ d = sY(1:ndimsY);
 T = sY(end);
 
 if options.noise_norm
-    min_noise = prctile(P.sn(P.sn>0),options.noise_norm_prctile);
-    Y = bsxfun(@times,Y,reshape(1./max(P.sn,min_noise),d));
+    mY = mean(Y,ndims(Y));
+    norm_image = mY + median(mY(:));
+    min_noise = norm_image;
+    %min_noise = prctile(P.sn(P.sn>0),options.noise_norm_prctile);
+    %Y = bsxfun(@times,Y,reshape(1./max(P.sn,min_noise),d));
+    Y = bsxfun(@times,Y,reshape(1./double(min_noise),d));
 end
 
 ds = d;
@@ -146,8 +150,10 @@ bin = imresize(reshape(bin,[ds(1),ds(2), options.nb*prod(ds)/ds(1)/ds(2)]),[d(1)
 bin = max(double(reshape(bin,prod(d),[])),0);
 
 if options.noise_norm
-    Ain = bsxfun(@times,Ain,double(max(P.sn(:),min_noise)));
-    bin = bsxfun(@times,bin,max(P.sn(:),min_noise));
+    %Ain = bsxfun(@times,Ain,double(max(P.sn(:),min_noise)));
+    %bin = bsxfun(@times,bin,max(P.sn(:),min_noise));
+    Ain = bsxfun(@times,Ain,double(min_noise(:)));
+    bin = bsxfun(@times,bin,double(min_noise(:)));
 end
 Cin = max(imresize(Cin, [size(Cin, 1), Ts*tsub]),0);
 fin = max(imresize(fin, [options.nb, Ts*tsub]),0);
