@@ -1,4 +1,4 @@
-function [A_or,C_or,S_or,P_or,srt,srt_val] = order_ROIs(A,C,S,P, srt)
+function [A_or,C_or,S_or,YrA_or,P_or,srt,srt_val,nA] = order_ROIs(A,C,S,YrA,P,options,srt)
 
 % ordering of the found components based on their maximum temporal
 % activation and their size (through their l_inf norm)
@@ -17,7 +17,7 @@ end
 A_or = A(:,srt);
 C_or = C(srt,:);
 
-if nargin < 4
+if nargin < 5
     P_or = [];
 else
     P_or = P;
@@ -30,6 +30,20 @@ end
 if nargin < 3 || isempty(S)
     S_or = [];
 else
-    S = spdiags(nA(:),0,nr,nr)*S;
+    if ~exist('options', 'var')
+        options.deconv_method = 'constrained_foopsi';
+    end
+    if ~strcmp(options.deconv_method, 'MCMC')
+        S = spdiags(nA(:),0,nr,nr)*S;
+    end
     S_or = S(srt,:);
 end
+
+if nargin < 4 || isempty(YrA)
+    YrA_or = [];
+else
+    YrA = spdiags(nA(:),0,nr,nr)*YrA;
+    YrA_or = YrA(srt,:);
+end
+    
+    
