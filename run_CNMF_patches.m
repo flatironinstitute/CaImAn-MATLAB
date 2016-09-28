@@ -281,7 +281,7 @@ end
 
 if options.classify_comp
     fprintf('Classifying components...')
-    [rval_space,rval_time,ind_space,ind_time] = classify_comp(data,Am,Cm,bin,fin,options);
+    [rval_space,rval_time,ind_space,ind_time] = classify_comp_corr(data,Am,Cm,bin,fin,options);
     ind = ind_space & ind_time;
     fprintf(' done. \n');
 else
