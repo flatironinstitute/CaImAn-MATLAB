@@ -218,7 +218,15 @@ for r = 1:length(K)
     center(sum(K(1:r-1))+1:sum(K(1:r)),:) = centers;
 end
 res = reshape(Y,d,T) + repmat(med(:),1,T);
-[b_in,f_in] = nnmf(max(res,0),nb);
+
+%[b_in,f_in] = nnmf(max(res,0),nb);
+%[b_in,f_in] = nnsvd(max(res,0),nb);
+f_in = [mean(res);rand(nb-1,T)];
+
+for nmfiter = 1:100
+    b_in = max((res*f_in')/(f_in*f_in'),0);    
+    f_in = max((b_in'*b_in)\(b_in'*res),0);
+end
 
 
 function [ain,cin] = finetune(data,cin,nIter)
