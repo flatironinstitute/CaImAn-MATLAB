@@ -60,7 +60,11 @@ tAA(1:K_m+1:K_m^2) = 0;
 
 rval_space = zeros(K_m,1);
 rval_time  = zeros(K_m,1);
-data = Yr.Yr;
+if memmaped
+    data = Yr.Yr;
+else
+    data = Yr;
+end
 for i = 1:K_m
     ovlp_cmp = find(tAA(:,i));
     indeces = LOCS{i};
