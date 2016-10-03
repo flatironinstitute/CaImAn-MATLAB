@@ -74,7 +74,7 @@ T = sY(end);
 
 if options.noise_norm
     mY = mean(Y,ndims(Y));
-    norm_image = mY + median(mY(:));
+    norm_image = mY + median(mY(:)) + 1e-4;
     min_noise = norm_image;
     %min_noise = prctile(P.sn(P.sn>0),options.noise_norm_prctile);
     %Y = bsxfun(@times,Y,reshape(1./max(P.sn,min_noise),d));
