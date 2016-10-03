@@ -72,4 +72,4 @@ P.p = 0;
 %[A2,b2,Cm] = update_spatial_components(Yr,Cm,f,Am,Pm,options);
 %[C2,f2,P2,S2] = update_temporal_components(Yr,A2,b2,Cm,f,Pm,options);
 
-plot_components_3D_GUI(Y,A,C,b,f,Cn,options)
+plot_components_3D_GUI(Y,A,C,b,f,Cn,options);

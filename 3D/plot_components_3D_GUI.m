@@ -62,8 +62,8 @@ set(gcf,'Position',2*[300,300,960,480]);
 set(gcf,'PaperPosition',2*[300,300,960,480]);
 
 thr = 0.95;
-minC = min(Cn,[],3);
-maxC = max(Cn,[],3);
+minC = max(squeeze(min(min(Cn,[],1),[],2)),0);
+maxC = squeeze(max(max(Cn,[],1),[],2));
 
 % Create a figure and axes
 % ax = axes('Units','DF/F');
