@@ -58,13 +58,15 @@ Ain = zeros(d1*d2, K);  % spatial components
 Cin = zeros(K, T);      % temporal components
 center = zeros(K, 2);   % center of the initialized components
 
+if ~isfield(options,'rem_prct') || isempty(options.rem_prct); options.rem_prct = 20; end
+
 %% compute correlation image and (max-median)/std ratio
 ind_frame = round(linspace(1, T, min(T, 1000)));    % select few frames for speed issues
 tmp_noise = randn(d1*d2, length(ind_frame)); 
 C1 = correlation_image(full(Y(:, ind_frame))+tmp_noise, sz, d1, d2);
 Cb =  zeros(size(C1)); %correlation_image(full(Y(:, ind_frame(1:3:end)))+tmp_noise(:, 1:3:end), [gSiz, gSiz+1], d1, d2);  %backgroung correlatin 
 Cn = C1-Cb; %here Cb is the background correlation. for 2photon imaging results. It might be useful when the background signal is large 
-Y_median = median(Y(:, ind_frame), 2);
+Y_median = prctile(Y(:, ind_frame),options.rem_prct,2);
 Y = bsxfun(@minus, Y, Y_median);
 % Y_std = sqrt(mean(Y.*Y, 2));
 

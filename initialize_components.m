@@ -11,6 +11,7 @@ function [Ain, Cin, bin, fin, center] = initialize_components(Y, K, tau, options
 
 %options    fine-tuning parameters (optional)
 %           options.init_method: method of initialization ('greedy','sparse_NMF','both')
+%           options.
 %           options.nIter: number of iterations for shape tuning (default 5)
 %           options.gSiz: size of kernel (default 2*tau + 1)
 %           options.ssub: spatial downsampling factor (default 1)
@@ -20,7 +21,7 @@ function [Ain, Cin, bin, fin, center] = initialize_components(Y, K, tau, options
 %           options.windowSiz: size of spatial window when computing the median (default 32 x 32)
 %           options.chunkSiz: number of timesteps to be processed simultaneously if on save_memory mode (default: 100)
 %           options.med_app: number of timesteps to be interleaved for fast (approximate) median calculation (default: 1, no approximation)
-%           
+%           options.rem_prct: percentile to be removed before initialization (default: 20)
 
 % P         parameter struct used for normalization by noise and user feed component centroids (optional)
 
@@ -49,6 +50,7 @@ else options.gSig = tau;
 end
 
 if ~isfield(options,'init_method'); options.init_method = 'greedy'; end
+if ~isfield(options,'rem_prct') || isempty(options.rem_prct); options.rem_prct = defoptions.rem_prct; end
 % downsample the data
 
 if ~isfield(options, 'ssub'); options.ssub = 1; end; ssub = options.ssub;

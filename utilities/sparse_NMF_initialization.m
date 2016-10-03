@@ -17,6 +17,7 @@ if ~isfield(options,'beta'); options.beta = defoptions.beta; end
     beta = options.beta;
 if ~isfield(options,'nb'), options.nb = defoptions.nb; end 
     nb = options.nb;
+if ~isfield(options,'rem_prct') || isempty(options.rem_prct); options.rem_prct = defoptions.rem_prct; end
     
 C = rand(K,T);
 
@@ -35,7 +36,7 @@ if flag_optim
 end
 
 % remove median
-medY = median(Y, 2);
+medY = prctile(Y,options.rem_prct,2);
 Y = bsxfun(@minus, Y, medY);
 
 while (iter <= max_iter) && repeat
