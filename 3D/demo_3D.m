@@ -21,7 +21,7 @@ d = d1*d2*d3;                                          % total number of pixels
 %% Set parameters
 
 K = 200;                                          % number of components to be found
-tau = [5,5,3];                                    % std of gaussian kernel (size of neuron) 
+tau = [3,3,2];                                    % std of gaussian kernel (size of neuron) 
 p = 0;                                            % order of autoregressive system (p = 0 no dynamics for slow imaging rate)
 merge_thr = 0.95;                                 % merging threshold
 
@@ -33,7 +33,7 @@ options = CNMFSetParms(...
     'temporal_iter',2,...                        % number of block-coordinate descent steps 
     'fudge_factor',0.98,...                      % bias correction for AR coefficients
     'merge_thr',merge_thr,...                    % merging threshold
-    'gSig',tau...
+    'gSig',tau,'nb',1 ...
     );
 %% Data pre-processing
 
@@ -42,6 +42,7 @@ Cn = correlation_image_3D(Y); % for large datasets change with reshape(P.sn,d1,d
 
 %% show movie of projections
 % plot4Dproj(Y, Cn, [d1,d2,d3]);
+
 %% fast initialization of spatial components using greedyROI and HALS
 
 [Ain,Cin,bin,fin,center] = initialize_components(Y,K,tau,options,P);  % initialize
