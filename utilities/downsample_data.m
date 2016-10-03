@@ -7,6 +7,10 @@ if nargin < 3 || isempty(options);
     options = defoptions;
 end
 
+if ~isfield(options, 'd1') || isempty(options.d1); options.d1 = size(Y,1); end
+if ~isfield(options, 'd2') || isempty(options.d2); options.d1 = size(Y,2); end
+if ~isfield(options, 'd3') || isempty(options.d3); if ndims(Y) == 3; options.d3 = 1; else options.d3 = size(Y,3); end; end
+
 if nargin < 2 || isempty(direction)
     direction = 'spacetime';
 end

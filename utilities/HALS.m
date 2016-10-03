@@ -30,7 +30,7 @@ Y = reshape(Y,size(A,1),[]);
 IND = determine_search_location(A,method,params);
 %IND = true(size(A));
 %% update spatial and temporal components neuron by neurons
-Yac = Y - b*f;
+Yac = max(Y - b*f,0);
 for miter=1:maxIter
     % update neurons
     ind_del = find(std(A,0,1)==0); 

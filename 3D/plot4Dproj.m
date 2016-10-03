@@ -1,16 +1,27 @@
 function figH = plot4Dproj(Y, maskY, sizY, params)
 % plot4Dproj(Y, maskY, sizY, params)
-% displays projections of 3D-4D matrices (Y), if 4D the figure will update with
-% a lag of pi.lag and overlais a maskY
+% Displays XY, YZ and XZ projections of Y over time.
+% inputs:
+% Y : 3D or 4D matrix (2DxT, 3D, 3DxT)
+% maskY: mask to overlay on Y (as a contour, for values greater then 0)
+% sizY: spatial dimensions of Y (2D or 3D);
+% params: extra parameters that edit the figure fitures
+% Notes:
+% mask must have the same 'spatial dimensions' as Y
+% the extra dimention will be read as a different masks. so far the
+% code only works for cases where last dimention of maskY is 1 or matches
+% the last dimention of Y.
+
 global pi
 pi = [];
-pi.iter = 0;
-pi.range = [];
-pi.cbgate = 1;
-pi.lag = 0.01;
-pi.maskcor = [1 0 0];
-pi.cormap = 'jet';
-pi.maskout = 0;
+pi.iter = 0; % update caxis iteratively (every timepoint)
+pi.range = []; % range to use by caxis
+pi.cbgate = 1; % display colorbar
+pi.lag = 0.01; % lag between iterations (or timepoints)
+pi.maskcor = [1 0 0]; % default color of mask contour
+pi.cormap = 'jet'; % colormap of background image
+pi.maskout = 0; % gate to zero all the Y values where maskY == 0
+pi.figpos = [368 286 1156 510]; % figure position
 
 fop = fields(pi);
 if exist('params', 'var') && ~isempty(params)
@@ -32,7 +43,7 @@ maskY = reshape(full(maskY), [sizY, size(maskY, 2)]);
 Y = double(Y);
 
 %% Plotting
-figH = figure('position', [368 286 1156 510]); % [213 311 1461 787]);
+figH = figure('position', pi.figpos);
 colormap(pi.cormap)
 
 if pi.maskout && size(maskY, 4) == 1
@@ -43,10 +54,10 @@ if isempty(pi.range) && pi.iter == 0
    pi.range = [min(Y(:)) max(Y(:))];
 end
 
-plotmuliproj(Y, maskY)
+plotmuliproj(Y, maskY, sizY)
 end
 
-function plotmuliproj(Y, maskY)
+function plotmuliproj(Y, maskY, sizY)
 global pi
 pi.d2proj = [3 2 1];
 pi.axesname = {'X', 'Y'; 'Z', 'Y'; 'Z', 'X'};
@@ -62,7 +73,7 @@ for t = 1:size(Y, 4)
     for a_idx = 1:3
         %% plot background Y
         plotproj(hAxes, Y(:, :, :, t), a_idx, t)
-        %% plot overlay maskY
+        %% overlay contour maskY
         if ~isempty(maskY)
             if size(Y, 4) == size(maskY, 4) % if mask is same size uses each for each Y(:, :, :, t)
                 plotoverlay(hAxes, a_idx, maskY(:, :, :, t))

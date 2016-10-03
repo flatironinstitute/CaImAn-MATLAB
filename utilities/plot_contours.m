@@ -32,7 +32,7 @@ end
 if nargin < 4 || isempty(display_numbers)
     display_numbers = 0;
 end
-if nargin < 3 || isempty(options) || isscalar(options)
+if nargin < 3 || isempty(options) || isnumeric(options)
     if isnumeric(options)    % compatibility with previous version
         nrgthr = options;
         clear options

@@ -100,11 +100,21 @@ Names = [
     'make_gif           ' % save animation (default: 0)
     'save_avi           ' % save video (default: 0)
     'pause_time         ' % time to pause between each component (default: Inf, user has to click)
-    % CLASSIFY COMPONENTS (classify components.m)
+    % CLASSIFY COMPONENTS PIXELS (classify_components_pixels.m)
     'cl_thr             ' % overlap threshold for energy for a component to be classified as true (default: 0.8)
+    % CLASSIFY COMPONENTS with CORRELATION (classify_comp_corr.m)
+    'space_thresh       ' % threshold for r-value in space (default: 0.4)
+    'time_thresh        ' % threshold for r-value in time (default: 0.4)
+    'A_thresh           ' % threshold for determining overlap (default: 0.1)
+    'Npeaks             ' % # of peaks to be considered (default: 10)
+    'peak_int           ' % interval around the peak (default: -5:24)
     % ORDER COMPONENTS (order_components.m)
     'nsd                ' % number of standard deviations (default: 3)
     'nfr                ' % number of consecutive frames (default: 3)
+    % PATCHES          (run_CNMF_patches.m)
+    'gnb                ' % number of global background components (default: 1)
+    'create_memmap      ' % create a memory mapped file if it is not provided in the input (default: false)    
+    'classify_comp      ' % classify components based on correlation values (default: true)
     ];
 
 [m,n] = size(Names);
@@ -278,11 +288,21 @@ Values = [
     {0}
     {0}
     {Inf}
-    % CLASSIFY COMPONENTS (classify_components.m)
+    % CLASSIFY COMPONENTS PIXELS (classify_components_pixels.m)
     {0.8}
+    % CLASSIFY COMPONENTS with CORRELATION (classify_comp_corr.m)
+    {0.4}
+    {0.4}
+    {0.1}
+    {10}
+    {-5:24}
     % ORDER COMPONENTS (order_components.m)
     {3}
     {5}
+    % PATCHES          (run_CNMF_patches.m)
+    {1}
+    {false}    
+    {true}
     ];
 
 for j = 1:m
