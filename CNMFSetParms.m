@@ -15,6 +15,7 @@ Names = [
     'ssub               ' % spatial downsampling factor (default: 1)
     'tsub               ' % temporal downsampling factor (default: 1)
     'init_method        ' % initialization method ('greedy','greedy_corr','sparse_NMF','HALS') (default: 'greedy')
+    'rem_prct           ' % percentile to be removed before initialization (default: 20)
     'noise_norm         ' % normalization by noise estimate prior to initialization (default: true)
     'noise_norm_prctile ' % minimum noise level (as percentile of P.sn) used in the normalization prior to initialization (default: 2)
     % greedy_corr parameters (greedyROI_corr.m)
@@ -203,6 +204,7 @@ Values = [
     {1}
     {1}
     {'greedy'}
+    {20}
     {true}
     {2}
     % greedy_corr parameters (greedyROI_corr.m)

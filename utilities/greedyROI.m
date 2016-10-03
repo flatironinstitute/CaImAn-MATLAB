@@ -83,14 +83,11 @@ else nIter = params.nIter; end
 if ~isfield(params, 'save_memory'), save_memory = 0;
 else save_memory = params.save_memory; end
     
-if ~isfield(params, 'chunkSiz'), chunkSiz = 100;
-else chunkSiz = params.chunkSiz; end
+if ~isfield(params, 'chunkSiz'), chunkSiz = 100; else chunkSiz = params.chunkSiz; end
+if ~isfield(params, 'windowSiz'), windowSiz = 32; else windowSiz = params.windowSiz; end
+if ~isfield(params, 'med_app'), med_app = 1; else med_app = params.med_app; end
 
-if ~isfield(params, 'windowSiz'), windowSiz = 32;
-else windowSiz = params.windowSiz; end
-
-if ~isfield(params, 'med_app'), med_app = 1;
-else med_app = params.med_app; end
+if ~isfield(params,'rem_prct') || isempty(params.rem_prct); params.rem_prct = 20; end
 
 Tint = 1:med_app:T;
 % if save_memory
@@ -103,7 +100,9 @@ Tint = 1:med_app:T;
 %         end
 %     end 
 % else
-if dimY == 2; med = median(Y(:,:,Tint), 3); else med = median(Y(:,:,:,Tint), 4); end
+%if dimY == 2; med = median(Y(:,:,Tint), 3); else med = median(Y(:,:,:,Tint), 4); end
+if dimY == 2; med = prctile(Y(:,:,Tint),params.rem_prct, 3); else med = prctile(Y(:,:,:,Tint),params.rem_prct,4); end
+
 % end
 
 Y = bsxfun(@minus, Y, med);
