@@ -1,4 +1,4 @@
-function [A_or,C_or,S_or,P_or,srt,srt_val] = order_ROIs(A,C,S,P, srt)
+function [A_or,C_or,S_or,P_or,srt,srt_val] = order_ROIs(A,C,S,P,srt)
 
 % ordering of the found components based on their maximum temporal
 % activation and their size (through their l_inf norm)
@@ -22,8 +22,8 @@ if nargin < 4
 else
     P_or = P;
     if isfield(P,'gn'); P_or.gn=P.gn(srt); end
-    if isfield(P,'b'); P_or.b=num2cell(nA(srt)'.*cell2mat(P.b(srt))); end
-    if isfield(P,'c1'); P_or.c1=num2cell(nA(srt)'.*cell2mat(P.c1(srt))); end
+    if isfield(P,'b'); P_or.b = cellfun(@times,P.b(srt),num2cell(nA(srt)'),'UniformOutput',false); end
+    if isfield(P,'c1'); P_or.c1 = cellfun(@times,P.c1(srt),num2cell(nA(srt)'),'UniformOutput',false); end
     if isfield(P,'neuron_sn'); P_or.neuron_sn=num2cell(nA(srt)'.*cell2mat(P.neuron_sn(srt))); end
 end
 
