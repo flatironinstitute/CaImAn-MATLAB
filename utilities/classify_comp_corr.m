@@ -20,6 +20,7 @@ function [rval_space,rval_time,ind_space,ind_time] = classify_comp_corr(Yr,A,C,b
 % ind_time:       components with rval_time > time_thresh
 
 % Written by Eftychios A. Pnevmatikakis, Simons Foundation, 2016
+% based on discussions with Matt Kaufman and Farzaneh Najafi, CSHL
 
 defoptions = CNMFSetParms;
 if nargin < 6 || isempty(options)
