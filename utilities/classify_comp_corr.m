@@ -10,14 +10,16 @@ function [rval_space,rval_time,ind_space,ind_time] = classify_comp_corr(Yr,A,C,b
 %    space_thresh:  r-value threshold for spatial components (default: 0.4) 
 %    time_thresh:  r-value threshold for temporal components (default: 0.4) 
 %    Athresh:  threshold for determining spatial overlap (default: 0.1)
-%    Np:       number of high activity intervals for each component (default: 10)
-%    peak_int: Interval around each local peak to be considered (default: -5:24)
+%    Np:       number of high activity intervals for each component (default: 20)
+%    peak_int: Interval around each local peak to be considered (default: -2:6)
+%    MinPeakDost:   minimum peak distance for finding points of high activity  (default: 10)
 
 % OUTPUTS:
 % rval_space:     r-values between spatial components and data patches
 % rval_time:      r-values between temporal components and trace averages
 % ind_space:      components with rval_space > space_thresh
 % ind_time:       components with rval_time > time_thresh
+% MinPeakDist:
 
 % Written by Eftychios A. Pnevmatikakis, Simons Foundation, 2016
 % based on discussions with Matt Kaufman and Farzaneh Najafi, CSHL
@@ -32,6 +34,7 @@ if ~isfield(options,'Npeaks') || isempty(options.peak_int); Np = defoptions.Npea
 if ~isfield(options,'A_thresh') || isempty(options.A_thresh); Athresh = defoptions.A_thresh; else Athresh = options.A_thresh; end
 if ~isfield(options,'space_thresh') || isempty(options.space_thresh); options.space_thresh = defoptions.space_thresh; end
 if ~isfield(options,'time_thresh') || isempty(options.time_thresh); options.time_thresh = defoptions.time_thresh; end
+if ~isfield(options,'MinPeakDist') || isempty(options.MinPeakDist); options.MinPeakDist = defoptions.MinPeakDist; end
 
 memmaped = isobject(Yr);
 
@@ -39,7 +42,13 @@ memmaped = isobject(Yr);
 pk = zeros(K_m,Np);
 
 parfor i = 1:K_m
-    [~,pk(i,:)] = findpeaks(C(i,:),'SortStr','descend','Npeaks',Np);
+    [~,pk_temp] = findpeaks(C(i,:),'SortStr','descend','Npeaks',Np,'MinPeakDistance',options.MinPeakDist);
+    if ~isempty(pk_temp)
+        if length(pk_temp) < Np
+            pk_temp(length(pk_temp)+1:Np) = pk_temp(1);
+        end
+        pk(i,:) = pk_temp;
+    end
 end
 
 %% expand intervals
