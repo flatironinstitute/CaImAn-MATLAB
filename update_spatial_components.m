@@ -171,5 +171,5 @@ if ~isempty(ff)
     Cf(ff,:) = [];
 end
 
-b = double(max((Yf - A(:,1:K)*double(Cf(1:K,:)*f'))/(f*f'),0));
+b = double(max((double(Yf) - A(:,1:K)*double(Cf(1:K,:)*f'))/(f*f'),0));
 A = A(:,1:K);
