@@ -107,8 +107,9 @@ Names = [
     'space_thresh       ' % threshold for r-value in space (default: 0.4)
     'time_thresh        ' % threshold for r-value in time (default: 0.4)
     'A_thresh           ' % threshold for determining overlap (default: 0.1)
-    'Npeaks             ' % # of peaks to be considered (default: 10)
-    'peak_int           ' % interval around the peak (default: -5:24)
+    'Npeaks             ' % # of peaks to be considered (default: 20)
+    'peak_int           ' % interval around the peak (default: -2:6)
+    'MinPeakDist        ' % minimum peak distance for finding points of high activity  (default: 10)
     % ORDER COMPONENTS (order_components.m)
     'nsd                ' % number of standard deviations (default: 3)
     'nfr                ' % number of consecutive frames (default: 3)
@@ -296,8 +297,9 @@ Values = [
     {0.4}
     {0.4}
     {0.1}
+    {20}
+    {-2:6}
     {10}
-    {-5:24}
     % ORDER COMPONENTS (order_components.m)
     {3}
     {5}
