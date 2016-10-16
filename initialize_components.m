@@ -10,7 +10,8 @@ function [Ain, Cin, bin, fin, center] = initialize_components(Y, K, tau, options
 %tau        standard deviation of neuron size (default value: 5)
 
 %options    fine-tuning parameters (optional)
-%           options.init_method: method of initialization ('greedy','sparse_NMF','both')
+%           options.init_method: method of initialization ('greedy','sparse_NMF','HALS')
+%           options.
 %           options.nIter: number of iterations for shape tuning (default 5)
 %           options.gSiz: size of kernel (default 2*tau + 1)
 %           options.ssub: spatial downsampling factor (default 1)
@@ -20,7 +21,7 @@ function [Ain, Cin, bin, fin, center] = initialize_components(Y, K, tau, options
 %           options.windowSiz: size of spatial window when computing the median (default 32 x 32)
 %           options.chunkSiz: number of timesteps to be processed simultaneously if on save_memory mode (default: 100)
 %           options.med_app: number of timesteps to be interleaved for fast (approximate) median calculation (default: 1, no approximation)
-%           
+%           options.rem_prct: percentile to be removed before initialization (default: 20)
 
 % P         parameter struct used for normalization by noise and user feed component centroids (optional)
 
@@ -49,6 +50,7 @@ else options.gSig = tau;
 end
 
 if ~isfield(options,'init_method'); options.init_method = 'greedy'; end
+if ~isfield(options,'rem_prct') || isempty(options.rem_prct); options.rem_prct = defoptions.rem_prct; end
 % downsample the data
 
 if ~isfield(options, 'ssub'); options.ssub = 1; end; ssub = options.ssub;
@@ -73,8 +75,12 @@ d = sY(1:ndimsY);
 T = sY(end);
 
 if options.noise_norm
-    min_noise = prctile(P.sn(P.sn>0),options.noise_norm_prctile);
-    Y = bsxfun(@times,Y,reshape(1./max(P.sn,min_noise),d));
+    mY = mean(Y,ndims(Y));
+    norm_image = mY + median(mY(:)) + 1e-4;
+    min_noise = norm_image;
+    %min_noise = prctile(P.sn(P.sn>0),options.noise_norm_prctile);
+    %Y = bsxfun(@times,Y,reshape(1./max(P.sn,min_noise),d));
+    Y = bsxfun(@times,Y,reshape(1./double(min_noise),d));
 end
 
 ds = d;
@@ -146,8 +152,10 @@ bin = imresize(reshape(bin,[ds(1),ds(2), options.nb*prod(ds)/ds(1)/ds(2)]),[d(1)
 bin = max(double(reshape(bin,prod(d),[])),0);
 
 if options.noise_norm
-    Ain = bsxfun(@times,Ain,double(max(P.sn(:),min_noise)));
-    bin = bsxfun(@times,bin,max(P.sn(:),min_noise));
+    %Ain = bsxfun(@times,Ain,double(max(P.sn(:),min_noise)));
+    %bin = bsxfun(@times,bin,max(P.sn(:),min_noise));
+    Ain = bsxfun(@times,Ain,double(min_noise(:)));
+    bin = bsxfun(@times,bin,double(min_noise(:)));
 end
 Cin = max(imresize(Cin, [size(Cin, 1), Ts*tsub]),0);
 fin = max(imresize(fin, [options.nb, Ts*tsub]),0);

@@ -32,7 +32,7 @@ end
 if nargin < 4 || isempty(display_numbers)
     display_numbers = 0;
 end
-if nargin < 3 || isempty(options) || isscalar(options)
+if nargin < 3 || isempty(options) || isnumeric(options)
     if isnumeric(options)    % compatibility with previous version
         nrgthr = options;
         clear options
@@ -93,17 +93,19 @@ fontname = 'helvetica';
                 A_temp = full(reshape(Aor(:,i),d1,d2));
                 A_temp = medfilt2(A_temp,[3,3]);
                 A_temp(A_temp<thr*max(A_temp(:))) = 0;
-                BW = bwareafilt(A_temp>0,1);
+                BW = bwareafilt(A_temp>0,1);                
                 BW2 = bwboundaries(BW);
-                for ii = 1:length(BW2)
-                    BW2{ii} = fliplr(BW2{ii});
-                    plot(BW2{ii}(:,1),BW2{ii}(:,2),'Color',cmap(i+size(Aor,2),:));
+                if ~isempty(BW2)
+                    for ii = 1:length(BW2)
+                        BW2{ii} = fliplr(BW2{ii});
+                        plot(BW2{ii}(:,1),BW2{ii}(:,2),'Color',cmap(i+size(Aor,2),:));
+                    end
+                    CC{i} = BW2{1}';
+                    fp = find(BW);
+                    [ii,jj] = ind2sub([d1,d2],fp);
+                    CR{i,1} = [ii,jj]';
+                    CR{i,2} = A_temp(fp)';
                 end
-                CC{i} = BW2{1}';
-                fp = find(BW);
-                [ii,jj] = ind2sub([d1,d2],fp);
-                CR{i,1} = [ii,jj]';
-                CR{i,2} = A_temp(fp)';
                 hold on;
             end
         end

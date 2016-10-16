@@ -104,7 +104,7 @@ if isempty(fin) || nargin < 5   % temporal background missing
         fin = fin/norm(fin);
         b = max(Y*fin',0);
     else
-        fin = max(b(bk_pix)'*Y(bk_pix,:),0)/norm(b(bk_pix))^2;
+        fin = max(b(bk_pix,:)'*Y(bk_pix,:),0)/(b(bk_pix,:)'*b(bk_pix,:));
     end
 end
 
@@ -112,11 +112,11 @@ end
 step = 5e3;
 if memmaped
     AY = zeros(size(A,2),T);
-    bY = zeros(1,T);
+    bY = zeros(size(b,2),T);
     for i = 1:step:d
         Y_temp = double(Y.Yr(i:min(i+step-1,d),:));
         AY = AY + A(i:min(i+step-1,d),:)'*Y_temp;
-        bY = bY + b(i:min(i+step-1,d))'*Y_temp;
+        bY = bY + b(i:min(i+step-1,d),:)'*Y_temp;
     end
 else
     if issparse(A) && isa(Y,'single')  

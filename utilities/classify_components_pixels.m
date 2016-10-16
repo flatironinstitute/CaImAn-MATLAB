@@ -1,4 +1,4 @@
-function ff = classify_components(A,P,options)
+function ff = classify_components_pixels(A,P,options)
 
 % Classify components based on their spatial overlap with the active pixels
 % Each component is classified as true if when restricted to the active
