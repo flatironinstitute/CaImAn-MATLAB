@@ -92,10 +92,10 @@ c = y;
 s = y;
 switch lower(options.method)
     case 'foopsi'  %% use FOOPSI
-        if strcmpi(options.type, 'ar1')  % AR 1 
+        if strcmpi(options.type, 'ar1')  % AR 1
             [c, s, options.b, options.g] = foopsi_oasisAR1(y-options.b, options.pars, options.lambda, ...
                 options.optimize_b, options.optimize_pars, [], options.maxIter);
-        elseif strcmpi(options.type, 'ar2') % AR 2 
+        elseif strcmpi(options.type, 'ar2') % AR 2
             [c, s] = foopsi_oasisAR2(y-options.b, options.pars, options.lambda);
         elseif strcmpi(options.type, 'exp2')   % difference of two exponential functions
             d = options.pars(1);
@@ -115,7 +115,12 @@ switch lower(options.method)
                 options.pars, options.sn, options.optimize_b, options.optimize_pars, ...
                 [], options.maxIter);
         else
-            disp('to be done');
+            [cc, options.b, c1, options.pars, options.sn, s] = constrained_foopsi(y,[],[],options.pars,options.sn, ...
+                options.extra_params);
+            gd = max(roots([1,-options.pars']));  % decay time constant for initial concentration
+            gd_vec = gd.^((0:length(y)-1));
+            c = cc(:) + c1*gd_vec';
+            options.cin = c1;
         end
     case 'thresholded'  %% Use hard-shrinkage method
         if strcmpi(options.type, 'ar1')
@@ -135,7 +140,7 @@ switch lower(options.method)
             else
                 [c, s] = oasisAR2(y-options.b, options.pars, options.lambda, ...
                     options.smin);
-            end           
+            end
         elseif strcmpi(options.type, 'exp2')   % difference of two exponential functions
             d = options.pars(1);
             r = options.pars(2);
@@ -149,10 +154,10 @@ switch lower(options.method)
             disp('to be done');
         end
     case 'mcmc'
-        SAMP = cont_ca_sampler(y,options.mcmc_pars);
-        options.mcmc_pars = SAMP; 
-        options.mcmc_results = SAMP; 
-        plot_continuous_samples(SAMP,y); 
+        SAMP = cont_ca_sampler(y,options.extra_params);
+        options.extra_params = SAMP;
+        options.mcmc_results = SAMP;
+        plot_continuous_samples(SAMP,y);
 end
 
 function options=parseinputs(varargin)
@@ -173,7 +178,7 @@ options.shift = 100;
 options.smin = 0;
 options.maxIter = 10;
 options.thresh_factor = 1.0;
-options.mcmc_pars = []; 
+options.extra_params = [];
 
 %% parse all input arguments
 k = 1;
@@ -221,8 +226,8 @@ while k<=nargin
             options.method = lower(varargin{k});
             k = k+1;
             if strcmpi(options.method, 'mcmc') && (k<=length(varargin)) && (~ischar(varargin{k}))
-                options.mcmc_pars = varargin{k}; 
-                k = k+1; 
+                options.extra_params = varargin{k};
+                k = k+1;
             end
         case 'window'
             % maximum length of the kernel
