@@ -1,6 +1,7 @@
 %% test modulate for all oasis functions. 
 col = {[0 114 178],[0 158 115], [213 94 0],[230 159 0],...
     [86 180 233], [204 121 167], [64 224 208], [240 228 66]}; % colors
+plot_cvx = false; 
 
 %% example 3: foopsi, convolution kernel 
 g = [1.7, -0.712];         % AR coefficient 
@@ -15,17 +16,14 @@ seed = 3;          % seed for genrating random variables
 y = Y(1,:); 
 true_c = trueC(1,:);  %#ok<*NASGU>
 true_s = trueS(1,:);
-temp = roots([1, -g(1), -g(2)]);
-d = max(temp);
-r = min(temp);
+taus = ar2exp(g); 
 w = 200;
-ht = (exp(log(d)*(1:w)) - exp(log(r)*(1:w))) / (d-r); % convolution kernel
-  
+taus = ar2exp(g); 
+ht = exp2kernel(taus, w); 
 % case 1: use the difference of two exponential functions to construct a
 % kernel 
 lambda = 25; 
-pars = [d, r]; 
-[c_oasis, s_oasis] = deconvolveCa(y, 'exp2', pars, 'foopsi', 'lambda', lambda, ...
+[c_oasis, s_oasis] = deconvolveCa(y, 'exp2', taus, 'foopsi', 'lambda', lambda, ...
     'shift', 100, 'window', 200);  %#ok<*ASGLU>
 
 figure('name', 'FOOPSI, exp2, known: g, lambda', 'papersize', [15, 4]); 
@@ -37,4 +35,29 @@ lambda = 25;
     lambda, 'shift', 100, 'window', 200);  %#ok<*ASGLU>
 
 figure('name', 'FOOPSI, kernel, known: g, lambda', 'papersize', [15, 4]); 
-show_results; %%%%%%%%%%%%%%  END %%%%%%%%%%%%%%%%%%
+show_results; 
+
+
+%% case 3: estimate the time constants 
+lambda = 0; 
+taus = ar2exp(g); 
+[c_oasis, s_oasis, options] = deconvolveCa(y, 'exp2', 'foopsi', 'lambda', lambda, ...
+    'shift', 100, 'window', 200, 'smin', 0.5);  %#ok<*ASGLU>
+
+figure('name', 'FOOPSI, exp2, known: g, lambda', 'papersize', [15, 4]); 
+show_results; 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -33,7 +33,17 @@ fprintf('estimated gamma:   %.3f\t %.3f\n', options.pars(1),  options.pars(2));
 figure('name', 'threshold, AR2, known:smin, estimated: g', 'papersize', [15, 4]); 
 show_results; 
 
-% case 3: estimate smin 
+%% case 3: know smin, update g
+smin = 0.5; 
+[c_oasis, s_oasis, options] = deconvolveCa(y, 'ar2', 'sn', noise, 'thresholded',...
+    'smin', smin, 'optimize_pars'); 
+fprintf('true gamma:        %.3f\t %.3f\n', g(1), g(2)); 
+fprintf('estimated gamma:   %.3f\t %.3f\n', options.pars(1),  options.pars(2)); 
+
+figure('name', 'threshold, AR2, known:smin, estimated: g', 'papersize', [15, 4]); 
+show_results; 
+
+%% case 3: estimate smin 
 [c_oasis, s_oasis, options] = deconvolveCa(y, 'ar2', 'sn', noise, 'thresholded',...
     'optimize_smin','optimize_pars', 'thresh_factor', 1); 
 % fprintf('true gamma:        %.3f\t %.3f\n', g(1), g(2)); 
