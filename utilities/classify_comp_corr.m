@@ -12,7 +12,7 @@ function [rval_space,rval_time,ind_space,ind_time] = classify_comp_corr(Yr,A,C,b
 %    Athresh:  threshold for determining spatial overlap (default: 0.1)
 %    Np:       number of high activity intervals for each component (default: 20)
 %    peak_int: Interval around each local peak to be considered (default: -2:6)
-%    MinPeakDost:   minimum peak distance for finding points of high activity  (default: 10)
+%    MinPeakDist:   minimum peak distance for finding points of high activity  (default: 10)
 
 % OUTPUTS:
 % rval_space:     r-values between spatial components and data patches
