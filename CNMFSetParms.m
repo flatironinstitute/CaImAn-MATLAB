@@ -237,7 +237,7 @@ Values = [
     {5}
     % Noise and AR coefficients calculation (preprocess_data.m)
     {[0.25,0.5]}
-    {'logmexp'}
+    {'mean'}
     {3000}
     {false}
     {5}
