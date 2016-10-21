@@ -9,7 +9,7 @@ num2read=2000;					% user input: how many frames to read   (optional, default un
 
 Y = bigread2(nam,sframe,num2read);
 Y = Y - min(Y(:)); 
-if ~isa(Y,'single');    Y = single(Y);  end         % convert to single
+if ~isa(Y,'double');    Y = double(Y);  end         % convert to single
 
 [d1,d2,T] = size(Y);                                % dimensions of dataset
 d = d1*d2;                                          % total number of pixels
@@ -23,7 +23,8 @@ merge_thr = 0.8;                                  % merging threshold
 
 options = CNMFSetParms(...                      
     'd1',d1,'d2',d2,...                         % dimensions of datasets
-    'search_method','ellipse','dist',3,...      % search locations when updating spatial components
+    'spatial_method','constrained',...
+    'search_method','dilate','dist',3,...       % search locations when updating spatial components
     'deconv_method','constrained_foopsi',...    % activity deconvolution method
     'temporal_iter',2,...                       % number of block-coordinate descent steps 
     'fudge_factor',0.98,...                     % bias correction for AR coefficients
@@ -54,8 +55,8 @@ end
     
 %% update spatial components
 Yr = reshape(Y,d,T);
-clear Y;
-[A,b,Cin] = update_spatial_components(Yr,Cin,fin,Ain,P,options);
+%clear Y;
+[A,b,Cin] = update_spatial_components(Yr,Cin,fin,[Ain,bin],P,options);
 
 %% update temporal components
 P.p = 0;    % set AR temporarily to zero for speed
@@ -86,7 +87,7 @@ end
 
 %% repeat
 Pm.p = p;    % restore AR value
-[A2,b2,Cm] = update_spatial_components(Yr,Cm,f,Am,Pm,options);
+[A2,b2,Cm] = update_spatial_components(Yr,Cm,f,[Am,b],Pm,options);
 [C2,f2,P2,S2,YrA2] = update_temporal_components(Yr,A2,b2,Cm,f,Pm,options);
 
 %% do some plotting
