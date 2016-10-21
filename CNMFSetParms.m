@@ -54,6 +54,7 @@ Names = [
     'max_nlocs          ' % number of local maxima to be extracted (default: 10)
     'max_width          ' % length of each interval (default: 11)
     % UPDATING SPATIAL COMPONENTS (unpdate_spatial_components.m)
+    'spatial_method     ' % method for updating spatial components 'constrained' or 'regularized' (default: 'regularized')
     'search_method      ' % method for determining footprint of spatial components 'ellipse' or 'dilate' (default: 'dilate')
     'spatial_parallel   ' % update pixels in parallel (default: 1 if present)
     % determine_search_location.m
@@ -250,6 +251,7 @@ Values = [
     {30}
     {21}
     % UPDATING SPATIAL COMPONENTS (unpdate_spatial_components.m)
+    {'regularized'}
     {'dilate'}
     {~isempty(which('parpool'))}
     % determine_search_location.m

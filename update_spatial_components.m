@@ -66,6 +66,9 @@ else
     end
 end
 
+K = size(C,1);
+if strcmpi(options.spatial_method,'constrained'); A_ = A_(:,1:K); end
+
 Cf = [C;f];
 
 if tsub ~= 1
@@ -89,72 +92,80 @@ if ~memmaped
     end
 end
 
-if spatial_parallel         % solve BPDN problem for each pixel
-    Nthr = max(20*maxNumCompThreads,round(d*T/2^24));
-    Nthr = min(Nthr,round(d/1e3));
-    siz_row = [floor(d/Nthr)*ones(Nthr-mod(d,Nthr),1);(floor(d/Nthr)+1)*ones(mod(d,Nthr),1)];
-    indeces = [0;cumsum(siz_row)];
-    Yf = cell(Nthr,1);
-    A = spalloc(d,size(Cf,1),nnz(IND)+size(f,1)*d);
-    for nthr = 1:Nthr     
-        if memmaped
-            Ytemp = double(Y.Yr(indeces(nthr)+1:indeces(nthr+1),:));
-            if tsub ~= 1;
-                Ytemp = squeeze(mean(reshape(Ytemp(:,1:Ts*tsub),[],tsub,Ts),2));
-                if ~isfield(P,'sn_ds')
-                    [P_ds,Ytemp] = preprocess_data(Ytemp);
-                    P.sn_ds(indeces(nthr)+1:indeces(nthr+1)) = P_ds.sn;
+if strcmpi(options.spatial_method,'constrained');
+    if spatial_parallel         % solve BPDN problem for each pixel
+        Nthr = max(20*maxNumCompThreads,round(d*T/2^24));
+        Nthr = min(Nthr,round(d/1e3));
+        siz_row = [floor(d/Nthr)*ones(Nthr-mod(d,Nthr),1);(floor(d/Nthr)+1)*ones(mod(d,Nthr),1)];
+        indeces = [0;cumsum(siz_row)];
+        Yf = cell(Nthr,1);
+        A = spalloc(d,size(Cf,1),nnz(IND)+size(f,1)*d);
+        for nthr = 1:Nthr     
+            if memmaped
+                Ytemp = double(Y.Yr(indeces(nthr)+1:indeces(nthr+1),:));
+                if tsub ~= 1;
+                    Ytemp = squeeze(mean(reshape(Ytemp(:,1:Ts*tsub),[],tsub,Ts),2));
+                    if ~isfield(P,'sn_ds')
+                        [P_ds,Ytemp] = preprocess_data(Ytemp);
+                        P.sn_ds(indeces(nthr)+1:indeces(nthr+1)) = P_ds.sn;
+                    end
+                    sn_temp = P.sn_ds(indeces(nthr)+1:indeces(nthr+1));
+                else
+                    sn_temp = P.sn(indeces(nthr)+1:indeces(nthr+1));
                 end
-                sn_temp = P.sn_ds(indeces(nthr)+1:indeces(nthr+1));
             else
-                sn_temp = P.sn(indeces(nthr)+1:indeces(nthr+1));
+                Ytemp = Y(indeces(nthr)+1:indeces(nthr+1),:);
+                sn_temp = options.sn(indeces(nthr)+1:indeces(nthr+1));
             end
-        else
-            Ytemp = Y(indeces(nthr)+1:indeces(nthr+1),:);
-            sn_temp = options.sn(indeces(nthr)+1:indeces(nthr+1));
+            IND_temp = IND(indeces(nthr)+1:indeces(nthr+1),:);
+            Atemp = spalloc(siz_row(nthr),size(Cf,1),nnz(IND_temp));
+            Yf{nthr} = Ytemp*f'; 
+
+            parfor px = 1:siz_row(nthr)
+                fn = ~isnan(Ytemp(px,:));       % identify missing data
+                ind = find(IND_temp(px,:));
+                if ~isempty(ind);
+                    ind2 = [ind,K+(1:size(f,1))];
+                    [~, ~, a, ~] = lars_regression_noise(Ytemp(px,fn)', Cf(ind2,fn)', 1, sn_temp(px)^2*T);
+                    a_sparse = sparse(1,ind2,double(a'));
+                    Atemp(px,:) = a_sparse';
+                end
+            end
+            if mod(nthr,50) == 0
+                fprintf('%2.1f%% of pixels completed \n', indeces(nthr+1)*100/d);
+            end
+            %Acell{nthr} = Atemp;
+            A(indeces(nthr)+1:indeces(nthr+1),:) = Atemp;
         end
-        IND_temp = IND(indeces(nthr)+1:indeces(nthr+1),:);
-        Atemp = spalloc(siz_row(nthr),size(Cf,1),nnz(IND_temp));
-        Yf{nthr} = Ytemp*f'; 
-        
-        parfor px = 1:siz_row(nthr)
-            fn = ~isnan(Ytemp(px,:));       % identify missing data
-            ind = find(IND_temp(px,:));
+        %A = cell2mat(Acell);
+        Yf = cell2mat(Yf);
+    else
+        A = [zeros(d,K),zeros(d,size(f,1))];
+        sA = zeros(d1,d2,d3);
+        Yf = Y*f';
+        for px = 1:d   % estimate spatial components
+            fn = ~isnan(Y(px,:));       % identify missing data
+            ind = find(IND(px,:));
             if ~isempty(ind);
                 ind2 = [ind,K+(1:size(f,1))];
-                [~, ~, a, ~] = lars_regression_noise(Ytemp(px,fn)', Cf(ind2,fn)', 1, sn_temp(px)^2*T);
-                a_sparse = sparse(1,ind2,double(a'));
-                Atemp(px,:) = a_sparse';
+                [~, ~, a, ~] = lars_regression_noise(Y(px,fn)', Cf(ind2,fn)', 1, options.sn(px)^2*T);
+                A(px,ind2) = a';
+                sA(px) = sum(a);
             end
-        end
-        if mod(nthr,50) == 0
-            fprintf('%2.1f%% of pixels completed \n', indeces(nthr+1)*100/d);
-        end
-        %Acell{nthr} = Atemp;
-        A(indeces(nthr)+1:indeces(nthr+1),:) = Atemp;
-    end
-    %A = cell2mat(Acell);
-    Yf = cell2mat(Yf);
-else
-    A = [zeros(d,K),zeros(d,size(f,1))];
-    sA = zeros(d1,d2,d3);
-    Yf = Y*f';
-    for px = 1:d   % estimate spatial components
-        fn = ~isnan(Y(px,:));       % identify missing data
-        ind = find(IND(px,:));
-        if ~isempty(ind);
-            ind2 = [ind,K+(1:size(f,1))];
-            [~, ~, a, ~] = lars_regression_noise(Y(px,fn)', Cf(ind2,fn)', 1, options.sn(px)^2*T);
-            A(px,ind2) = a';
-            sA(px) = sum(a);
-        end
-        if show_sum
-            if mod(px,d1) == 0;
-               figure(20); imagesc(max(sA,[],3)); axis square;  
-               title(sprintf('Sum of spatial components (%i out of %i columns done)',round(px/d1),d2)); drawnow;
+            if show_sum
+                if mod(px,d1) == 0;
+                   figure(20); imagesc(max(sA,[],3)); axis square;  
+                   title(sprintf('Sum of spatial components (%i out of %i columns done)',round(px/d1),d2)); drawnow;
+                end
             end
         end
     end
+elseif strcmpi(options.spatial_method,'regularized')
+    [A,C] = update_spatial_lasso(Y, A_, Cf, IND, options.sn, [], [], options);
+    K = size(C,1)-options.nb;
+    b = full(A(:,K+1:end));
+    A = A(:,1:K);
+    C = C(1:K,:);
 end
 
 A(isnan(A))=0;
@@ -171,5 +182,7 @@ if ~isempty(ff)
     Cf(ff,:) = [];
 end
 
-b = double(max((double(Yf) - A(:,1:K)*double(Cf(1:K,:)*f'))/(f*f'),0));
-A = A(:,1:K);
+if strcmpi(options.spatial_method,'constrained');
+    b = double(max((double(Yf) - A(:,1:K)*double(Cf(1:K,:)*f'))/(f*f'),0));
+    A = A(:,1:K);
+end
