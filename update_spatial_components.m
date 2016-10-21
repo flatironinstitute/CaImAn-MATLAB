@@ -70,6 +70,9 @@ K = size(C,1);
 if strcmpi(options.spatial_method,'constrained'); A_ = A_(:,1:K); end
 
 Cf = [C;f];
+if size(Cf,1) > size(A_,2) && strcmpi(options.spatial_method,'regularized');
+    error('When using options.spatial_method = regularized pass [A,b] as an input and not just A');
+end
 
 if tsub ~= 1
     P.sn_ds = zeros(d,1);

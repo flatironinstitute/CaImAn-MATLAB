@@ -23,7 +23,6 @@ merge_thr = 0.8;                                  % merging threshold
 
 options = CNMFSetParms(...                      
     'd1',d1,'d2',d2,...                         % dimensions of datasets
-    'spatial_method','constrained',...
     'search_method','dilate','dist',3,...       % search locations when updating spatial components
     'deconv_method','constrained_foopsi',...    % activity deconvolution method
     'temporal_iter',2,...                       % number of block-coordinate descent steps 
