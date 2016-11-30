@@ -164,7 +164,7 @@ if strcmpi(options.spatial_method,'constrained');
         end
     end
 elseif strcmpi(options.spatial_method,'regularized')
-    [A,C] = update_spatial_lasso(Y, A_, Cf, IND, options.sn, [], [], options);
+    [A,C] = update_spatial_lasso(Y, A_, Cf, IND, options.sn, 0.75, [], options);
     K = size(C,1)-options.nb;
     b = full(A(:,K+1:end));
     A = A(:,1:K);
