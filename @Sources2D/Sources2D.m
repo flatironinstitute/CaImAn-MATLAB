@@ -58,8 +58,14 @@ classdef Sources2D < handle
         
         %% update spatial components
         function updateSpatial(obj, Y)
+        % add b to A_, otherwise error in update_spatial_components line 73
+        if strcmpi(obj.options.spatial_method,'regularized')
+            A_ = [obj.A, obj.b];
+        else
+            A_ = obj.A;
+        end
             [obj.A, obj.b, obj.C] = update_spatial_components(Y, ...
-                obj.C, obj.f, obj.A, obj.P, obj.options);
+                obj.C, obj.f, A_, obj.P, obj.options);
         end
         
         %% udpate spatial components without background
