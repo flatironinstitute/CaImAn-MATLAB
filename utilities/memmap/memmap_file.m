@@ -55,11 +55,12 @@ else
     elseif length(sizY) == 4
         data.Y(sizY(1),sizY(2),sizY(3),sizY(4)) = Yt(1)*0;
     end
+    data.Yr(numel(Yt),numFrames) = Yt(1)*0;
     for i = sframe:chunksize:numFrames
         Ytemp = bigread2(filename,i,min(chunksize,numFrames-i+1));        
         Yr = reshape(Ytemp,prod(sizY(1:end-1)),[]);        
         nY = min(nY,min(Yr(:)));
-        data.Yr(1:prod(sizY(1:end-1)),i-1+(1:size(Yr,2))) = Yr;
+        data.Yr(:,i:i-1+size(Yr,2)) = Yr;
         if length(sizY) == 3
             data.Y(1:sizY(1),1:sizY(2),i-1+(1:size(Yr,2))) = Ytemp;
         elseif legnth(sizY) == 4
