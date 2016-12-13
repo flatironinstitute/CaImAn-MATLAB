@@ -87,19 +87,7 @@ end
 %% repeat
 Pm.p = p;    % restore AR value
 [A2,b2,Cm] = update_spatial_components(Yr,Cm,f,[Am,b],Pm,options);
-% Pm.p = 2;
-% [C2,f2,P2,S2,YrA2] = update_temporal_components(Yr,A2,b2,Cm,f,Pm,options);
-
-%% 
-tt1 = tic;
-Pm.p = 2;
-options.temporal_iter = 5;
 [C2,f2,P2,S2,YrA2] = update_temporal_components(Yr,A2,b2,Cm,f,Pm,options);
-tt1 = toc(tt1);
-%%
-tt2 = tic;
-[C3,f3,P3,S3,YrA3] = update_temporal_components_fast(Yr,A2,b2,Cm,f,Pm,options);
-tt2 = toc(tt2);
 
 %% do some plotting
 
