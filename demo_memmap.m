@@ -12,7 +12,7 @@ if exist([filename(1:end-3),'mat'],'file')
 else
     sframe=1;						% user input: first frame to read (optional, default 1)
     num2read=[];					% user input: how many frames to read   (optional, default until the end)
-    chunksize=1000;                 % user input: read and map input in chunks (optional, default read all at once)
+    chunksize=5000;                 % user input: read and map input in chunks (optional, default read all at once)
     data = memmap_file(filename,sframe,num2read,chunksize);
     %data = memmap_file_sequence(foldername);
 end
