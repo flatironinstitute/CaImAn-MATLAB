@@ -272,13 +272,6 @@ fprintf(' done. \n');
 
 %% classify components
 
-if p == 0
-    % perform deconvolution before classifying components
-    Pm.p = 2;
-    [Cm,fin,Pm,Sm,YrA] = update_temporal_components(data,Am,bin,Cm,fin,Pm,options);
-end
-
-
 if options.classify_comp
     fprintf('Classifying components...')
     [rval_space,rval_time,ind_space,ind_time] = classify_comp_corr(data,Am,Cm,bin,fin,options);
@@ -308,9 +301,9 @@ if ~isfield(Pm,'mis_values'); Pm.mis_values = []; end
 if ~isfield(Pm,'mis_entries'); Pm.mis_entries = []; end
 [A,b,C,Pm] = update_spatial_components(data,C,fin,A,Pm,options);
 fprintf(' done. \n');
+
 %% update temporal components
 fprintf('Updating temporal components... ')
-Pm.p = p;
-options.temporal_iter = 1;
-[C,f,P,S,YrA] = update_temporal_components(data,A,b,C,fin,Pm,options);
+Pm.p = 2;
+[C,f,P,S,YrA] = update_temporal_components_fast(data,A2,b2,C,fin,Pm,options);
 fprintf(' done. \n');

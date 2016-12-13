@@ -6,9 +6,9 @@ addpath(genpath('utilities'));
 nam = 'demoMovie.tif';          % insert path to tiff stack here
 sframe=1;						% user input: first frame to read (optional, default 1)
 num2read=2000;					% user input: how many frames to read   (optional, default until the end)
-
 Y = bigread2(nam,sframe,num2read);
-Y = Y - min(Y(:)); 
+
+%Y = Y - min(Y(:)); 
 if ~isa(Y,'double');    Y = double(Y);  end         % convert to single
 
 [d1,d2,T] = size(Y);                                % dimensions of dataset
@@ -87,7 +87,19 @@ end
 %% repeat
 Pm.p = p;    % restore AR value
 [A2,b2,Cm] = update_spatial_components(Yr,Cm,f,[Am,b],Pm,options);
+% Pm.p = 2;
+% [C2,f2,P2,S2,YrA2] = update_temporal_components(Yr,A2,b2,Cm,f,Pm,options);
+
+%% 
+tt1 = tic;
+Pm.p = 2;
+options.temporal_iter = 5;
 [C2,f2,P2,S2,YrA2] = update_temporal_components(Yr,A2,b2,Cm,f,Pm,options);
+tt1 = toc(tt1);
+%%
+tt2 = tic;
+[C3,f3,P3,S3,YrA3] = update_temporal_components_fast(Yr,A2,b2,Cm,f,Pm,options);
+tt2 = toc(tt2);
 
 %% do some plotting
 
