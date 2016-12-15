@@ -145,6 +145,7 @@ if p > 0
         gn = cell(K,1);
         neuron_sn = cell(K,1);
         %disp([K,nb,length(C)])
+        use_OASIS = true;
         parfor ii = 1:K+nb
             Ytemp = C{ii} + YrA{ii};
             if ii <= K
@@ -154,23 +155,37 @@ if p > 0
                 end                 
                 switch method
                     case 'constrained_foopsi'
-%                         [cc,b_temp,c1_temp,gn_temp,neuron_sn_temp,spk] = constrained_foopsi(Ytemp,[],[],[],[],options);
-%                             %P.gn{ii} = gn;
-%                         gd = max(roots([1,-gn_temp']));  % decay time constant for initial concentration
-%                         gd_vec = gd.^((0:T-1));
-%                         C{ii} = full(cc(:)' + b_temp + c1_temp*gd_vec);
-%                         S{ii} = spk(:)';
-%                         b{ii} = b_temp;
-%                         c1{ii} = c1_temp;
-%                         neuron_sn{ii} = neuron_sn_temp;
-%                         gn{ii} = gn_temp;
-                        [cc,spk,kernel] = deconvCa(Ytemp,[],[],true,false,[],5);                        
+                        [cc,b_temp,c1_temp,gn_temp,neuron_sn_temp,spk] = constrained_foopsi(Ytemp,[],[],[],[],options);
+                            %P.gn{ii} = gn;
+                        gd = max(roots([1,-gn_temp']));  % decay time constant for initial concentration
+                        gd_vec = gd.^((0:T-1));
+                        C{ii} = full(cc(:)' + b_temp + c1_temp*gd_vec);
                         S{ii} = spk(:)';
-                        b{ii} = median(Ytemp-cc(:)');
-                        C{ii} = cc(:)'+b{ii};
-                        c1{ii} = Ytemp(1)-cc(1);
-                        neuron_sn{ii} = std(Ytemp-cc(:)');
-                        gn{ii} = kernel.pars;                        
+                        b{ii} = b_temp;
+                        c1{ii} = c1_temp;
+                        neuron_sn{ii} = neuron_sn_temp;
+                        gn{ii} = gn_temp;
+                        if use_OASIS
+                            [cc,spk,kernel] = deconvCa(Ytemp,[],[],true,false,[],5);                        
+                            S{ii} = spk(:)';
+                            b_temp = median(Ytemp-cc(:)')
+                            C{ii} = cc(:)' + b_temp;
+                            b{ii} = b_temp;
+                            c1{ii} = Ytemp(1)-cc(1);
+                            neuron_sn{ii} = std(Ytemp-cc(:)');
+                            gn{ii} = kernel.pars;                        
+                        else
+                            [cc,b_temp,c1_temp,gn_temp,neuron_sn_temp,spk] = constrained_foopsi(Ytemp,[],[],[],[],options);
+                            %P.gn{ii} = gn;
+                            gd = max(roots([1,-gn_temp']));  % decay time constant for initial concentration
+                            gd_vec = gd.^((0:T-1));
+                            C{ii} = full(cc(:)' + b_temp + c1_temp*gd_vec);
+                            S{ii} = spk(:)';
+                            b{ii} = b_temp;
+                            c1{ii} = c1_temp;
+                            neuron_sn{ii} = neuron_sn_temp;
+                            gn{ii} = gn_temp;
+                        end
                     case 'MCMC'
                         SAMPLES = cont_ca_sampler(Ytemp,params);
                         ctemp = make_mean_sample(SAMPLES,Ytemp);
