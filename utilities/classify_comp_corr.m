@@ -70,11 +70,9 @@ tAA(1:K_m+1:K_m^2) = 0;
 
 rval_space = zeros(K_m,1);
 rval_time  = zeros(K_m,1);
-if memmaped
-    data = Yr.Yr;
-else
-    data = Yr;
-end
+
+%cm = com(A,options.d1,options.d2,options.d3);
+if options.d3 == 1; b_rs = reshape(b,options.d1,options.d2,[]); else b_rs = reshape(b,options.d1,options.d2,options.d3,[]); end
 for i = 1:K_m
     ovlp_cmp = find(tAA(:,i));
     indeces = LOCS{i};
@@ -82,8 +80,16 @@ for i = 1:K_m
         indeces = setdiff(indeces,LOCS{ovlp_cmp(j)});
     end
     amask = A(:,i)>0;
+    [rows,cols] = find(reshape(A(:,i),options.d1,options.d2,options.d3)>0);
     if ~isempty(indeces)
         if memmaped      
+            %rows = max(1,round(cm(i,1)-16)):min(options.d1,round(cm(i,1)+16));            
+            %cols = max(1,round(cm(i,2)-16)):min(options.d2,round(cm(i,2)+16));
+            y_temp = Y.Y(min(rows):max(rows),min(cols):max(cols),:);
+            y_temp = reshape(y_temp(:,:,indeces),[],length(indeces));
+            b_temp = reshape(b_rs(min(rows):max(rows),min(cols):max(cols),:),size(y_temp,1),[]);
+            mY_space = double(mean(y_temp,2) - b_temp*mean(f(:,indeces),2));
+            mY_time = double(mean(y_temp)-mean(b_temp)*f(:,indeces));
     %         time_indeces = sort(indeces,'ascend');
     %         ff_time = [0,find(diff(time_indeces)>1),length(time_indeces)];
     %         time_intervals = mat2cell(time_indeces,1,diff(ff_time));
@@ -97,8 +103,8 @@ for i = 1:K_m
     %             end
     %         end                
             %mY = (A(:,i)>0).*double(mean(Yr.Yr(:,indeces),2) - b*mean(f(:,indeces),2));
-            mY_space = double(mean(data(amask,indeces),2) - b(amask,:)*mean(f(:,indeces),2));
-            mY_time = double(mean(data(amask,indeces)) - mean(b(amask,:))*f(:,indeces));
+    %        mY_space = double(mean(data(amask,indeces),2) - b(amask,:)*mean(f(:,indeces),2));
+    %        mY_time = double(mean(data(amask,indeces)) - mean(b(amask,:))*f(:,indeces));
         else
             mY_space = double(mean(Yr(amask,indeces),2) - b(amask,:)*mean(f(:,indeces),2));
             mY_time = double(mean(Yr(amask,indeces)) - mean(b(amask,:))*f(:,indeces));
