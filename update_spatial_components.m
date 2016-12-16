@@ -74,26 +74,32 @@ if size(Cf,1) > size(A_,2) && strcmpi(options.spatial_method,'regularized');
     error('When using options.spatial_method = regularized pass [A,b] as an input and not just A');
 end
 
-if tsub ~= 1 && strcmpi(options.spatial_method,'constrained');
+if tsub ~= 1 %&& strcmpi(options.spatial_method,'constrained');
     P.sn_ds = zeros(d,1);
     Ts = floor(T/tsub);
     Cf = squeeze(mean(reshape(Cf(:,1:Ts*tsub),[],tsub,Ts),2));        
     f = Cf(end-size(f,1)+1:end,:);
     T = Ts;
-end 
-
-options.sn = P.sn;
-if ~memmaped
-    Y(P.mis_entries) = NaN; % remove interpolated values
-    if tsub~=1        
-        Y = squeeze(mean(reshape(Y(:,1:Ts*tsub),[],tsub,Ts),2));    % downsample
+    if ~memmaped
+        Y = squeeze(mean(reshape(Y(:,1:Ts*tsub),[],tsub,Ts),2));
         if ~isfield(P,'sn_ds');
             [P_ds,Y] = preprocess_data(Y);            
             P.sn_ds = P_ds.sn;        
         end
-        options.sn = P.sn_ds;
+        options.sn = P.sn_ds;        
+    else
+        Y_ds = zeros(d,Ts);
+        step_size = 2e4;
+        for i = 1:step_size:d
+            Ytemp = double(Y.Yr(i:min(i+step_size-1,d),:));
+            Y_ds(i:min(i+step_size-1,d),:) = squeeze(mean(reshape(Ytemp(:,1:Ts*tsub),[],tsub,Ts),2));
+        end
+        Y = Y_ds;
+        options.sn = get_noise_fft(Y_ds);
     end
-end
+else
+    options.sn = P.sn;
+end 
 
 if strcmpi(options.spatial_method,'constrained');
     if spatial_parallel         % solve BPDN problem for each pixel
@@ -164,8 +170,9 @@ if strcmpi(options.spatial_method,'constrained');
         end
     end
 elseif strcmpi(options.spatial_method,'regularized')
-    [A,C] = update_spatial_lasso(Y, A_, Cf, IND, options.sn, [], [], options);
-    K = size(C,1)-options.nb;
+    
+    A = update_spatial_lasso(Y, A_, Cf, IND, options.sn, [], [], options);
+    K = size(A,2)-options.nb;
     b = full(A(:,K+1:end));
     A = A(:,1:K);
     C = C(1:K,:);

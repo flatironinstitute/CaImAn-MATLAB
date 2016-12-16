@@ -145,7 +145,7 @@ if p > 0
         gn = cell(K,1);
         neuron_sn = cell(K,1);
         %disp([K,nb,length(C)])
-        use_OASIS = true;
+        use_OASIS = false;
         parfor ii = 1:K+nb
             Ytemp = C{ii} + YrA{ii};
             if ii <= K
