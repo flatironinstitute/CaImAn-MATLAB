@@ -88,8 +88,16 @@ for i = 1:K_m
         if memmaped      
             %rows = max(1,round(cm(i,1)-16)):min(options.d1,round(cm(i,1)+16));            
             %cols = max(1,round(cm(i,2)-16)):min(options.d2,round(cm(i,2)+16));
-            y_temp = Yr.Y(min(rows):max(rows),min(cols):max(cols),:);
-            y_temp = reshape(y_temp(:,:,indeces),[],length(indeces));            
+            time_indeces = sort(indeces,'ascend');
+            ff_time = [0,find(diff(time_indeces)>1),length(time_indeces)];
+            time_intervals = mat2cell(time_indeces,1,diff(ff_time));
+            y_temp = cell(1,length(time_intervals));
+            parfor int = 1:length(time_intervals)
+                y_temp{int} = Yr.Y(min(rows):max(rows),min(cols):max(cols),time_intervals{int});
+            end
+            %y_temp = Yr.Y(min(rows):max(rows),min(cols):max(cols),:);
+            y_temp = cat(3,y_temp{:}); %cell2mat(y_temp);
+            y_temp = reshape(y_temp,[],length(indeces));            
     %         time_indeces = sort(indeces,'ascend');
     %         ff_time = [0,find(diff(time_indeces)>1),length(time_indeces)];
     %         time_intervals = mat2cell(time_indeces,1,diff(ff_time));

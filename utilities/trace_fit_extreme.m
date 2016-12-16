@@ -1,6 +1,6 @@
 function max_pr = trace_fit_extreme(C,fr,t_int,fac)
 
-if nargin < 4 || isempty(fac); fac = 3; end
+if nargin < 4 || isempty(fac); fac = 1; end
 if nargin < 3 || isempty(t_int); t_int = 0.25; end
 if nargin < 2 || isempty(fr); fr = 30; end
 
