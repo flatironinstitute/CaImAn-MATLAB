@@ -35,6 +35,7 @@ if ~isfield(options,'full_A') || isempty(options.full_A); full_A = defoptions.fu
 step = 5e3;
 if memmaped
     AY = zeros(K,T);
+    d = size(A,1);
     for i = 1:step:d
         AY = AY + A(i:min(i+step-1,d),:)'*double(Y.Yr(i:min(i+step-1,d),:));
     end
