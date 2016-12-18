@@ -30,7 +30,7 @@ if nargin < 2 || isempty(sframe)
 end
 
 if isempty(chunksize)
-    Y = bigread2(filename,sframe,num2read);
+    Y = tiff_reader(filename,sframe,num2read);
     sizY = size(Y);
     Yr = reshape(Y,prod(sizY(1:end-1)),[]);
     nY = min(Yr(:));
@@ -57,7 +57,7 @@ else
     end
     data.Yr(numel(Yt),numFrames) = Yt(1)*0;
     for i = sframe:chunksize:numFrames
-        Ytemp = bigread2(filename,i,min(chunksize,numFrames-i+1));        
+        Ytemp = tiff_reader(filename,i,min(chunksize,numFrames-i+1));        
         Yr = reshape(Ytemp,prod(sizY(1:end-1)),[]);        
         nY = min(nY,min(Yr(:)));
         data.Yr(:,i:i-1+size(Yr,2)) = Yr;
