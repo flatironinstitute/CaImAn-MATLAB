@@ -19,7 +19,9 @@ function [A,C] = update_spatial_lasso(Y, A, C, IND, sn, q, maxIter, options)
 
 %% options for HALS
 
-norm_C_flag = false;
+memmaped = isobject(Y);
+
+%norm_C_flag = false;
 tol = 1e-3;
 repeat = 1;
 defoptions = CNMFSetParms;
@@ -32,19 +34,32 @@ if nargin < 2 || isempty(A);
     A = max(Y*C'/(C*C'),0);
 end
 
-if norm_C_flag
-    nC = sqrt(sum(C.^2,2));
-    A = bsxfun(@times,A,nC);
-    C = bsxfun(@times,C,1./nC(:));
-end
+% if norm_C_flag
+%     nC = sqrt(sum(C.^2,2));
+%     A = bsxfun(@times,A,nC);
+%     C = bsxfun(@times,C,1./nC(:));
+% end
 
-[~,K] = size(A);
+[d,K] = size(A);
 
 nr = K - options.nb;
 IND(:,nr+1:K) = true;
+T = size(C,2);
+
+if memmaped
+    %d = size(A,1);
+    step_size = 2e4;
+    YC = zeros([d,K]);    
+    for t = 1:step_size:d
+        YC(t:min(t+step_size-1,d),:) = double(Y.Yr(t:min(t+step_size-1,d),:))*C';
+    end
+else
+    YC = Y*C';
+end
+
 %% initialization 
 A(~IND) = 0; 
-U = Y*C'; 
+U = YC; 
 V = C*C'; 
 cc = diag(V);   % squares of l2 norm for all components 
 
@@ -68,6 +83,6 @@ while repeat && miter < maxIter
 end
 
 f = C(nr+1:end,:);
-Yf = Y*f';
+Yf = YC(:,nr+1:end); %Y*f';
 b = double(max((double(Yf) - A(:,1:nr)*double(C(1:nr,:)*f'))/(f*f'),0));
 A(:,nr+1:end) = b;

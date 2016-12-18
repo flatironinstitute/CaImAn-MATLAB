@@ -117,22 +117,23 @@ parfor i = 1:length(patches)
         end
         [d1,d2,d3,T] = size(Y);
     end
-    if ~(isa(Y,'single') || isa(Y,'double'));    Y = single(Y);  end
+    %if ~(isa(Y,'single') || isa(Y,'double'));    Y = single(Y);  end
+    Y = double(Y);
     d = d1*d2*d3;
     options_temp = options;
     options_temp.d1 = d1; options_temp.d2 = d2; options_temp.d3 = d3;
     options_temp.nb = 1;
     [P,Y] = preprocess_data(Y,p);
-    [Ain,Cin,~,fin] = initialize_components(Y,K,tau,options_temp,P);  % initialize
+    [Ain,Cin,bin,fin] = initialize_components(Y,K,tau,options_temp,P);  % initialize
     Yr = reshape(Y,d,T);
     %clear Y;
     options_temp.spatial_parallel = 0;              % turn off parallel updating for spatial components
-    [A,b,Cin,P] = update_spatial_components(Yr,Cin,fin,Ain,P,options_temp);
+    [A,b,Cin,P] = update_spatial_components(Yr,Cin,fin,[Ain,bin],P,options_temp);
     P.p = 0;
     options_temp.temporal_parallel = 0;
     [C,f,P,S] = update_temporal_components(Yr,A,b,Cin,fin,P,options_temp); % turn off parallel updating for temporal components
     [Am,Cm,~,~,P] = merge_components(Yr,A,b,C,f,P,S,options_temp);
-    [A2,b2,Cm,P] = update_spatial_components(Yr,Cm,f,Am,P,options_temp);
+    [A2,b2,Cm,P] = update_spatial_components(Yr,Cm,f,[Am,b],P,options_temp);
     P.p = p;
     [C2,f2,P2,S2] = update_temporal_components(Yr,A2,b2,Cm,f,P,options_temp);
     RESULTS(i).A = A2;
@@ -272,13 +273,6 @@ fprintf(' done. \n');
 
 %% classify components
 
-if p == 0
-    % perform deconvolution before classifying components
-    Pm.p = 2;
-    [Cm,fin,Pm,Sm,YrA] = update_temporal_components(data,Am,bin,Cm,fin,Pm,options);
-end
-
-
 if options.classify_comp
     fprintf('Classifying components...')
     [rval_space,rval_time,ind_space,ind_time] = classify_comp_corr(data,Am,Cm,bin,fin,options);
@@ -306,11 +300,11 @@ options.d2 = sizY(2);
 if length(sizY) == 4; options.d3 = sizY(3); end
 if ~isfield(Pm,'mis_values'); Pm.mis_values = []; end
 if ~isfield(Pm,'mis_entries'); Pm.mis_entries = []; end
-[A,b,C,Pm] = update_spatial_components(data,C,fin,A,Pm,options);
+[A,b,C,Pm] = update_spatial_components(data,C,fin,[A,bin],Pm,options);
 fprintf(' done. \n');
+
 %% update temporal components
 fprintf('Updating temporal components... ')
-Pm.p = p;
-options.temporal_iter = 1;
-[C,f,P,S,YrA] = update_temporal_components(data,A,b,C,fin,Pm,options);
+Pm.p = 2;
+[C,f,P,S,YrA] = update_temporal_components_fast(data,A,b,C,fin,Pm,options);
 fprintf(' done. \n');

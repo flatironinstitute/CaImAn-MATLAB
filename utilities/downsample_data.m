@@ -1,6 +1,6 @@
 function [Y_ds,options_ds] = downsample_data(Y,direction,options,nrm)
 
-% downsampling for 2d imaging data
+% downsampling for 2d or 3d imaging data
 
 if nargin < 4 || isempty(nrm)
     nrm = 1;

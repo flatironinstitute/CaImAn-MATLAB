@@ -1,7 +1,7 @@
 clear;
 %% load file
 
-path_to_package = '';   % path to the folder that contains the package
+path_to_package = '../ca_source_extraction';   % path to the folder that contains the package
 addpath(genpath(path_to_package));
              
 filename = '';      % path to stack tiff file
@@ -12,7 +12,7 @@ if exist([filename(1:end-3),'mat'],'file')
 else
     sframe=1;						% user input: first frame to read (optional, default 1)
     num2read=[];					% user input: how many frames to read   (optional, default until the end)
-    chunksize=1000;                 % user input: read and map input in chunks (optional, default read all at once)
+    chunksize=5000;                 % user input: read and map input in chunks (optional, default read all at once)
     data = memmap_file(filename,sframe,num2read,chunksize);
     %data = memmap_file_sequence(foldername);
 end
@@ -34,12 +34,13 @@ options = CNMFSetParms(...
     'search_method','ellipse','dist',3,...      % search locations when updating spatial components
     'deconv_method','constrained_foopsi',...    % activity deconvolution method
     'temporal_iter',2,...                       % number of block-coordinate descent steps 
-    'cluster_pixels',true,...
+    'cluster_pixels',false,...
     'ssub',2,...
     'tsub',4,...
     'fudge_factor',0.98,...                     % bias correction for AR coefficients
-    'merge_thr',merge_thr,...                    % merging threshold
-    'gSig',tau...
+    'merge_thr',merge_thr,...                   % merging threshold
+    'gSig',tau,... 
+    'spatial_method','constrained'...
     );
 
 %% Run on patches
