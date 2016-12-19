@@ -143,13 +143,13 @@ if strcmpi(options.spatial_method,'constrained');
     else
         A = [zeros(d,K),zeros(d,size(f,1))];
         sA = zeros(d1,d2,d3);
-        Yf = Y*f_ds';
+        Yf = Y_ds*f_ds';
         for px = 1:d   % estimate spatial components
-            fn = ~isnan(Y(px,:));       % identify missing data
+            fn = ~isnan(Y_ds(px,:));       % identify missing data
             ind = find(IND(px,:));
             if ~isempty(ind);
                 ind2 = [ind,K+(1:size(f,1))];
-                [~, ~, a, ~] = lars_regression_noise(Y(px,fn)', Cf_ds(ind2,fn)', 1, options.sn(px)^2*T);
+                [~, ~, a, ~] = lars_regression_noise(Y_ds(px,fn)', Cf_ds(ind2,fn)', 1, options.sn(px)^2*T);
                 A(px,ind2) = a';
                 sA(px) = sum(a);
             end
