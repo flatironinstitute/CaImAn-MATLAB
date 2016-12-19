@@ -21,24 +21,24 @@ function [A,C] = update_spatial_lasso(Y, A, C, IND, sn, q, maxIter, options)
 
 memmaped = isobject(Y);
 
-norm_C_flag = false;
+%norm_C_flag = false;
 tol = 1e-3;
 repeat = 1;
 defoptions = CNMFSetParms;
 if nargin < 8; options = defoptions; end
 if nargin < 7 || isempty(maxIter); maxIter = 40; end
-if nargin < 6 || isempty(q); q = 0.975; end
+if nargin < 6 || isempty(q); q = 0.75; end
 if   nargin<5 || isempty(sn); sn = get_noise_fft(Y,options);  end;
 if   nargin<4 || isempty(IND); IND = determine_search_location(A,options.search_method,options); end 
 if nargin < 2 || isempty(A); 
     A = max(Y*C'/(C*C'),0);
 end
 
-if norm_C_flag
-    nC = sqrt(sum(C.^2,2));
-    A = bsxfun(@times,A,nC);
-    C = bsxfun(@times,C,1./nC(:));
-end
+% if norm_C_flag
+%     nC = sqrt(sum(C.^2,2));
+%     A = bsxfun(@times,A,nC);
+%     C = bsxfun(@times,C,1./nC(:));
+% end
 
 [d,K] = size(A);
 

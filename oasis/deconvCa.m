@@ -270,7 +270,7 @@ function [sn,psdx,ff] = get_noise_fft(Y,options)
 % with minor adaption by Pengcheng Zhou, Carnegie Mellon University, 2015
 options.noise_range = [.25, .5];
 range_ff = options.noise_range;
-options.noise_method = 'logmexp';
+options.noise_method = 'mean';
 method = options.noise_method;
 options.block_size = [64, 64];
 block_size = options.block_size;

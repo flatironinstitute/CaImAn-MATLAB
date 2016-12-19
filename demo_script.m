@@ -16,7 +16,7 @@ d = d1*d2;                                          % total number of pixels
 
 %% Set parameters
 
-K = 30;                                           % number of components to be found
+K = 35;                                           % number of components to be found
 tau = 4;                                          % std of gaussian kernel (size of neuron) 
 p = 2;                                            % order of autoregressive system (p = 0 no dynamics, p=1 just decay, p = 2, both rise and decay)
 merge_thr = 0.8;                                  % merging threshold
@@ -54,7 +54,6 @@ end
     
 %% update spatial components
 Yr = reshape(Y,d,T);
-%clear Y;
 [A,b,Cin] = update_spatial_components(Yr,Cin,fin,[Ain,bin],P,options);
 
 %% update temporal components
@@ -84,10 +83,24 @@ if and(display_merging, ~isempty(merged_ROIs))
         drawnow;
 end
 
-%% repeat
+%% evaluate components
+
+options.space_thresh = 0.3;
+options.time_thresh = 0.3;
+[rval_space,rval_time,ind_space,ind_time] = classify_comp_corr(Y,Am,Cm,b,f,options);
+
+keep = ind_time & ind_space; 
+throw = ~keep;
+figure;
+    subplot(121); plot_contours(Am(:,keep),Cn,options,1); title('Selected components','fontweight','bold','fontsize',14);
+    subplot(122); plot_contours(Am(:,throw),Cn,options,1);title('Rejected components','fontweight','bold','fontsize',14);
+
+%% refine estimates excluding rejected components
+
 Pm.p = p;    % restore AR value
-[A2,b2,Cm] = update_spatial_components(Yr,Cm,f,[Am,b],Pm,options);
-[C2,f2,P2,S2,YrA2] = update_temporal_components(Yr,A2,b2,Cm,f,Pm,options);
+[A2,b2,C2] = update_spatial_components(Yr,Cm(keep,:),f,[Am(:,keep),b],Pm,options);
+[C2,f2,P2,S2,YrA2] = update_temporal_components(Yr,A2,b2,C2,f,Pm,options);
+
 
 %% do some plotting
 
@@ -95,7 +108,6 @@ Pm.p = p;    % restore AR value
 K_m = size(C_or,1);
 [C_df,~] = extract_DF_F(Yr,A_or,C_or,P_or,options); % extract DF/F values (optional)
 
-%contour_threshold = 0.95;                       % amount of energy used for each component to construct contour plot
 figure;
 [Coor,json_file] = plot_contours(A_or,Cn,options,1); % contour plot of spatial footprints
 %savejson('jmesh',json_file,'filename');        % optional save json file with component coordinates (requires matlab json library)
