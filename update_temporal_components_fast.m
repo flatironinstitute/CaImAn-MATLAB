@@ -76,36 +76,18 @@ if isempty(fin) || nargin < 5           % temporal background missing
 end
 
 % construct product A'*Y
-AY = mm_fun(A,Y);
-bY = mm_fun(b,Y);
-% step = 5e3;
-% if memmaped
-%     AY = zeros(size(A,2),T);
-%     bY = zeros(size(b,2),T);
-%     for i = 1:step:d
-%         Y_temp = double(Y.Yr(i:min(i+step-1,d),:));
-%         AY = AY + A(i:min(i+step-1,d),:)'*Y_temp;
-%         bY = bY + b(i:min(i+step-1,d),:)'*Y_temp;
-%     end
-% else
-%     if issparse(A) && isa(Y,'single')  
-%         if full_A
-%             AY = full(A)'*Y;            
-%         else
-%             AY = A'*double(Y);
-%         end
-%     else
-%         AY = A'*Y;
-%     end
-%     bY = b'*Y;
-% end  
+
+K = size(A,2);
+nb = size(b,2);
+
+AY = mm_fun([A,double(b)],Y);
+bY = AY(K+1:end,:);
+AY = AY(1:K,:);
 
 if isempty(Cin) || nargin < 4    % estimate temporal components if missing    
     Cin = max((A'*A)\double(AY - (A'*b)*fin),0);  
 end
 
-K = size(A,2);
-nb = size(b,2);
 A = [A,double(b)];
 S = zeros(size(Cin));
 Cin = [Cin;fin];
