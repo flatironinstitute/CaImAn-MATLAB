@@ -43,11 +43,12 @@ if strcmpi(ext,'.tiff') || strcmpi(ext,'.tif');
 elseif strcmpi(ext,'.hdf5') || strcmpi(ext,'.h5');
     info = hdf5info(path_to_file);
     dims = info.GroupHierarchy.Datasets.Dims;
+    name = info.GroupHierarchy.Datasets.Name;
     if nargin < 3
         num2read = dims(end)-sframe+1;
     end
     num2read = min(num2read,dims(end)-sframe+1);
-    imData = h5read(path_to_file,'/mov',[ones(1,length(dims)-1),sframe],[dims(1:end-1),num2read]);
+    imData = h5read(path_to_file,name,[ones(1,length(dims)-1),sframe],[dims(1:end-1),num2read]);
 elseif strcmpi(ext,'.avi')
     v = VideoReader(path_to_file);
     if nargin < 3
