@@ -34,7 +34,7 @@ classdef Sources2D < handle
             if nargin>0
                 obj.options = CNMFSetParms(obj.options, varargin{:});
             end
-            obj.kernel = create_kernel('exp2');
+            %obj.kernel = create_kernel('exp2');
         end
         
         %% update parameters
@@ -88,6 +88,11 @@ classdef Sources2D < handle
                 Y, obj.A, obj.b, obj.C, obj.f, obj.P, obj.options);
         end
         
+        %% refine components
+        function center = refineComponents(Y,obj,center,Cn,tau)
+            [obj.A,obj.C,center] = manually_refine_components(Y,obj.A,obj.C,center,Cn,tau,obj.options);
+        end
+        
         %% udpate temporal components with fast deconvolution
         updateTemporal_endoscope(obj, Y, smin)
         
@@ -123,17 +128,15 @@ classdef Sources2D < handle
         end
         
         %% extract DF/F signal after performing NMF
-        function [C_df, Df, S_df] = extractDF_F(obj, Y, i)
+        function [C_df, Df] = extractDF_F(obj, Y)
             if ~exist('i', 'var')
                 i = size(obj.A, 2) + 1;
             end
             
-            [obj.C_df, obj.Df, obj.S_df] = extract_DF_F(Y, [obj.A, obj.b],...
-                [obj.C; obj.f], obj.S, i);
+            [obj.C_df, obj.Df] = extract_DF_F(Y, obj.A,obj.C, obj.P, obj.options);
             
             C_df =  obj.C_df;
-            Df = obj.Df;
-            S_df = obj.S_df;
+            Df = obj.Df;            
             
         end
         
