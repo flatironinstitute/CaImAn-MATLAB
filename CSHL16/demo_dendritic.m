@@ -12,7 +12,7 @@ end
 
 Y = bigread2(nam);
 Y = Y - min(Y(:)); 
-if ~isa(Y,'single');    Y = single(Y);  end         % convert to single
+if ~isa(Y,'double');    Y = double(Y);  end         % convert to double
 
 [d1,d2,T] = size(Y);                                % dimensions of dataset
 d = d1*d2;                                          % total number of pixels
@@ -61,7 +61,7 @@ plot_dend_components_GUI(Yr,Ain,Cin,bin,fin,options);  % view the components
     
 %% update spatial components
 
-[A,b,Cin] = update_spatial_components(Yr,Cin,fin,Ain,P,options);
+[A,b,Cin] = update_spatial_components(Yr,Cin,fin,[Ain,bin],P,options);
 
 %% update temporal components
 
