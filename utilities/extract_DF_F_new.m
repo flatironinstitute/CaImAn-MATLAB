@@ -1,4 +1,4 @@
-function [C_df,Df] = extract_DF_F(Y,A,C,P,options)
+function [C_df,Df] = extract_DF_F_new(A,C,b,f,P,options)
 
 % extract DF/F signals after performing NMF
 % inputs:  Y raw data (d X T matrix, d # number of pixels, T # of timesteps)
@@ -19,7 +19,7 @@ function [C_df,Df] = extract_DF_F(Y,A,C,P,options)
 
 %memmaped = isobject(Y);
 defoptions = CNMFSetParms;
-if nargin < 5 || isempty(options)
+if nargin < 6 || isempty(options)
     options = defoptions;
 end
 if ~isfield(options,'df_prctile') || isempty(options.df_prctile)
@@ -31,27 +31,6 @@ end
 if ~isfield(options,'full_A') || isempty(options.full_A); full_A = defoptions.full_A; else full_A = options.full_A; end
 
 [K,T] = size(C);
-
-% step = 5e3;
-% if memmaped
-%     AY = zeros(K,T);
-%     d = size(A,1);
-%     for i = 1:step:d
-%         AY = AY + A(i:min(i+step-1,d),:)'*double(Y.Yr(i:min(i+step-1,d),:));
-%     end
-% else
-%     if issparse(A) && isa(Y,'single')  
-%         if full_A
-%             AY = full(A)'*Y;
-%         else
-%             AY = A'*double(Y);
-%         end
-%     else
-%         AY = A'*Y;
-%     end
-% end
-
-AY = mm_fun(A,Y);
 
 Bas = zeros(K,T);
 
@@ -68,13 +47,13 @@ if ~(nargin < 5 || isempty(P))
     end
 end
 
-nA = sqrt(sum(A.^2))';
+nA = sqrt(sum(A.^2));
+
 AA = A'*A;
 AA(1:K+1:end) = 0;
 
 Cf = bsxfun(@times,C - Bas,nA(:).^2);
-
-C2 = AY - AA*C;
+C2 = AA*bas_val + (A'*b)*f;
 
 if isempty(options.df_window) || (options.df_window > size(C,2))
     if options.df_prctile == 50
