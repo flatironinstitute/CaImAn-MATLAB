@@ -1,39 +1,29 @@
-function [Y_ds,options_ds] = downsample_data(Y,direction,options,nrm)
+function Y_ds = downsample_data(Y,direction,tsub,ssub,nrm)
 
-% downsampling for 2d or 3d imaging data
+% downsampling for 2d or 3d imaging data (already loaded in memory)
 
-if nargin < 4 || isempty(nrm)
-    nrm = 1;
+% INPUTS
+% Y:            input dataset in 2D+T or 3D+T format
+% direction:    direction of downsampling: 'space','time','spacetime' 
+% tsub:         degree of downsampling in time
+% ssub:         degree of downsampling in space
+% nrm:          norm to be used when averaging (default: 1, plain averaging)
+
+if nargin < 5 || isempty(nrm); nrm = 1; end
+if nargin < 4 || isempty(ssub); ssub = 1; end
+if nargin < 3 || isempty(tsub); tsub = 1; end
+if nargin < 2 || isempty(direction); direction = 'spacetime'; end
+
+ndimsY = ndims(Y) - 1;
+if ndimsY == 2
+    [d1,d2,T] = size(Y); d3 = 1;
+elseif ndimsY == 3
+    [d1,d2,d3,T] = size(Y);
 end
 
-defoptions = CNMFSetParms;
-if nargin < 3 || isempty(options);
-    options = defoptions;
-end
-
-if ~isfield(options, 'd1') || isempty(options.d1); options.d1 = size(Y,1); end
-if ~isfield(options, 'd2') || isempty(options.d2); options.d1 = size(Y,2); end
-if ~isfield(options, 'd3') || isempty(options.d3); if ndims(Y) == 3; options.d3 = 1; else options.d3 = size(Y,3); end; end
-
-if nargin < 2 || isempty(direction)
-    direction = 'spacetime';
-end
-
-if ismatrix(Y)
-    if options.d3 == 1;
-        Y = reshape(Y,options.d1,options.d2,[]);
-    else
-        Y = reshape(Y,options.d1,options.d2,options.d3,[]);
-    end
-end
-
-if ~isfield(options, 'ssub'); options.ssub = defoptions.ssub; end; ssub = options.ssub;
-if ~isfield(options, 'tsub'), options.tsub = defoptions.tsub; end; tsub = options.tsub;
-
-d = [options.d1,options.d2,options.d3];
+d = [d1,d2,d3];
 ds = d;
-ndimsY = ndims(Y)-1;
-T = size(Y,ndimsY+1);
+
 Ts = floor(T/tsub);          %reduced number of frames
 Y_ds = Y;
 if ~((ssub == 1) && (tsub == 1))
@@ -56,21 +46,17 @@ if ~((ssub == 1) && (tsub == 1))
     if strcmpi(direction,'time') || strcmpi(direction,'spacetime')
         if tsub~=1
             if nrm == 1
-                if ndimsY == 2; Y_ds = squeeze(mean(reshape(Y_ds(:, :, 1:(Ts*tsub)),ds(1), ds(2), tsub, Ts), 3)); end
-                if ndimsY == 3; Y_ds = squeeze(mean(reshape(Y_ds(:, :, :, 1:(Ts*tsub)),ds(1), ds(2), ds(3), tsub, Ts), 4)); end
+                if ndimsY == 2; Y_ds = squeeze(nanmean(reshape(Y_ds(:, :, 1:(Ts*tsub)),ds(1), ds(2), tsub, Ts), 3)); end
+                if ndimsY == 3; Y_ds = squeeze(nanmean(reshape(Y_ds(:, :, :, 1:(Ts*tsub)),ds(1), ds(2), ds(3), tsub, Ts), 4)); end
             elseif nrm == Inf
                 if ndimsY == 2; Y_ds = squeeze(max(reshape(Y_ds(:, :, 1:(Ts*tsub)),ds(1), ds(2), tsub, Ts),[], 3)); end
                 if ndimsY == 3; Y_ds = squeeze(max(reshape(Y_ds(:, :, :, 1:(Ts*tsub)),ds(1), ds(2), ds(3), tsub, Ts),[], 4)); end
             else
-                if ndimsY == 2; Y_ds = squeeze(mean(reshape(Y_ds(:, :, 1:(Ts*tsub)).^nrm,ds(1), ds(2), tsub, Ts), 3)).^(1/nrm); end
-                if ndimsY == 3; Y_ds = squeeze(mean(reshape(Y_ds(:, :, :, 1:(Ts*tsub)).^nrm,ds(1), ds(2), ds(3), tsub, Ts), 4)).^(1/nrm); end
+                if ndimsY == 2; Y_ds = squeeze(nanmean(reshape(Y_ds(:, :, 1:(Ts*tsub)).^nrm,ds(1), ds(2), tsub, Ts), 3)).^(1/nrm); end
+                if ndimsY == 3; Y_ds = squeeze(nanmean(reshape(Y_ds(:, :, :, 1:(Ts*tsub)).^nrm,ds(1), ds(2), ds(3), tsub, Ts), 4)).^(1/nrm); end
             end
         end
     end
 else
     fprintf('No downsampling is performed \n')
 end
-
-options_ds = options;
-options_ds.d1 = ds(1);
-options_ds.d2 = ds(2);
