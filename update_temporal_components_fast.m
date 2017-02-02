@@ -236,26 +236,33 @@ if p > 0
             if ii <= K
                 switch method
                      case 'constrained_foopsi'
-%                         if restimate_g
-%                             [cc,cb,c1,gn,sn,spk] = constrained_foopsi(Ytemp,[],[],[],[],options);
-%                             P.gn{ii} = gn;
-%                         else
-%                             [cc,cb,c1,gn,sn,spk] = constrained_foopsi(Ytemp,[],[],P.g,[],options);
-%                         end
-%                         gd = max(roots([1,-gn']));  % decay time constant for initial concentration
-%                         gd_vec = gd.^((0:T-1));
-%                         C(ii,:) = full(cc(:)' + cb + c1*gd_vec);
-%                         S(ii,:) = spk(:)';
-%                         P.b{ii} = cb;
-%                         P.c1{ii} = c1;           
-%                         P.neuron_sn{ii} = sn;
-                        [cc,spk,kernel] = deconvCa(Ytemp,[],[],true,false,[],5);                        
+                        try 
+                             if restimate_g
+                                [cc,cb,c1,gn,sn,spk] = constrained_foopsi(Ytemp,[],[],[],[],options);
+                                P.gn{ii} = gn;
+                            else
+                                [cc,cb,c1,gn,sn,spk] = constrained_foopsi(Ytemp,[],[],P.g,[],options);
+                             end
+                        catch
+                            options2 = options;
+                            options2.p = 0;
+                            [cc,cb,c1,gn,sn,spk] = constrained_foopsi(Ytemp,[],[],0,[],options2);
+                             P.gn{ii} = gn;
+                        end
+                        gd = max(roots([1,-gn']));  % decay time constant for initial concentration
+                        gd_vec = gd.^((0:T-1));
+                        C(ii,:) = full(cc(:)' + cb + c1*gd_vec);
                         S(ii,:) = spk(:)';
-                        P.b{ii} = median(Ytemp-cc(:)');
-                        C(ii,:) = cc(:)'+P.b{ii};
-                        P.c1{ii} = Ytemp(1)-cc(1);
-                        P.neuron_sn{ii} = std(Ytemp-cc(:)');
-                        P.gn{ii} = kernel.pars;                            
+                        P.b{ii} = cb;
+                        P.c1{ii} = c1;           
+                        P.neuron_sn{ii} = sn;
+%                         [cc,spk,kernel] = deconvCa(Ytemp,[],[],true,false,[],5);                        
+%                         S(ii,:) = spk(:)';
+%                         P.b{ii} = median(Ytemp-cc(:)');
+%                         C(ii,:) = cc(:)'+P.b{ii};
+%                         P.c1{ii} = Ytemp(1)-cc(1);
+%                         P.neuron_sn{ii} = std(Ytemp-cc(:)');
+%                         P.gn{ii} = kernel.pars;                            
                     case 'MCMC'
                         SAMPLES = cont_ca_sampler(Ytemp,params);
                         ctemp = make_mean_sample(SAMPLES,Ytemp);
