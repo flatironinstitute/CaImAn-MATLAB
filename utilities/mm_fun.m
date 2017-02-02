@@ -43,6 +43,9 @@ elseif isobject(Y);
 else % array loaded in memory
     filetype = 'mat';
     Y = double(Y);
+    if ~ismatrix(Y)
+        Y = reshape(Y,[],size(Y,ndims(Y)));
+    end
     sizY = size(Y);
     T = sizY(end);
 end
