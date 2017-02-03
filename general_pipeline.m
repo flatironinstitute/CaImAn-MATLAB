@@ -85,7 +85,7 @@ patch_size = [40,40];                   % size of each patch along each dimensio
 overlap = [8,8];                        % amount of overlap in each dimension (optional, default: [4,4])
 
 patches = construct_patches(sizY(1:end-1),patch_size,overlap);
-K = 6;                                            % number of components to be found
+K = 7;                                            % number of components to be found
 tau = 8;                                          % std of gaussian kernel (size of neuron) 
 p = 0;                                            % order of autoregressive system (p = 0 no dynamics, p=1 just decay, p = 2, both rise and decay)
 merge_thr = 0.8;                                  % merging threshold
@@ -114,28 +114,36 @@ options = CNMFSetParms(...
 
 %% compute correlation image on a small sample of the data (optional - for visualization purposes) 
 Cn = correlation_image(single(data.Y(:,:,1:2000)),8);
-%% get contour plots for all components
-CC = plot_contours(A,Cn,options,0); close;
+
 %% classify components (around 3 minutes)
 options.space_thresh = 0.5;
 options.time_thresh = 0.5;
 [rval_space,rval_time,max_pr,sizeA,keep] = classify_components(data,A,C,b,f,YrA,options);
-
 %% modify thresholds to examine which parameters are kept
+%
+%keep = (rval_space > options.space_thresh) & (rval_time > options.time_thresh) & (max_pr > options.max_pr_thr) & (sizeA >= options.min_size_thr) & (sizeA <= options.max_size_thr);
+% play with thresholds to modify the components being selected
 
-keep = (rval_space > 0.3) & (rval_time > options.time_thresh) & (max_pr > 0.9) & (sizeA >= options.min_size_thr) & (sizeA <= options.max_size_thr);
-    % play with thresholds to modify the components being selected
+%% open a GUI to do some exploring
+
+gui_components(rval_space,rval_time,max_pr,sizeA,A,Cn,options);
+
+%% after modifying the thresholds get the indeces of the accepted components (do not close gui)
+    sl1 = findobj(0,'Tag','space_corr');
+    sl2 = findobj(0,'Tag','time_corr');
+    sl3 = findobj(0,'Tag','min_size');
+    sl4 = findobj(0,'Tag','max_size');
+    sl5 = findobj(0,'Tag','max_pr');
+    keep = (rval_space >= sl1.Value) & (rval_time >= sl2.Value) & (sizeA > sl3.Value) & (sizeA <= sl4.Value) & (log10(1-max_pr) <= sl5.Value);
 %% view contour plots of selected and rejected components (optional)
-
+CC = plot_contours(A,Cn,options,0); close;
 throw = ~keep;
 figure;
     ax1 = subplot(121); plot_contours(A(:,keep),Cn,options,0,[],CC,1,find(keep)); title('Selected components','fontweight','bold','fontsize',14);
     ax2 = subplot(122); plot_contours(A(:,throw),Cn,options,0,[],CC,1,find(throw));title('Rejected components','fontweight','bold','fontsize',14);
     linkaxes([ax1,ax2],'xy')
-%%
-
-gui_components(rval_space,rval_time,max_pr,sizeA,A,Cn,options)
-%% keep only the active components    
+    
+    %% keep only the active components    
 A_keep = A(:,keep);
 C_keep = C(keep,:);
 
@@ -147,28 +155,57 @@ C_keep = C(keep,:);
 
 plot_components_GUI(data,A_keep,C_keep,b,f,Cn,options)
 
-%% extract fluorescence and DF/F on native temporal resolution (13-14 minutes)
+%% extract fluorescence and DF/F on native temporal resolution
 % C is deconvolved activity, C + YrA is non-deconvolved fluorescence 
 % F_df is the DF/F computed on the non-deconvolved fluorescence
 
-P.p = 0;                    % order of dynamics. Set P.p = 0 for no deconvolution at the moment
+P.p = 2;                    % order of dynamics. Set P.p = 0 for no deconvolution at the moment
 C_us = cell(numFiles,1);    % cell array for thresholded fluorescence
 f_us = cell(numFiles,1);    % cell array for temporal background
 P_us = cell(numFiles,1);  
 S_us = cell(numFiles,1);
 YrA_us = cell(numFiles,1);  % 
 b_us = cell(numFiles,1);    % cell array for spatial background
-F_df = cell(numFiles,1);    % cell array for DF/F values
-Df = cell(numFiles,1);
-tt1 = tic;   
 for i = 1:numFiles    
     int = sum(floor(Ts(1:i-1)/tsub))+1:sum(floor(Ts(1:i)/tsub));
     Cin = imresize([C_keep(:,int);f(:,int)],[size(C_keep,1)+size(f,1),Ts(i)]);
     [C_us{i},f_us{i},P_us{i},S_us{i},YrA_us{i}] = update_temporal_components_fast(h5_files(i).name,A_keep,b,Cin(1:end-1,:),Cin(end,:),P,options);
     b_us{i} = max(mm_fun(f_us{i},h5_files(i).name) - A_keep*(C_us{i}*f_us{i}'),0)/norm(f_us{i})^2;
-    [F_df{i},Df{i}] = extract_DF_F_new(A_keep,C_us{i}+YrA_us{i},b_us{i},f_us{i},P_us{i},options);
-    toc(tt1);
 end
-F_us = cellfun(@plus,C_us,YrA_us,'un',0);       % cell array for 
 
-%% perform deconvolution
+prctfun = @(data) prctfilt(data,30,1000,300);       % first detrend fluorescence (remove 20%th percentile on a rolling 1000 timestep window)
+F_us = cellfun(@plus,C_us,YrA_us,'un',0);           % cell array for projected fluorescence
+Fd_us = cellfun(prctfun,F_us,'un',0);               % detrended fluorescence
+
+Ab_d = cell(numFiles,1);                            % now extract projected background fluorescence
+for i = 1:numFiles
+    Ab_d{i} = prctfilt((bsxfun(@times, A_keep, 1./sum(A_keep.^2))'*b_us{i})*f_us{i},30,1000,300,0);
+end
+    
+F0 = cellfun(@plus, cellfun(@(x,y) x-y,F_us,Fd_us,'un',0), Ab_d,'un',0);   % add and get F0 fluorescence for each component
+F_df = cellfun(@(x,y) x./y, Fd_us, Df ,'un',0);                            % DF/F value
+%% detrend each segment and then deconvolve
+
+
+% %% perform deconvolution
+% Cd = cellfun(@(x) zeros(size(x)), Fd_us, 'un',0);
+% Sp = cellfun(@(x) zeros(size(x)), Fd_us, 'un',0);
+% bas = zeros(size(Cd{1},1),numFiles);
+% c1 = bas;
+% sn = bas;
+% gn = cell(size(bas));
+% options.p = 2;
+% tt1 = tic;
+% for i = 1:numFiles
+%     c_temp = zeros(size(Cd{i}));
+%     s_temp = c_temp;
+%     f_temp = Fd_us{i};
+%     parfor j = 1:size(Fd_us{i},1)
+%         [c_temp(j,:),bas(j,i),c1(j,i),gn{j,i},sn(j,i),s_temp(j,:)] = constrained_foopsi(f_temp(j,:),[],[],[],[],options);
+%     end
+%     Cd{i} = c_temp;
+%     Sp{i} = s_temp;
+%     toc(tt1);
+% end
+    
+    
