@@ -91,8 +91,8 @@ switch filetype
         elseif d2a == d2y
             AY = zeros(d1y,d1a);
             At = A';
-            for i = 1:chunk_size:d1a
-                AY(i:min(i+chunk_size-1,d1),:) = double(Y.Yr(i:min(i+chunk_size-1,d1a),:))*At;
+            for i = 1:chunk_size:d1y
+                AY(i:min(i+chunk_size-1,d1y),:) = double(Y.Yr(i:min(i+chunk_size-1,d1y),:))*At;
             end
         else
             error('matrix dimensions do not agree');
@@ -103,6 +103,7 @@ switch filetype
             AY = zeros(d2a,d2y);
             for t = 1:chunk_size:T
                 Y_temp = bigread2(Y,t,min(T-t+1,chunk_size));
+                Y_temp(isnan(Y_temp)) = 0;
                 if ~ismatrix(Y_temp); Y_temp = reshape(Y_temp,d1y,[]); end
                 AY(:,t:min(T,t+chunk_size-1)) = A'*double(Y_temp);
             end
@@ -110,6 +111,7 @@ switch filetype
             AY = zeros(d1y,d1a);            
             for t = 1:chunk_size:T
                 Y_temp = bigread2(Y,t,min(T-t+1,chunk_size));
+                Y_temp(isnan(Y_temp)) = 0;
                 if ~ismatrix(Y_temp); Y_temp = reshape(Y_temp,d1y,[]); end
                 AY = AY + double(Y_temp)*A(:,t:min(T,t+chunk_size-1))';
             end            
