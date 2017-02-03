@@ -1,4 +1,4 @@
-function Y = prctfilt(X,p,window,shift)
+function Y = prctfilt(X,p,window,shift,mode)
 
 % percentile filtering along the last dimension
 % INPUTS
@@ -6,9 +6,15 @@ function Y = prctfilt(X,p,window,shift)
 % p:        percentile
 % window:   window over which to compute the percentile
 % shift:    length of window shifting (default: window)
+% mode:     if mode == 1 then returns Y - baseline, otherwise returns baseline
 
 % OUTPUT
 % Y:        filtered version
+
+if nargin < 2 || isempty(p); p = 20; end
+if nargin < 3 || isempty(window); window = 200; end
+if nargin < 4 || isempty(shift); shift = window; end
+if nargin < 5 || isempty(mode); mode = 1; end
 
 sizX = size(X);
 if ndims(X) == 1
@@ -33,5 +39,9 @@ dx = diff(Xpcs,1,2);
 
 Xf = kron(Xpcs(:,1:end-1),ones(1,shift)) + kron(dx,1/shift*(0:shift-1));
 Xf = padarray(Xf,[0,size(X,2)-shift*(ln-1)],'post','symmetric');
-Y = X - Xf;
+if mode == 1
+    Y = X - Xf;
+else
+    Y = Xf;
+end
 Y = reshape(Y,sizX);
