@@ -1,8 +1,8 @@
-% TAXIDIS pipeline
+% complete pipeline for calcium imaging data pre-processing
 clear;
 addpath(genpath('../NoRMCorre'));               % add the NoRMCorre motion correction package to MATLAB path
 gcp;        % start a parallel engine
-foldername = '/mnt/ceph/users/epnevmatikakis/Ca_datasets/Taxidis/mouse1-multi-sessions';   
+foldername = '';   
         % folder where all the files are located. Currently supported .tif,
         % .hdf5, .raw, .avi, and .mat files
 files = subdir(fullfile(foldername,'*.raw'));   % list of filenames (will search all subdirectories)
@@ -115,32 +115,23 @@ options = CNMFSetParms(...
 %% compute correlation image on a small sample of the data (optional - for visualization purposes) 
 Cn = correlation_image(single(data.Y(:,:,1:2000)),8);
 
-%% classify components (around 3 minutes)
-options.space_thresh = 0.5;
-options.time_thresh = 0.5;
-[rval_space,rval_time,max_pr,sizeA,keep] = classify_components(data,A,C,b,f,YrA,options);
-%% modify thresholds to examine which parameters are kept
-%
-%keep = (rval_space > options.space_thresh) & (rval_time > options.time_thresh) & (max_pr > options.max_pr_thr) & (sizeA >= options.min_size_thr) & (sizeA <= options.max_size_thr);
-% play with thresholds to modify the components being selected
+%% classify components
+[ROIvars.rval_space,ROIvars.rval_time,ROIvars.max_pr,ROIvars.sizeA,keep] = classify_components(Y,A,C,b,f,YrA,options);
 
-%% open a GUI to do some exploring
+%% run GUI for modifying component selection (optional, close twice to save values)
+run_GUI = true;
+if run_GUI
+    Coor = plot_contours(A,Cn,options,1); close;
+    GUIout = ROI_GUI(A,options,Cn,Coor,keep,ROIvars);   
+    options = GUIout{2};
+    keep = GUIout{3};    
+end
 
-gui_components(rval_space,rval_time,max_pr,sizeA,A,Cn,options);
-
-%% after modifying the thresholds get the indeces of the accepted components (do not close gui)
-    sl1 = findobj(0,'Tag','space_corr');
-    sl2 = findobj(0,'Tag','time_corr');
-    sl3 = findobj(0,'Tag','min_size');
-    sl4 = findobj(0,'Tag','max_size');
-    sl5 = findobj(0,'Tag','max_pr');
-    keep = (rval_space >= sl1.Value) & (rval_time >= sl2.Value) & (sizeA > sl3.Value) & (sizeA <= sl4.Value) & (log10(1-max_pr) <= sl5.Value);
 %% view contour plots of selected and rejected components (optional)
-CC = plot_contours(A,Cn,options,0); close;
 throw = ~keep;
 figure;
-    ax1 = subplot(121); plot_contours(A(:,keep),Cn,options,0,[],CC,1,find(keep)); title('Selected components','fontweight','bold','fontsize',14);
-    ax2 = subplot(122); plot_contours(A(:,throw),Cn,options,0,[],CC,1,find(throw));title('Rejected components','fontweight','bold','fontsize',14);
+    ax1 = subplot(121); plot_contours(A(:,keep),Cn,options,0,[],Coor,1,find(keep)); title('Selected components','fontweight','bold','fontsize',14);
+    ax2 = subplot(122); plot_contours(A(:,throw),Cn,options,0,[],Coor,1,find(throw));title('Rejected components','fontweight','bold','fontsize',14);
     linkaxes([ax1,ax2],'xy')
     
     %% keep only the active components    
@@ -153,7 +144,7 @@ C_keep = C(keep,:);
 %[C_keep,f_keep,Pk,Sk,YrAk] = update_temporal_components_fast(data,A_keep,b,C_keep,f,P,options);
 %toc
 
-plot_components_GUI(data,A_keep,C_keep,b,f,Cn,options)
+%plot_components_GUI(data,A_keep,C_keep,b,f,Cn,options)
 
 %% extract fluorescence and DF/F on native temporal resolution
 % C is deconvolved activity, C + YrA is non-deconvolved fluorescence 
@@ -207,5 +198,3 @@ F_df = cellfun(@(x,y) x./y, Fd_us, Df ,'un',0);                            % DF/
 %     Sp{i} = s_temp;
 %     toc(tt1);
 % end
-    
-    

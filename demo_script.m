@@ -16,7 +16,7 @@ d = d1*d2;                                          % total number of pixels
 
 %% Set parameters
 
-K = 35;                                           % number of components to be found
+K = 40;                                           % number of components to be found
 tau = 4;                                          % std of gaussian kernel (size of neuron) 
 p = 2;                                            % order of autoregressive system (p = 0 no dynamics, p=1 just decay, p = 2, both rise and decay)
 merge_thr = 0.8;                                  % merging threshold
@@ -60,8 +60,19 @@ Yr = reshape(Y,d,T);
 P.p = 0;    % set AR temporarily to zero for speed
 [C,f,P,S,YrA] = update_temporal_components(Yr,A,b,Cin,fin,P,options);
 
+%% classify components
+[ROIvars.rval_space,ROIvars.rval_time,ROIvars.max_pr,ROIvars.sizeA,keep] = classify_components(Y,A,C,b,f,YrA,options);
+
+%% run GUI for modifying component selection (optional, close twice to save values)
+run_GUI = true;
+if run_GUI
+    Coor = plot_contours(A,Cn,options,1); close;
+    GUIout = ROI_GUI(A,options,Cn,Coor,keep,ROIvars);   
+    options = GUIout{2};
+    keep = GUIout{3};    
+end
 %% merge found components
-[Am,Cm,K_m,merged_ROIs,Pm,Sm] = merge_components(Yr,A,b,C,f,P,S,options);
+[Am,Cm,K_m,merged_ROIs,Pm,Sm] = merge_components(Yr,A(:,keep),b,C(keep,:),f,P,S,options);
 
 %%
 display_merging = 1; % flag for displaying merging example
@@ -83,22 +94,10 @@ if and(display_merging, ~isempty(merged_ROIs))
         drawnow;
 end
 
-%% evaluate components
-
-options.space_thresh = 0.3;
-options.time_thresh = 0.3;
-[rval_space,rval_time,ind_space,ind_time] = classify_comp_corr(Y,Am,Cm,b,f,options);
-
-keep = ind_time & ind_space; 
-throw = ~keep;
-figure;
-    subplot(121); plot_contours(Am(:,keep),Cn,options,1); title('Selected components','fontweight','bold','fontsize',14);
-    subplot(122); plot_contours(Am(:,throw),Cn,options,1);title('Rejected components','fontweight','bold','fontsize',14);
-
 %% refine estimates excluding rejected components
 
 Pm.p = p;    % restore AR value
-[A2,b2,C2] = update_spatial_components(Yr,Cm(keep,:),f,[Am(:,keep),b],Pm,options);
+[A2,b2,C2] = update_spatial_components(Yr,Cm,f,[Am,b],Pm,options);
 [C2,f2,P2,S2,YrA2] = update_temporal_components(Yr,A2,b2,C2,f,Pm,options);
 
 
