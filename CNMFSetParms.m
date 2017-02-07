@@ -54,6 +54,7 @@ Names = [
     'max_nlocs          ' % number of local maxima to be extracted (default: 10)
     'max_width          ' % length of each interval (default: 11)
     % UPDATING SPATIAL COMPONENTS (unpdate_spatial_components.m)
+    'spatial_method     ' % method for updating spatial components 'constrained' or 'regularized' (default: 'regularized')
     'search_method      ' % method for determining footprint of spatial components 'ellipse' or 'dilate' (default: 'dilate')
     'spatial_parallel   ' % update pixels in parallel (default: 1 if present)
     % determine_search_location.m
@@ -83,7 +84,7 @@ Names = [
     'merge_thr          ' % merging threshold (default: 0.85)
     'fast_merge         ' % flag for using fast merging (default 1)
     % DF/F (extract_DF_F.m)
-    'df_prctile         ' % percentile to be defined as baseline (default 50, median)
+    'df_prctile         ' % percentile to be defined as baseline (default 20)
     'df_window          ' % length of running window (default [], no window)
     % CONTOUR PLOTS (plot_contours.m)
     'cont_threshold     '
@@ -117,6 +118,12 @@ Names = [
     'gnb                ' % number of global background components (default: 1)
     'create_memmap      ' % create a memory mapped file if it is not provided in the input (default: false)    
     'classify_comp      ' % classify components based on correlation values (default: true)
+    % parameters for microendoscope 
+    'min_pnr            '
+    'seed_method        '    
+    'min_pixel          ' % minimum number of nonzero pixels for a neuron 
+    'bd                 ' % number of pixels to be ignored in the boundary 
+    'deconv_flag        ' % perform deconvolution or not     
     ];
 
 [m,n] = size(Names);
@@ -231,7 +238,7 @@ Values = [
     {5}
     % Noise and AR coefficients calculation (preprocess_data.m)
     {[0.25,0.5]}
-    {'logmexp'}
+    {'mean'}
     {3000}
     {false}
     {5}
@@ -244,6 +251,7 @@ Values = [
     {30}
     {21}
     % UPDATING SPATIAL COMPONENTS (unpdate_spatial_components.m)
+    {'regularized'}
     {'dilate'}
     {~isempty(which('parpool'))}
     % determine_search_location.m
@@ -273,7 +281,7 @@ Values = [
     {0.85}
     {1}
     % DF/F (extract_DF_F.m)
-    {50}
+    {20}
     {[]}
     % CONTOUR PLOTS (plot_contours.m)
     {0.9}
@@ -306,6 +314,12 @@ Values = [
     % PATCHES          (run_CNMF_patches.m)
     {1}
     {false}    
+    {true}
+    % parameters for microendoscope
+    {10}
+    {'auto'}
+    {5}
+    {3}    
     {true}
     ];
 

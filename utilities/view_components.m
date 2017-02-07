@@ -73,7 +73,8 @@ end
 Y_r = (AY- (A'*A)*C - full(A'*double(b))*f) + C;
 
 if plot_df
-    [~,Df] = extract_DF_F(Y,[A,b],[C;f],size(A,2)+1);
+    %[~,Df] = extract_DF_F(Y,[A,b],[C;f],size(A,2)+1);
+    [~,Df] = extract_DF_F(Y,A,C,[],options);
 else
     Df = ones(size(A,2)+1,1);
 end

@@ -41,13 +41,15 @@
                     psdx = (1/(Fs*N)) * abs(xdft).^2;
                     psdx(:,2:end-1) = 2*psdx(:,2:end-1) + eps;
                     %SN{ind} = mean_psd(psdx(:,indf),method);
-                    switch method
+                    switch lower(method)
                         case 'mean'
                             SN{ind}=sqrt(mean(psdx(:,indf)/2,2));
                         case 'median'
                             SN{ind}=sqrt(median(psdx(:,indf)/2,2));
                         case 'logmexp'
                             SN{ind} = sqrt(exp(mean(log(psdx(:,indf)/2),2)));
+                        otherwise
+                            error('unknown method for averaging noise..')
                     end
                     PSDX{ind} = psdx;
                 end
@@ -60,13 +62,15 @@
                     psdx = (1/(Fs*N)) * abs(xdft).^2;
                     psdx(:,2:end-1) = 2*psdx(:,2:end-1) + eps;
                     Yc{ind} = [];
-                    switch method
+                    switch lower(method)
                         case 'mean'
                             SN{ind}=sqrt(mean(psdx(:,indf)/2,2));
                         case 'median'
                             SN{ind}=sqrt(median(psdx(:,indf)/2,2));
                         case 'logmexp'
                             SN{ind} = sqrt(exp(mean(log(psdx(:,indf)/2),2)));
+                        otherwise
+                            error('unknown method for averaging noise..')
                     end
                     
                 end
@@ -77,13 +81,15 @@
             xdft = xdft(:,1:floor(N/2)+1);
             psdx = (1/(Fs*N)) * abs(xdft).^2;
             psdx(:,2:end-1) = 2*psdx(:,2:end-1) + eps;
-            switch method
+            switch lower(method)
                 case 'mean'
                     sn = sqrt(mean(psdx(:,indf)/2,2));
                 case 'median'
                     sn = sqrt(median(psdx(:,indf)/2,2));
                 case 'logmexp'
                     sn = sqrt(exp(mean(log(psdx(:,indf)/2),2)));
+                otherwise
+                    error('unknown method for averaging noise..')
             end
         end
         psdx = cell2mat(PSDX);

@@ -4,7 +4,7 @@ function [rval_space,rval_time,ind_space,ind_time] = classify_comp_corr(Yr,A,C,b
 % correlate with the raw data at point of high activation
 
 % INPUTS
-% Yr:       reshaped data in 2D matrix or memmaped file
+% Yr:       reshaped data in 3D matrix or memmaped file
 % A,C,b,f:  identified components
 % options:  options structure
 %    space_thresh:  r-value threshold for spatial components (default: 0.4) 
@@ -12,7 +12,7 @@ function [rval_space,rval_time,ind_space,ind_time] = classify_comp_corr(Yr,A,C,b
 %    Athresh:  threshold for determining spatial overlap (default: 0.1)
 %    Np:       number of high activity intervals for each component (default: 20)
 %    peak_int: Interval around each local peak to be considered (default: -2:6)
-%    MinPeakDost:   minimum peak distance for finding points of high activity  (default: 10)
+%    MinPeakDist:   minimum peak distance for finding points of high activity  (default: 10)
 
 % OUTPUTS:
 % rval_space:     r-values between spatial components and data patches
@@ -70,20 +70,34 @@ tAA(1:K_m+1:K_m^2) = 0;
 
 rval_space = zeros(K_m,1);
 rval_time  = zeros(K_m,1);
-if memmaped
-    data = Yr.Yr;
-else
-    data = Yr;
-end
+
+%cm = com(A,options.d1,options.d2,options.d3);
+if options.d3 == 1; b_rs = reshape(b,options.d1,options.d2,[]); else b_rs = reshape(b,options.d1,options.d2,options.d3,[]); end
 for i = 1:K_m
     ovlp_cmp = find(tAA(:,i));
     indeces = LOCS{i};
     for j = 1:length(ovlp_cmp)
         indeces = setdiff(indeces,LOCS{ovlp_cmp(j)});
     end
-    amask = A(:,i)>0;
+    %amask = A(:,i)>0;
+    a_temp = reshape(A(:,i),options.d1,options.d2,options.d3);
+    [rows,cols] = find(a_temp>0);
+    a_temp = a_temp(min(rows):max(rows),min(cols):max(cols));
+    b_temp = reshape(b_rs(min(rows):max(rows),min(cols):max(cols),:),numel(a_temp),[]);
     if ~isempty(indeces)
         if memmaped      
+            %rows = max(1,round(cm(i,1)-16)):min(options.d1,round(cm(i,1)+16));            
+            %cols = max(1,round(cm(i,2)-16)):min(options.d2,round(cm(i,2)+16));
+            time_indeces = sort(indeces,'ascend');
+            ff_time = [0,find(diff(time_indeces)>1),length(time_indeces)];
+            time_intervals = mat2cell(time_indeces,1,diff(ff_time));
+            y_temp = cell(1,length(time_intervals));
+            parfor int = 1:length(time_intervals)
+                y_temp{int} = Yr.Y(min(rows):max(rows),min(cols):max(cols),time_intervals{int});
+            end
+            %y_temp = Yr.Y(min(rows):max(rows),min(cols):max(cols),:);
+            y_temp = cat(3,y_temp{:}); %cell2mat(y_temp);
+            y_temp = reshape(y_temp,[],length(indeces));            
     %         time_indeces = sort(indeces,'ascend');
     %         ff_time = [0,find(diff(time_indeces)>1),length(time_indeces)];
     %         time_intervals = mat2cell(time_indeces,1,diff(ff_time));
@@ -97,13 +111,15 @@ for i = 1:K_m
     %             end
     %         end                
             %mY = (A(:,i)>0).*double(mean(Yr.Yr(:,indeces),2) - b*mean(f(:,indeces),2));
-            mY_space = double(mean(data(amask,indeces),2) - b(amask,:)*mean(f(:,indeces),2));
-            mY_time = double(mean(data(amask,indeces)) - mean(b(amask,:))*f(:,indeces));
+    %        mY_space = double(mean(data(amask,indeces),2) - b(amask,:)*mean(f(:,indeces),2));
+    %        mY_time = double(mean(data(amask,indeces)) - mean(b(amask,:))*f(:,indeces));
         else
-            mY_space = double(mean(Yr(amask,indeces),2) - b(amask,:)*mean(f(:,indeces),2));
-            mY_time = double(mean(Yr(amask,indeces)) - mean(b(amask,:))*f(:,indeces));
+            y_temp = Yr(min(rows):max(rows),min(cols):max(cols),indeces);
+            y_temp = reshape(y_temp,[],length(indeces));   
         end
-        rval_space(i) = corr(full(A(amask,i)),mY_space);
+        mY_space = double(mean(y_temp,2) - b_temp*mean(f(:,indeces),2));
+        mY_time = double(mean(y_temp)-mean(b_temp)*f(:,indeces));
+        rval_space(i) = corr(full(a_temp(:)),mY_space);
         rval_time(i) = corr(C(i,indeces)',mY_time');
     else
         rval_space(i) = NaN;

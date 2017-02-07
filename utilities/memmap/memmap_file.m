@@ -30,12 +30,13 @@ if nargin < 2 || isempty(sframe)
 end
 
 if isempty(chunksize)
-    Y = bigread2(filename,sframe,num2read);
+    Y = tiff_reader(filename,sframe,num2read);
     sizY = size(Y);
     Yr = reshape(Y,prod(sizY(1:end-1)),[]);
     nY = min(Yr(:));
     %Yr = Yr - nY;
-    save([filename(1:end-3),'mat'],'Yr','Y','nY','sizY','-v7.3');
+    %save([filename(1:end-3),'mat'],'Yr','Y','nY','sizY','-v7.3');
+    savefast([filename(1:end-3),'mat'],'Yr','Y','nY','sizY');
     data = matfile([filename(1:end-3),'mat'],'Writable',true);
 else
     info = imfinfo(filename);
@@ -47,12 +48,19 @@ else
     end
     nY = Inf;
     data = matfile([filename(1:end-3),'mat'],'Writable',true);
+    Yt = imread(filename,'Index',1,'Info',info);
+    sizY = [size(Yt),numFrames];
+    if length(sizY) == 3
+        data.Y(sizY(1),sizY(2),sizY(3)) = Yt(1)*0;
+    elseif length(sizY) == 4
+        data.Y(sizY(1),sizY(2),sizY(3),sizY(4)) = Yt(1)*0;
+    end
+    data.Yr(numel(Yt),numFrames) = Yt(1)*0;
     for i = sframe:chunksize:numFrames
-        Ytemp = bigread2(filename,i,min(chunksize,numFrames-i+1));
-        sizY = size(Ytemp);
-        Yr = reshape(Ytemp,prod(sizY(1:end-1)),[]);
+        Ytemp = tiff_reader(filename,i,min(chunksize,numFrames-i+1));        
+        Yr = reshape(Ytemp,prod(sizY(1:end-1)),[]);        
         nY = min(nY,min(Yr(:)));
-        data.Yr(1:prod(sizY(1:end-1)),i-1+(1:size(Yr,2))) = Yr;
+        data.Yr(:,i:i-1+size(Yr,2)) = Yr;
         if length(sizY) == 3
             data.Y(1:sizY(1),1:sizY(2),i-1+(1:size(Yr,2))) = Ytemp;
         elseif legnth(sizY) == 4

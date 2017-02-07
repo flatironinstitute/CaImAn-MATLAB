@@ -49,7 +49,7 @@ figure;imagesc(Cn);
     drawnow;
 
 %% manually refine components (optional)
-refine_components = false;  % flag for manual refinement
+refine_components = true;  % flag for manual refinement
 if refine_components
     [center] = refineComponents(Y,obj,center,Cn,tau);
 end
@@ -92,7 +92,7 @@ updateTemporal(obj, Yr);
 %% do some plotting
 [srt] = orderROIs(obj);     % order components
 K_m = size(obj.C,1);
-[C_df, ~, S_df] = extractDF_F(obj, Yr, K_m+1); % extract DF/F values.
+[C_df, ~] = extractDF_F(obj, Yr); % extract DF/F values.
 
 contour_threshold = 0.95;   % amount of energy used for each component to construct contour plot
 figure;

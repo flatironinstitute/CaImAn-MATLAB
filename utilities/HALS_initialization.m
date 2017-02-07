@@ -3,6 +3,7 @@ function [A,C,b,f] = HALS_initialization(Y,K,options)
 defoptions = CNMFSetParms;
 if ~isfield(options,'max_iter_hals_in') || isempty(options.max_iter_hals_in); options.max_iter_hals_in = defoptions.max_iter_hals_in; end
 if ~isfield(options,'rem_prct') || isempty(options.rem_prct); options.rem_prct = defoptions.rem_prct; end
+if ~isfield(options,'nb') || isempty(options.nb); nb = defoptions.nb; else nb = options.nb; end
 
 init_hals_method = 'random';
 
@@ -31,7 +32,6 @@ elseif strcmpi(init_hals_method,'cor_im');
     BW = imregionalmax(Cnf);
     C = Y(BW(:),:);
     A = max(Y*pinv(C),0);
-    K = sum(BW(:));
 end
 
 for iter = 1:options.max_iter_hals_in
@@ -44,8 +44,10 @@ A(:, ind_del) = [];
 C(ind_del, :) = []; 
 
 Y = bsxfun(@plus,Y-A*C,med(:));
-b = med(:);
-for iter = 1:options.max_iter_hals_in
-    f = max(b'*Y/norm(b)^2,0);
-    b = max(Y*f'/norm(f)^2,0);
+
+b = [med(:),rand(d,nb-1)];
+
+for nmfiter = 1:100
+    f = max((b'*b)\(b'*Y),0);
+    b = max((Y*f')/(f*f'),0);    
 end

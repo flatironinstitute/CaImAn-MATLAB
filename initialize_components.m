@@ -10,7 +10,7 @@ function [Ain, Cin, bin, fin, center] = initialize_components(Y, K, tau, options
 %tau        standard deviation of neuron size (default value: 5)
 
 %options    fine-tuning parameters (optional)
-%           options.init_method: method of initialization ('greedy','sparse_NMF','both')
+%           options.init_method: method of initialization ('greedy','sparse_NMF','HALS')
 %           options.
 %           options.nIter: number of iterations for shape tuning (default 5)
 %           options.gSiz: size of kernel (default 2*tau + 1)

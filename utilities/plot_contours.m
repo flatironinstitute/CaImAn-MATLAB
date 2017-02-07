@@ -1,4 +1,4 @@
-function [CC,jsf] = plot_contours(Aor,Cn,options,display_numbers,max_number,Coor)
+function [CC,jsf] = plot_contours(Aor,Cn,options,display_numbers,max_number,Coor, ln_wd)
 
 % save and plot the contour traces of the found spatial components against
 % a specified background image. The contour can be determined in two ways:
@@ -43,6 +43,12 @@ if nargin < 3 || isempty(options) || isnumeric(options)
         options = defoptions;
     end
 end
+if ~exist('ln_wd', 'var') || isempty(ln_wd)
+    ln_wd = 1; % linewidth;
+end
+units = 'centimeters';
+fontname = 'helvetica';
+
 
 if ~isfield(options,'thr_method') || isempty(options.thr_method); options.thr_method = defoptions.thr_method; end
 if ~isfield(options,'nrgthr') || isempty(options.nrgthr); options.nrgthr = defoptions.nrgthr; end
@@ -63,7 +69,7 @@ fontname = 'helvetica';
         for i = 1:size(Aor,2)
             cont = medfilt1(Coor{i}')';
             if size(cont,2) > 1
-                plot(cont(1,2:end),cont(2,2:end),'Color',cmap(i+size(Aor,2),:)); hold on;
+                plot(cont(1,2:end),cont(2,2:end),'Color',cmap(i+size(Aor,2),:), 'linewidth', ln_wd); hold on;
             end
         end
     else
@@ -79,7 +85,7 @@ fontname = 'helvetica';
                 temp =  cumsum(temp);
                 ff = find(temp > (1-thr)*temp(end),1,'first');
                 if ~isempty(ff)
-                    CC{i} = contour(reshape(A_temp,d1,d2),[0,0]+A_temp(ind(ff)),'LineColor',cmap(i+size(Aor,2),:));
+                    CC{i} = contour(reshape(A_temp,d1,d2),[0,0]+A_temp(ind(ff)),'LineColor',cmap(i+size(Aor,2),:), 'linewidth', ln_wd);
                     fp = find(A_temp >= A_temp(ind(ff)));
                     [ii,jj] = ind2sub([d1,d2],fp);
                     CR{i,1} = [ii,jj]';
@@ -98,7 +104,7 @@ fontname = 'helvetica';
                 if ~isempty(BW2)
                     for ii = 1:length(BW2)
                         BW2{ii} = fliplr(BW2{ii});
-                        plot(BW2{ii}(:,1),BW2{ii}(:,2),'Color',cmap(i+size(Aor,2),:));
+                        plot(BW2{ii}(:,1),BW2{ii}(:,2),'Color',cmap(i+size(Aor,2),:), 'linewidth', ln_wd);
                     end
                     CC{i} = BW2{1}';
                     fp = find(BW);
