@@ -71,29 +71,24 @@ tAA(1:K_m+1:K_m^2) = 0;
 rval_space = zeros(K_m,1);
 rval_time  = zeros(K_m,1);
 
-%cm = com(A,options.d1,options.d2,options.d3);
-if options.d3 == 1; b_rs = reshape(b,options.d1,options.d2,[]); else b_rs = reshape(b,options.d1,options.d2,options.d3,[]); end
 for i = 1:K_m
     ovlp_cmp = find(tAA(:,i));
     indeces = LOCS{i};
     for j = 1:length(ovlp_cmp)
         indeces = setdiff(indeces,LOCS{ovlp_cmp(j)});
     end
-    %amask = A(:,i)>0;
-    a_temp = reshape(A(:,i),options.d1,options.d2,options.d3);
-    [rows,cols] = find(a_temp>0);
-    a_temp = a_temp(min(rows):max(rows),min(cols):max(cols));
-    b_temp = reshape(b_rs(min(rows):max(rows),min(cols):max(cols),:),numel(a_temp),[]);
+    a_temp = full(A(:,i));
+    indexes_a = find(a_temp>0);
+    a_temp = a_temp(indexes_a);
+    b_temp = reshape(b(indexes_a,:),numel(a_temp),[]);
     if ~isempty(indeces)
         if memmaped      
-            %rows = max(1,round(cm(i,1)-16)):min(options.d1,round(cm(i,1)+16));            
-            %cols = max(1,round(cm(i,2)-16)):min(options.d2,round(cm(i,2)+16));
             time_indeces = sort(indeces,'ascend');
             ff_time = [0,find(diff(time_indeces)>1),length(time_indeces)];
             time_intervals = mat2cell(time_indeces,1,diff(ff_time));
             y_temp = cell(1,length(time_intervals));
             parfor int = 1:length(time_intervals)
-                y_temp{int} = Yr.Y(min(rows):max(rows),min(cols):max(cols),time_intervals{int});
+                y_temp{int} = Yr.Yr(indexes_a,time_intervals{int});
             end
             %y_temp = Yr.Y(min(rows):max(rows),min(cols):max(cols),:);
             y_temp = cat(3,y_temp{:}); %cell2mat(y_temp);
@@ -114,11 +109,15 @@ for i = 1:K_m
     %        mY_space = double(mean(data(amask,indeces),2) - b(amask,:)*mean(f(:,indeces),2));
     %        mY_time = double(mean(data(amask,indeces)) - mean(b(amask,:))*f(:,indeces));
         else
-            y_temp = Yr(min(rows):max(rows),min(cols):max(cols),indeces);
+            if size(Yr, 3) > 1
+                sizY = size(Yr);
+                Yr = reshape(Yr, [prod(sizY(1:end-1)), sizY(end)]);
+            end
+            y_temp = Yr(indexes_a,indeces);
             y_temp = reshape(y_temp,[],length(indeces));   
         end
         mY_space = double(mean(y_temp,2) - b_temp*mean(f(:,indeces),2));
-        mY_time = double(mean(y_temp)-mean(b_temp)*f(:,indeces));
+        mY_time = double(mean(y_temp) - mean(b_temp)*f(:,indeces));
         rval_space(i) = corr(full(a_temp(:)),mY_space);
         rval_time(i) = corr(C(i,indeces)',mY_time');
     else
