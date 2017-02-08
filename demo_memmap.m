@@ -1,3 +1,7 @@
+% demo script for splitting the field of view in patches and processing in parallel
+% through memory mapping. See also run_pipeline.m for the complete  
+% pre-processing pipeline of large datasets
+
 clear;
 %% load file
 
@@ -47,11 +51,25 @@ options = CNMFSetParms(...
 
 [A,b,C,f,S,P,RESULTS,YrA] = run_CNMF_patches(data,K,patches,tau,p,options);
 
-%% order and plot
+%% classify components
+[ROIvars.rval_space,ROIvars.rval_time,ROIvars.max_pr,ROIvars.sizeA,keep] = classify_components(data,A,C,b,f,YrA,options);
 
-[A_or,C_or,S_or,P] = order_ROIs(A,C,S,P); % order components
+%% run GUI for modifying component selection (optional, close twice to save values)
+Cn = reshape(P.sn,sizY(1),sizY(2));  % background image for plotting
+run_GUI = false;
+if run_GUI
+    Coor = plot_contours(A,Cn,options,1); close;
+    GUIout = ROI_GUI(A,options,Cn,Coor,keep,ROIvars);   
+    options = GUIout{2};
+    keep = GUIout{3};    
+end
 
-contour_threshold = 0.95;                 % amount of energy used for each component to construct contour plot
-figure;
-[Coor,json_file] = plot_contours(A_or,reshape(P.sn,sizY(1),sizY(2)),contour_threshold,1); % contour plot of spatial footprints
-%savejson('jmesh',json_file,'filename');        % optional save json file with component coordinates (requires matlab json library)
+%% re-estimate temporal components
+
+A_keep = A(:,keep);
+C_keep = C(keep,:);
+options.p = 2;      % perform deconvolution
+[C2,f2,P2,S2,YrA2] = update_temporal_components_fast(data,A_keep,b,C_keep,f_keep,P,options);
+
+%% plot results
+plot_components_GUI(data,A_keep,C2,b,f2,Cn,options);

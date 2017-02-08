@@ -1,5 +1,6 @@
 clear;
 % same demo as demo_script.m but using the class @Sources2D
+% (possibly outdated at the moment)
 %% load file
 
 addpath(genpath('utilities'));
