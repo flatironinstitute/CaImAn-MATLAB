@@ -54,7 +54,7 @@ if memmaped
         YC(t:min(t+step_size-1,d),:) = double(Y.Yr(t:min(t+step_size-1,d),:))*C';
     end
 else
-    YC = Y*C';
+    YC = double(Y*C');
 end
 
 %% initialization 

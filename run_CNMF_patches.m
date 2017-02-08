@@ -305,6 +305,6 @@ fprintf(' done. \n');
 
 %% update temporal components
 fprintf('Updating temporal components... ')
-Pm.p = 2;
+Pm.p = 0;
 [C,f,P,S,YrA] = update_temporal_components_fast(data,A,b,C,fin,Pm,options);
 fprintf(' done. \n');

@@ -29,29 +29,67 @@ function [C,f,P,S,YrA] = update_temporal_components_fast(Y,A,b,Cin,fin,P,options
 % Written by: 
 % Eftychios A. Pnevmatikakis, Simons Foundation, 2016
 
-memmaped = isobject(Y);
-if memmaped
+defoptions = CNMFSetParms;
+if nargin < 7 || isempty(options); options = defoptions; end
+d1 = options.d1;
+d2 = options.d2;
+d3 = options.d3;
+d = prod([d1,d2,d3]);
+
+if isa(Y,'char')
+    [~,~,ext] = fileparts(Y);
+    ext = ext(2:end);
+    if strcmpi(ext,'tif') || strcmpi(ext,'tiff')
+        tiffInfo = imfinfo(Y);
+        filetype = 'tif';
+        T = length(tiffInfo);
+        sizY = [tiffInfo(1).Height,tiffInfo(1).Width,T];
+    elseif strcmpi(ext,'mat')
+        filetype = 'mem';
+        Y = matfile(Y,'Writable',true);
+        sizY = size(Y);
+        T = sizY(end);
+    elseif strcmpi(ext,'hdf5') || strcmpi(ext,'h5')
+        filetype = 'hdf5';
+        fileinfo = hdf5info(Y);
+        data_name = fileinfo.GroupHierarchy.Datasets.Name;
+        sizY = fileinfo.GroupHierarchy.Datasets.Dims;
+        T = sizY(end);
+    elseif strcmpi(ext,'raw')
+        filetype = 'raw';
+        fid = fopen(Y);
+        bitsize = 2;
+        imsize = d*bitsize;                                                   % Bit size of single frame
+        current_seek = ftell(fid);
+        fseek(fid, 0, 1);
+        file_length = ftell(fid);
+        fseek(fid, current_seek, -1);
+        T = file_length/imsize;
+        if d3 == 1; sizY = [d1,d2,T]; nd = 2; elseif d3 > 1; sizY = [d1,d2,d3,T]; nd = 3; end
+        fclose(fid);
+    end    
+elseif isobject(Y)
+    filetype = 'mem';
     sizY = size(Y,'Y');
-    d = prod(sizY(1:end-1));
     T = sizY(end);
-else
-    [d,T] = size(Y);
+else % array loaded in memory
+    filetype = 'mat';
+    Y = double(Y);
+    sizY = size(Y);
+    T = sizY(end);
 end
+
+
 if isempty(P) || nargin < 6
     active_pixels = find(sum(A,2));                                 % pixels where the greedy method found activity
     unsaturated_pixels = find_unsaturatedPixels(Y);                 % pixels that do not exhibit saturation
     options.pixels = intersect(active_pixels,unsaturated_pixels);   % base estimates only on unsaturated, active pixels                
 end
 
-defoptions = CNMFSetParms;
 if nargin < 7 || isempty(options); options = []; end
 if ~isfield(options,'deconv_method') || isempty(options.deconv_method); method = defoptions.deconv_method; else method = options.deconv_method; end  % choose method
-if ~isfield(options,'restimate_g') || isempty(options.restimate_g); restimate_g = defoptions.restimate_g; else restimate_g = options.restimate_g; end % re-estimate time constant (only with constrained foopsi)
-if ~isfield(options,'temporal_iter') || isempty(options.temporal_iter); ITER = defoptions.temporal_iter; else ITER = options.temporal_iter; end           % number of block-coordinate descent iterations
 if ~isfield(options,'bas_nonneg'); options.bas_nonneg = defoptions.bas_nonneg; end
 if ~isfield(options,'fudge_factor'); options.fudge_factor = defoptions.fudge_factor; end
-
-if isfield(P,'unsaturatedPix'); unsaturatedPix = P.unsaturatedPix; else unsaturatedPix = 1:d; end   % saturated pixels
 
 ff = find(sum(A)==0);
 if ~isempty(ff)
@@ -198,26 +236,33 @@ if p > 0
             if ii <= K
                 switch method
                      case 'constrained_foopsi'
-%                         if restimate_g
-%                             [cc,cb,c1,gn,sn,spk] = constrained_foopsi(Ytemp,[],[],[],[],options);
-%                             P.gn{ii} = gn;
-%                         else
-%                             [cc,cb,c1,gn,sn,spk] = constrained_foopsi(Ytemp,[],[],P.g,[],options);
-%                         end
-%                         gd = max(roots([1,-gn']));  % decay time constant for initial concentration
-%                         gd_vec = gd.^((0:T-1));
-%                         C(ii,:) = full(cc(:)' + cb + c1*gd_vec);
-%                         S(ii,:) = spk(:)';
-%                         P.b{ii} = cb;
-%                         P.c1{ii} = c1;           
-%                         P.neuron_sn{ii} = sn;
-                        [cc,spk,kernel] = deconvCa(Ytemp,[],[],true,false,[],5);                        
+                        try 
+                             if restimate_g
+                                [cc,cb,c1,gn,sn,spk] = constrained_foopsi(Ytemp,[],[],[],[],options);
+                                P.gn{ii} = gn;
+                            else
+                                [cc,cb,c1,gn,sn,spk] = constrained_foopsi(Ytemp,[],[],P.g,[],options);
+                             end
+                        catch
+                            options2 = options;
+                            options2.p = 0;
+                            [cc,cb,c1,gn,sn,spk] = constrained_foopsi(Ytemp,[],[],0,[],options2);
+                             P.gn{ii} = gn;
+                        end
+                        gd = max(roots([1,-gn']));  % decay time constant for initial concentration
+                        gd_vec = gd.^((0:T-1));
+                        C(ii,:) = full(cc(:)' + cb + c1*gd_vec);
                         S(ii,:) = spk(:)';
-                        P.b{ii} = median(Ytemp-cc(:)');
-                        C(ii,:) = cc(:)'+P.b{ii};
-                        P.c1{ii} = Ytemp(1)-cc(1);
-                        P.neuron_sn{ii} = std(Ytemp-cc(:)');
-                        P.gn{ii} = kernel.pars;                            
+                        P.b{ii} = cb;
+                        P.c1{ii} = c1;           
+                        P.neuron_sn{ii} = sn;
+%                         [cc,spk,kernel] = deconvCa(Ytemp,[],[],true,false,[],5);                        
+%                         S(ii,:) = spk(:)';
+%                         P.b{ii} = median(Ytemp-cc(:)');
+%                         C(ii,:) = cc(:)'+P.b{ii};
+%                         P.c1{ii} = Ytemp(1)-cc(1);
+%                         P.neuron_sn{ii} = std(Ytemp-cc(:)');
+%                         P.gn{ii} = kernel.pars;                            
                     case 'MCMC'
                         SAMPLES = cont_ca_sampler(Ytemp,params);
                         ctemp = make_mean_sample(SAMPLES,Ytemp);

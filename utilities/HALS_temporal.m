@@ -1,4 +1,4 @@
-function C = HALS_temporal(Y, A, C, maxIter,tol,nonneg,flag_AY)
+function [C,U] = HALS_temporal(Y, A, C, maxIter,tol,nonneg,flag_AY)
 %% run HALS by fixating all spatial components 
 % input: 
 %   Y:       d*T, fluorescence data or K*T, product A'*Y if flag_AY = true 
@@ -9,6 +9,7 @@ function C = HALS_temporal(Y, A, C, maxIter,tol,nonneg,flag_AY)
 %   noneg:   restrict output to be non-negative
 % output: 
 %   C: K*T, updated temporal components 
+%   U:      product A'*Y (for downstream use)
 
 % Author: Pengcheng Zhou, Carnegie Mellon University and Eftychios A. Pnevmatikakis, 
 % adapted from Johannes Friedrich's NIPS paper "Fast Constrained Non-negative Matrix
@@ -27,7 +28,7 @@ if flag_AY
 else
     U = mm_fun(A,Y);
 end
-%U = A'*Y; 
+ 
 V = A'*A; 
 aa = diag(V);   % squares of l2 norm all all components 
 %% updating

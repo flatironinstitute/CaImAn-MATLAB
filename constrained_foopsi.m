@@ -267,7 +267,11 @@ end
         end
         xc = xc(:);
         A = toeplitz(xc(lags+(1:lags)),xc(lags+(1:p))) - sn^2*eye(lags,p);
-        g = pinv(A)*xc(lags+2:end);            
+        try 
+            g = pinv(A)*xc(lags+2:end);            
+        catch
+            g = 0;
+        end
     end
 
     function [f,grad] = lagrangian_temporal_gradient(Al,thr,y_raw,bas_flag,c1_flag)

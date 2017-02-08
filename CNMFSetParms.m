@@ -124,6 +124,15 @@ Names = [
     'min_pixel          ' % minimum number of nonzero pixels for a neuron 
     'bd                 ' % number of pixels to be ignored in the boundary 
     'deconv_flag        ' % perform deconvolution or not     
+    % parameters for max probability test (trace_fit_extreme.m)
+    'max_pr_thr         ' % threshold for keeping components (default: 0.9)
+    'fr                 ' % imaging frame rate in Hz (defaut: 30)
+    't_int              ' % length of each trial in sec (default: 0.25)
+    'sn_fac             ' % multiplicative factor for estimated noise level (default: 1)
+    % parameters for thresholding based on size (classify_components.m)
+    'max_size_thr       ' % maximum size of each component in pixels (default: 300)
+    'min_size_thr       ' % minimum size of each component in pixels (default: 9)
+    'size_thr           ' % fraction of max value for thresholding each component before determining its size (default 0.2)
     ];
 
 [m,n] = size(Names);
@@ -321,6 +330,15 @@ Values = [
     {5}
     {3}    
     {true}
+    % parameters for max probability test (trace_fit_extreme.m)
+    {0.9}
+    {30}
+    {0.25}
+    {1}
+    % parameters for size based thresholding (classify_components.m)
+    {320}
+    {9}
+    {0.2}
     ];
 
 for j = 1:m
