@@ -57,7 +57,7 @@ else
     end
     data.Yr(numel(Yt),numFrames) = Yt(1)*0;
     for i = sframe:chunksize:numFrames
-        Ytemp = tiff_reader(filename,i,min(chunksize,numFrames-i+1));        
+        Ytemp = read_file(filename,i,min(chunksize,numFrames-i+1));        
         Yr = reshape(Ytemp,prod(sizY(1:end-1)),[]);        
         nY = min(nY,min(Yr(:)));
         data.Yr(:,i:i-1+size(Yr,2)) = Yr;
