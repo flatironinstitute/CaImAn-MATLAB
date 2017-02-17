@@ -113,10 +113,10 @@ options = CNMFSetParms(...
 [A,b,C,f,S,P,RESULTS,YrA] = run_CNMF_patches(data,K,patches,tau,p,options);
 
 %% compute correlation image on a small sample of the data (optional - for visualization purposes) 
-Cn = correlation_image(single(data.Y(:,:,1:2000)),8);
+Cn = correlation_image(single(data.Y(:,:,1:min(2000,data.sizY(1,3)))),8);
 
 %% classify components
-[ROIvars.rval_space,ROIvars.rval_time,ROIvars.max_pr,ROIvars.sizeA,keep] = classify_components(Y,A,C,b,f,YrA,options);
+[ROIvars.rval_space,ROIvars.rval_time,ROIvars.max_pr,ROIvars.sizeA,keep] = classify_components(data,A,C,b,f,YrA,options);
 
 %% run GUI for modifying component selection (optional, close twice to save values)
 run_GUI = true;
