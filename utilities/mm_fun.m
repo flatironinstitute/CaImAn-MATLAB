@@ -1,4 +1,7 @@
-function AY = mm_fun(A,Y,chunk_size)
+function AY = mm_fun(A,Y,chunk_size,run_paralel,FOV)
+if ~exist('run_paralel', 'var') || isempty(run_paralel); run_paralel = true; end
+if ~exist('chunk_size', 'var') || isempty(chunk_size); chunk_size = 2e4; end
+if ~exist('FOV', 'var') || isempty(FOV); FOV = [512,512]; end
 
 % multiply A*Y or A'*Y or Y*A or Y*C' depending on the dimension for loaded
 % or memory mapped Y.
@@ -25,7 +28,6 @@ if isa(Y,'char')
     elseif strcmpi(ext,'raw')
         filetype = 'raw';
         fid = fopen(Y);
-        FOV = [512,512];
         bitsize = 2;
         imsize = FOV(1)*FOV(2)*bitsize;                                                   % Bit size of single frame
         current_seek = ftell(fid);
@@ -70,12 +72,32 @@ switch filetype
             error('matrix dimensions do not agree');
         end
     case 'mem'
-        if nargin < 3 || isempty(chunk_size); chunk_size = 2e4; end
-        if d1a == d1y
-            if nargin < 3 || isempty(chunk_size); chunk_size = 2e4; end
+
+        if d1a == d1y    
             AY = zeros(d2a,d2y);
-            for i = 1:chunk_size:d1a
-                AY = AY + A(i:min(i+chunk_size-1,d1a),:)'*double(Y.Yr(i:min(i+chunk_size-1,d1a),:));
+            if ~run_paralel
+                for i = 1:chunk_size:d1a
+                    AY = AY + A(i:min(i+chunk_size-1,d1a),:)'*double(Y.Yr(i:min(i+chunk_size-1,d1a),:));
+                end
+            else % adding parallel option
+                chunks = 1:chunk_size:d1a; corenum = 4;
+                nchunks = numel(chunks); % number of indexes
+                chunk_idx = arrayfun(@(i) chunks(i:min((i+corenum-1), nchunks)), ...
+                    1:corenum:nchunks, 'UniformOutput', false); % indices of the patches in each batch
+                for i = 1:numel(chunk_idx)
+                    batch2run = chunk_idx{i};
+                    parfor ii = 1:numel(batch2run)
+                        idx = batch2run(ii);
+                        tempY = Y.Yr(idx:min(idx+chunk_size-1,d1a),:);
+                        tempA = A(idx:min(idx+chunk_size-1,d1a),:);
+                        AYt{ii} = tempA'*double(tempY);
+                    end
+                    AY = AY + sum(cat(3, AYt{:}),3);
+                    clear AYt
+                    if mod(i, 20) == 0
+                        fprintf('%2.1f%% of chunks completed \n', i*100/numel(chunk_idx));
+                    end
+                end
             end
         elseif d1a == d2y
             AY = zeros(d1y,d2a);
@@ -83,7 +105,6 @@ switch filetype
                 AY(i:min(i+chunk_size-1,d1),:) = double(Y.Yr(i:min(i+chunk_size-1,d1a),:))*A;
             end
         elseif d2a == d1y
-            if nargin < 3 || isempty(chunk_size); chunk_size = 2e4; end
             AY = zeros(d1a,d2y);
             for i = 1:chunk_size:d2a
                 AY = AY + A(:,i:min(i+chunk_size-1,d1a))'*double(Y.Yr(i:min(i+chunk_size-1,d1a),:));
@@ -98,7 +119,6 @@ switch filetype
             error('matrix dimensions do not agree');
         end
     case 'hdf5'
-        if nargin < 3 || isempty(chunk_size); chunk_size = 2e3; end
         if d1a == d1y            
             AY = zeros(d2a,d2y);
             for t = 1:chunk_size:T
