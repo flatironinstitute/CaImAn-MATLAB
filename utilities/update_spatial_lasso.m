@@ -75,7 +75,7 @@ while repeat && miter < maxIter
             lam = 0;
         end
         LAM = norminv(q)*sn*lam;
-        ak = max(0, A(tmp_ind, k)+(U(tmp_ind, k) - LAM(tmp_ind) - A(tmp_ind,:)*V(:, k))/cc(k)); 
+        ak = max(0, full(A(tmp_ind, k))+(U(tmp_ind, k) - LAM(tmp_ind) - full(A(tmp_ind,:))*V(:, k))/cc(k)); 
         A(tmp_ind, k) = ak; 
     end
     miter = miter + 1;
