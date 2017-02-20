@@ -8,3 +8,7 @@ CSHL16/dendritic_demo.zip
 CSHL16/__MACOSX/._dendritic_demo.tif
 CSHL16/dendritic_demo.tif
 endoscope/demos/demos_labs/*.*
+
+*.zip
+
+dendritic_demo.tif
