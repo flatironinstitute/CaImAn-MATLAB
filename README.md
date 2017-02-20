@@ -14,7 +14,16 @@ New: Motion Correction
 ======
 We have just released [NoRMCorre](https://github.com/simonsfoundation/NoRMCorre) a new toolbox for NOn-Rigid Motion CORREction. You can find it in [Matlab](https://github.com/simonsfoundation/NoRMCorre) as a standalone package to be integrated with this package, or Python as part of [CaImAn](https://github.com/simonsfoundation/CaImAn).
 
-Code description and related packages
+Code description
+=======
+
+The best way to start is by looking at the various demos.
+- [demo_script.m](https://github.com/epnev/ca_source_extraction): A simple demo with a small dataset included in the repo to display the notation and basic operations
+- [demo_memmap.m](https://github.com/epnev/ca_source_extraction/blob/master/demo_memmap.m): A larger demo displaying the process of memory mapping and spliting the field of view in patches to be processed in parallel and then combined.
+- [run_pipeline.m](https://github.com/epnev/ca_source_extraction/blob/master/run_pipeline.m): Demo for the complete pipeline of motion correction, source separation and spike extraction for large datasets. More details about the pipeline can be found [here](https://github.com/epnev/ca_source_extraction/wiki/Complete-analysis-pipeline).
+- [3D/demo_3D.m](https://github.com/epnev/ca_source_extraction/blob/master/3D/demo_3D.m): Demo for processing of 3D volumetric imaging data.
+
+Related packages
 =======
 
 This repository contains a MATLAB implementation of the spatio-temporal demixing, i.e., (source extraction) code for large scale calcium imaging data. Related code can be found in the following links:
