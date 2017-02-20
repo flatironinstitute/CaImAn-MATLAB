@@ -57,12 +57,14 @@ plotCenteroverY(Cn, center, [d1,d2,d3]);  % plot found centers against max-proje
 %% update spatial components
 Yr = reshape(Y,d,T);
 %clear Y;
-[A,b,Cin] = update_spatial_components(Yr,Cin,fin,[Ain,bin],P,options);
+[A,b,Cin] = update_spatial_components(demo,Cin,fin,[Ain,bin],P,options);
 
 %% update temporal components
 P.p = 0;
-[C,f,P,S] = update_temporal_components(Yr,A,b,Cin,fin,P,options);
+[C,f,P,S,YrA] = update_temporal_components(Yr,A,b,Cin,fin,P,options);
 
+%%
+%[ROIvars.rval_space,ROIvars.rval_time,ROIvars.max_pr,ROIvars.sizeA,keep] = classify_components(Yr,A,C,b,f,YrA,options);
 %% plot components
 %plot_components_3D_GUI(Y,A,C,b,f,Cn,options)
 %% merge found components and repeat (optional)
