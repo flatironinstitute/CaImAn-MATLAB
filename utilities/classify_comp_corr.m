@@ -85,8 +85,11 @@ for i = 1:K_m
     [cols,plns] = ind2sub([options.d2,options.d3],temp);
     if options.d3 > 1
         a_temp = reshape(full(A(:,i)),options.d1,options.d2,options.d3);
+        a_temp = a_temp(min(rows):max(rows),min(cols):max(cols),min(plns):max(plns));
+    else
+        a_temp = a_temp(min(rows):max(rows),min(cols):max(cols));
     end
-    a_temp = a_temp(min(rows):max(rows),min(cols):max(cols),min(plns):max(plns));
+    
     if options.d3 == 1
         b_temp = reshape(b_rs(min(rows):max(rows),min(cols):max(cols),:),numel(a_temp),[]);
     else
