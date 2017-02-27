@@ -8,7 +8,7 @@ function [A,C] = update_spatial_lasso(Y, A, C, IND, sn, q, maxIter, options)
 %       C:    K x T,  temporal components + background
 %     IND:    K x T,  spatial extent for each component
 %      sn:    d x 1,  noise std for each pixel
-%       q:    scalar, control probability for FDR (default: 0.975)
+%       q:    scalar, control probability for FDR (default: 0.75)
 % maxIter:    maximum HALS iteration (default: 40)
 % options:    options structure
 
