@@ -57,7 +57,7 @@ plotCenteroverY(Cn, center, [d1,d2,d3]);  % plot found centers against max-proje
 %% update spatial components
 Yr = reshape(Y,d,T);
 %clear Y;
-[A,b,Cin] = update_spatial_components(demo,Cin,fin,[Ain,bin],P,options);
+[A,b,Cin] = update_spatial_components(Yr,Cin,fin,[Ain,bin],P,options);
 
 %% update temporal components
 P.p = 0;
