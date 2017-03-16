@@ -50,15 +50,23 @@ if ~isfield(options,'classify_comp') || isempty(options.classify_comp); options.
 memmaped = isobject(data);
 if memmaped
     sizY = data.sizY;
+    if ~ismember('F_dark',who(data));
+        if ismember('nY',who(data))
+            data.F_dark = data.nY;
+        else
+            data.F_dark = 0;
+        end
+    end
+    F_dark = data.F_dark;
 else    % create a memory mapped object named data_file.mat    
     Y = data;
     clear data;
     sizY = size(Y);
     Yr = reshape(Y,prod(sizY(1:end-1)),[]);
-    nY = min(Yr(:));
+    F_dark = min(Yr(:));
     %Yr = Yr - nY;
     if options.create_memmap
-        save('data_file.mat','Yr','Y','nY','sizY','-v7.3');
+        save('data_file.mat','Yr','Y','F_dark','sizY','-v7.3');
         data = matfile('data_file.mat','Writable',true);
         memmaped = true;
     else
@@ -118,7 +126,8 @@ parfor i = 1:length(patches)
         [d1,d2,d3,T] = size(Y);
     end
     %if ~(isa(Y,'single') || isa(Y,'double'));    Y = single(Y);  end
-    Y = double(Y);
+    Y = double(Y - F_dark);
+    Y(isnan(Y)) = F_dark;
     d = d1*d2*d3;
     options_temp = options;
     options_temp.d1 = d1; options_temp.d2 = d2; options_temp.d3 = d3;
@@ -275,7 +284,7 @@ fprintf(' done. \n');
 
 if options.classify_comp
     fprintf('Classifying components...')
-    [rval_space,rval_time,ind_space,ind_time] = classify_comp_corr(data,Am,Cm,bin,fin,options);
+    [rval_space,rval_time,ind_space,ind_time] = classify_comp_corr(data,Am,Cm,[bin,ones(d,1)],[fin;F_dark*ones(1,size(fin,2))],options);
     ind = ind_space & ind_time;
     fprintf(' done. \n');
 else
@@ -300,7 +309,8 @@ options.d2 = sizY(2);
 if length(sizY) == 4; options.d3 = sizY(3); end
 if ~isfield(Pm,'mis_values'); Pm.mis_values = []; end
 if ~isfield(Pm,'mis_entries'); Pm.mis_entries = []; end
-[A,b,C,Pm] = update_spatial_components(data,C,fin,[A,bin],Pm,options);
+%[A,b,C,Pm] = update_spatial_components(data,C,fin,[A,bin],Pm,options);
+[A,b,C,Pm] = update_spatial_components(data,C,fin,A,Pm,options);
 fprintf(' done. \n');
 
 %% update temporal components
