@@ -176,7 +176,7 @@ for i = 1:numFiles
 end
     
 F0 = cellfun(@plus, cellfun(@(x,y) x-y,F_us,Fd_us,'un',0), Ab_d,'un',0);   % add and get F0 fluorescence for each component
-F_df = cellfun(@(x,y) x./y, Fd_us, Df ,'un',0);                            % DF/F value
+F_df = cellfun(@(x,y) x./y, Fd_us, F0 ,'un',0);                            % DF/F value
 %% detrend each segment and then deconvolve
 
 
