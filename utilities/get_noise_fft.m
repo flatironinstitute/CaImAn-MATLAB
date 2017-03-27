@@ -20,7 +20,7 @@
         N = min(sizY(end),options.max_timesteps);
         if N < sizY(end)
            %Y = reshape(Y,prod(sizY(1:end-1)),[]);
-           switch ndims(A), 
+           switch ndims(Y), 
                case 3, 
                     Y(:,:,N+1:end) = [];
                case 4, 
