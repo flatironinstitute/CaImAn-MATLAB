@@ -133,6 +133,11 @@ Names = [
     'max_size_thr       ' % maximum size of each component in pixels (default: 300)
     'min_size_thr       ' % minimum size of each component in pixels (default: 9)
     'size_thr           ' % fraction of max value for thresholding each component before determining its size (default 0.2)
+    % parameters for registering components across different sessions (register_ROIs.m)
+    'dist_exp           ' % exponent for calculating the distance between different ROIs (default: 1)
+    'dist_thr           ' % distance threshold above which dist = Inf (default: 0.5)
+    'dist_maxthr        ' % max thresholding for components before turing into binary masks (default: 0.15)
+    'dist_overlap_thr   ' % threshold for detecting if one ROI is a subset of another (deafult: 0.8)
     ];
 
 [m,n] = size(Names);
@@ -339,6 +344,11 @@ Values = [
     {320}
     {9}
     {0.2}
+    % parameters for registering components across different sessions (register_ROIs.m)
+    {1}
+    {0.5}
+    {0.15}
+    {0.8}
     ];
 
 for j = 1:m
