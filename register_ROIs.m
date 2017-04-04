@@ -55,6 +55,7 @@ if align_flag
     
     A_backup2 = A2; %store initial values in any case
     parfor i = 1:K2
+       warning('off','MATLAB:mat2cell:TrailingUnityVectorArgRemoved');
        a_temp = reshape(full(A2(:,i)),siz);
        a_temp = apply_shifts(a_temp,global_shift(1),options_mc);   
        A2(:,i) = sparse(a_temp(:));
