@@ -73,7 +73,7 @@ else    % create a memory mapped object named data_file.mat
         data = Yr;
     end
 end
-
+F_dark = double(F_dark);
 if ~isfield(options,'d1') || isempty(options.d1); options.d1 = sizY(1); end
 if ~isfield(options,'d2') || isempty(options.d2); options.d2 = sizY(2); end
 if ~isfield(options,'d3') || isempty(options.d3); if length(sizY) == 3; options.d3 = 1; else options.d3 = sizY(3); end; end
@@ -284,6 +284,9 @@ fprintf(' done. \n');
 
 if options.classify_comp
     fprintf('Classifying components...')
+    options.space_thresh = 0.3;
+    options.time_thresh = 0.3;
+    options.max_pr_thr = 0.75;
     [rval_space,rval_time,ind_space,ind_time] = classify_comp_corr(data,Am,Cm,[bin,ones(d,1)],[fin;F_dark*ones(1,size(fin,2))],options);
     ind = ind_space & ind_time;
     fprintf(' done. \n');
