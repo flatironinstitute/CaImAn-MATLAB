@@ -69,7 +69,7 @@ end
 A_keep = A(:,keep);
 C_keep = C(keep,:);
 options.p = 2;      % perform deconvolution
-[C2,f2,P2,S2,YrA2] = update_temporal_components_fast(data,A_keep,b,C_keep,f_keep,P,options);
+[C2,f2,P2,S2,YrA2] = update_temporal_components_fast(data,A_keep,b,C_keep,f,P,options);
 
 %% plot results
 plot_components_GUI(data,A_keep,C2,b,f2,Cn,options);
