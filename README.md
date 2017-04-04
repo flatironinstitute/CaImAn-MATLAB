@@ -92,29 +92,3 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-
-[//]: #  (function name                           | description )
-[//]: #  (----------------------------------------|-----------------------------------)
-[//]: #  (demo_script.m                           | wrapper code <br />)
-[//]: #  (demoMovie.tif                           | Sample dataset for running the code (by W. Yang and D. Peterka) <br />)
-[//]: #  (update_spatial_components.m             | update spatial components given temporal components and data <br />)
-[//]: #  (update_temporal_components.m            | update temporal components given spatial components and data <br />)
-[//]: #  (merge_ROIs.m                            | merge spatially overlapping components that are temporally correlated <br />)
-[//]: #  (utilities/arpfit.m                      | estimation of noise level for every pixel and global time constants <br />)
-[//]: #  (utilities/bigread2.m                    | read (parts of) large tiff stacks)
-[//]: #  (utilities/com.m:                        | calculation of the center of mass of each component <br />)
-[//]: #  (utilities/correlation_image.m           | calculates the correlation image of the movie <br />)
-[//]: #  (utilities/extract_DF_F.m                | transforming the temporal components in the DF/F domain <br />)
-[//]: #  (utilities/graph_connected_comp.m        | finds the connected components in a graph <br />)
-[//]: #  (utilities/greedyROI2d.m                 | Greedy method for initializing the spatial and temporal components <br />)
-[//]: #  (utilities/interp_missing_data.m         | Filling in missing data using linear interpolation <br />)
-[//]: #  (utilities/lars_regression_noise.m       | solve a basis pursuit denoising problem using the LARS algorithm <br />)
-[//]: #  (utilities/make_G_matrix.m               | construct a convolution/deconvolution matrix <br />)
-[//]: #  (utilities/make_patch_video.m            | construct a video that displays the results of the algorithm <br />)
-[//]: #  (utilities/order_ROIs.m                  | order found components based on their temporal activation and spatial size <br />)
-[//]: #  (utilities/plain_foopsi.m                | projection of fluorescence onto the cone formed by the indicator dynamics )
-[//]: #  (utilities/plot_contours.m               | contour plot of found components and creation of a json file <br />)
-[//]: #  (utilities/tiff_reader.m                 | loading a tiff stack into matlab <br />)
-[//]: #  (utilities/threshold_components.m        | mild post-processing of spatial components <br />)
-[//]: #  (utilities/view_patches.m                | plotting of each found component and its temporal activation <br />)
