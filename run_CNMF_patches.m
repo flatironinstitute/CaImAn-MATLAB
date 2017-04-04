@@ -309,8 +309,7 @@ options.d2 = sizY(2);
 if length(sizY) == 4; options.d3 = sizY(3); end
 if ~isfield(Pm,'mis_values'); Pm.mis_values = []; end
 if ~isfield(Pm,'mis_entries'); Pm.mis_entries = []; end
-%[A,b,C,Pm] = update_spatial_components(data,C,fin,[A,bin],Pm,options);
-[A,b,C,Pm] = update_spatial_components(data,C,fin,A,Pm,options);
+[A,b,C,Pm] = update_spatial_components(data,C,fin,[A,bin],Pm,options);
 fprintf(' done. \n');
 
 %% update temporal components
