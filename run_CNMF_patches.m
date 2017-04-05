@@ -141,10 +141,21 @@ parfor i = 1:length(patches)
     P.p = 0;
     options_temp.temporal_parallel = 0;
     [C,f,P,S] = update_temporal_components(Yr,A,b,Cin,fin,P,options_temp); % turn off parallel updating for temporal components
-    [Am,Cm,~,~,P] = merge_components(Yr,A,b,C,f,P,S,options_temp);
-    [A2,b2,Cm,P] = update_spatial_components(Yr,Cm,f,[Am,b],P,options_temp);
-    P.p = p;
-    [C2,f2,P2,S2] = update_temporal_components(Yr,A2,b2,Cm,f,P,options_temp);
+    if ~isempty(A) && ~isempty(C)
+        [Am,Cm,~,~,P] = merge_components(Yr,A,b,C,f,P,S,options_temp);
+        [A2,b2,Cm,P] = update_spatial_components(Yr,Cm,f,[Am,b],P,options_temp);
+        P.p = p;
+        [C2,f2,P2,S2] = update_temporal_components(Yr,A2,b2,Cm,f,P,options_temp);
+    else
+        %Am = A; Cm = C;
+        A2 = A;
+        b2 = b;
+        C2 = C;
+        f2 = f;
+        S2 = S;
+        P2 = P;
+    end
+    
     RESULTS(i).A = A2;
     RESULTS(i).C = C2;
     RESULTS(i).b = b2;
@@ -287,7 +298,8 @@ if options.classify_comp
     options.space_thresh = 0.3;
     options.time_thresh = 0.3;
     options.max_pr_thr = 0.75;
-    [rval_space,rval_time,ind_space,ind_time] = classify_comp_corr(data,Am,Cm,[bin,ones(d,1)],[fin;F_dark*ones(1,size(fin,2))],options);
+    %[rval_space,rval_time,ind_space,ind_time] = classify_comp_corr(data,Am,Cm,[bin,ones(d,1)],[fin;F_dark*ones(1,size(fin,2))],options);
+    [rval_space,rval_time,ind_space,ind_time] = classify_comp_corr(data,Am,Cm,bin,fin,options);
     ind = ind_space & ind_time;
     fprintf(' done. \n');
 else
