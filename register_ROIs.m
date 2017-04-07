@@ -1,9 +1,13 @@
 function [matched_ROIs,nonmatched_1,nonmatched_2,A2] = register_ROIs(A1,A2,options,template1,template2,options_mc)
-
-% register ROIs from two different sessions. Before registration the ROIs 
+% REGISTER_ROIs - register ROIs from two different recording sessions
+%
+%   [MATCHED_ROIS, NONMATCHED_1, NONMATCHED_2, A2] = REGISTER_ROIS( ...
+%         A1, A2, OPTIONS, TEMPLATE1, TEMPLATE2, OPTIONS_MC)
+%
+% Register ROIs from two different sessions. Before registration the ROIs 
 % the displacement between the FOVs of session1 and session2 is calculated
 % and the ROIs from session 2 are aligned to the FOV of session 1.
-
+%
 % INPUTS:
 % A1:               matrix of spatial components from session 1 (sparse, d x K1)
 % A2:               matrix of spatial components from session 2 (sparse, d x K2)
@@ -24,6 +28,11 @@ function [matched_ROIs,nonmatched_1,nonmatched_2,A2] = register_ROIs(A1,A2,optio
 % nonmatched_1:     components from first session that are not matched
 % nonmatched_2:     components from second session that are not matched
 % A2:               aligned ROIs
+%
+%
+
+
+
 
 defoptions = CNMFSetParms;
 if ~exist('options','var'); options = defoptions; end
