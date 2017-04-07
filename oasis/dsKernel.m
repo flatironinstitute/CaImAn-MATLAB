@@ -1,5 +1,8 @@
 function kernel_new = dsKernel(kernel, tsub)
-%% downsample/upsample the convolution kernel 
+% DSKERNEL - Downsample/upsample a convolution kernel
+%
+%   KERNEL_NEW = DSKERNEL(KERNEL, TSUB)
+%
 %% inputs:
 %   kernel: struct variable with fields {'kernel_type', 'pars', 'nMax', 'lb', 'ub', 'bound_pars'}
 %       kernel_type: string, convolution kernel type. now support {'exp',
@@ -11,7 +14,7 @@ function kernel_new = dsKernel(kernel, tsub)
 %       bound_pars: logical variable, bound the parameters or not {1, 0}
 %% outputs
 %   kernel: struct variable
-
+%
 %% Author: Pengcheng Zhou, Carnegie Mellon University, 2016
 
 kernel_new = kernel; 

@@ -1,12 +1,35 @@
 function [P,Y] = preprocess_data(Y,p,options)
-
-% data pre-processing for:
-% (i)   identifying and interpolating missing entries (assumed to have the
-%       value NaN). Interpolated entries are passed back to Y.
-% (ii)  identifying saturated pixels
-% (iii) estimating noise level for every pixel
-% (iv)  estimating global discrete time constants (if needed)
-% This function replaces arpfit, present in the previous versions of the code.
+% PREPROCESS_DATA - Preprocess data for CNMF analysis of image signals
+%
+%   [P_PARMS,Y] = PREPROCESS_DATA(Y, P_ORDER, OPTIONS)
+%  
+% Inputs:
+%    Y - the image data to be examined
+%    P_ORDER - The order of the autoregressive system
+%    OPTIONS - A structure of options (see help CNMFSetParms)
+%
+% Outputs:
+%    P_PARMS - A structure of parameters extracted from the pre-processed data
+%    P_PARMS has the following fields:
+%
+%       Fieldname:                       | Description
+%       --------------------------------------------------------------------------
+%       p                                |  P_ORDER as above
+%       mis_data                         |  Index locations of missing (NaN) values in Y
+%       mis_values                       |  Interpolated values at the missing index locations
+%       pixels                           |  Index values of pixels that are not saturated
+%       sn                               |  Noise power of each pixel
+%       g                                |  Autoregressive model parameters
+%       
+%    Y - A processed version of the data Y with the following changes:
+%      (i)   identifying and interpolating missing entries (assumed to have the
+%            value NaN). Interpolated entries are passed back to Y.
+%      (ii)  identifying saturated pixels
+%      (iii) estimating noise level for every pixel
+%      (iv)  estimating global discrete time constants (if needed)
+%  
+% This function replaces ARPFIT, present in the previous versions of the code.
+%
 
 % Author: Eftychios A. Pnevmatikakis
 %           Simons Foundation, 2015

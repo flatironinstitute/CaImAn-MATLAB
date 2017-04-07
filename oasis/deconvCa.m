@@ -1,5 +1,9 @@
 function [c, s, kernel, iter] = deconvCa(y, kernel, smin, fit_gt, debug_on, sn, maxIter, theta, lambda)
-%% deconvolve calcium traces to infer spike counts
+% DECONVCA - deconvolve calcium traces to infer spike counts
+%
+%  [C,S,KERNEL,ITER] = DECONVA(Y, KERNEL, SMIN, FIT_GT, DEBUG_ON,...
+%        SN, MAXITER, THETA, LAMBDA)
+%
 %% inputs:
 %   y:  1*T vector, observed calcium traces
 %   kernel: struct variable with two fields {'fhandle', 'pars', nMax}. kernel

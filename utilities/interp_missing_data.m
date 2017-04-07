@@ -1,7 +1,21 @@
 function Y_interp = interp_missing_data(Y)
-
-% interpolate missing data using linear interpolation for each pixel
-% produce a sparse matrix with the values 
+% INTERP_MISSING_DATA - interpolate missing data using linear interpolation for each pixel
+%
+%  [Y_INTERP] = INTERP_MISSING_DATA(Y)
+%
+%  Given a matrix Y with possible NaN values, this function produces
+%  a sparse matrix Y_INTERP that has the linearly interpolated values
+%  of each pixel that exhibits a NaN value. The values are interpolated
+%  over the last dimension of Y. 
+%
+%  Example:
+%     yy = [0 0 ; 0 0];
+%     yy(:,:,2) = [0 NaN ; 0 2];
+%     yy(:,:,3) = [0.1 0.2 ; 0 2.3];
+%     Y_interp = interp_missing_data(yy);
+%     % Y_interp is a sparse matrix :    (3,2)  0.1000
+%
+%  See also: INTERP1
 
 sizY = size(Y);
 dimY = length(sizY);
