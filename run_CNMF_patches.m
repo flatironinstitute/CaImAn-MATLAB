@@ -47,7 +47,7 @@ if ~memmaped
     Y = data;
     clear data;  % TODO check if necessary
     sizY = size(Y);
-    Yr = reshape(Y,prod(sizY(1:end-1)),[]);
+    Yr = reshape(Y,[],sizY(end));
     F_dark = min(Yr(:));
 
     % create a read-only memory mapped object named data_file.mat
@@ -136,13 +136,15 @@ end
 fprintf('Combining results from different patches... \n');
 d = prod(sizY(1:end-1));
 A = sparse(d,n_patches*K);
+
 P.sn = zeros(sizY(1:end-1));
-if isfield(RESULTS(1).P,'sn_ds'); P.sn_ds = zeros(sizY(1:end-1)); end
-IND = zeros(sizY(1:end-1));
 P.b = {};
 P.c1 = {};
 P.gn = {};
 P.neuron_sn = {};
+if isfield(RESULTS(1).P,'sn_ds')
+    P.sn_ds = zeros(sizY(1:end-1));
+end
 
 if options.cluster_pixels
     P.active_pixels = zeros(sizY(1:end-1));
@@ -154,7 +156,7 @@ if options.cluster_pixels
 end
 
 cnt = 0;
-B = sparse(prod(sizY(1:end-1)),n_patches);
+B = sparse(d,n_patches);
 MASK = zeros(sizY(1:end-1));
 F = zeros(n_patches,sizY(end));
 for i = 1:n_patches
@@ -176,7 +178,6 @@ for i = 1:n_patches
         MASK(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4)) = MASK(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4)) + 1;
         P.sn(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4)) = reshape(RESULTS(i).P.sn,patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1);
         if isfield(RESULTS(i).P,'sn_ds'); P.sn_ds(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4)) = reshape(RESULTS(i).P.sn_ds,patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1); end
-        IND(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4)) = IND(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4)) + 1;
         if options.cluster_pixels
             P.active_pixels(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4)) = P.active_pixels(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4)) + ...
                 reshape(RESULTS(i).P.active_pixels,patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1);
@@ -188,7 +189,6 @@ for i = 1:n_patches
         MASK(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6)) = MASK(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6)) + 1;
         P.sn(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6)) = reshape(RESULTS(i).P.sn,patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1,patches{i}(6)-patches{i}(5)+1);
         if isfield(RESULTS(i).P,'sn_ds'); P.sn_ds(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6)) = reshape(RESULTS(i).P.sn_ds,patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1,patches{i}(6)-patches{i}(5)+1);  end
-        IND(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6)) = IND(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6)) + 1;
         if options.cluster_pixels
             P.active_pixels(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6)) = P.active_pixels(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6)) + ...
                 reshape(RESULTS(i).P.active_pixels,patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1,patches{i}(6)-patches{i}(5)+1);
@@ -203,8 +203,8 @@ for i = 1:n_patches
     F(i,:) = RESULTS(i).f;
 end
 A(:,cnt+1:end) = [];
-A = spdiags(1./MASK(:),0,prod(sizY(1:end-1)),prod(sizY(1:end-1)))*A;
-B = spdiags(1./MASK(:),0,prod(sizY(1:end-1)),prod(sizY(1:end-1)))*B;
+A = spdiags(1./MASK(:),0,d,d)*A;
+B = spdiags(1./MASK(:),0,d,d)*B;
 C = cell2mat({RESULTS(:).C}');
 S = cell2mat({RESULTS(:).S}');
 ff = find(sum(A,1)==0);
