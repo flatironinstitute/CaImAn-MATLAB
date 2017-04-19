@@ -18,9 +18,9 @@ function [A,b,C,f,S,P,RESULTS,YrA] = run_CNMF_patches(data,K,patches,tau,p,optio
 %            data.sizY   (dimensions of the original dataset)
 %            data.nY     (minimum value of dataset)
 %          OR the original dataset in 3d/4d format in which case the user
-%          chooses whether to create a memory mapped file 
+%          chooses whether to create a memory mapped file
 % K:       number of components to be found in each patch
-% patches: cell array containing the start and end points of each patch   
+% patches: cell array containing the start and end points of each patch
 % tau:     half-size of each cell for initializing the components
 % p:       order of autoregressive progress
 % options: struct for algorithm parameters
@@ -28,9 +28,9 @@ function [A,b,C,f,S,P,RESULTS,YrA] = run_CNMF_patches(data,K,patches,tau,p,optio
 % OUTPUTS:
 % A:       Matrix of spatial components
 % b:       Spatial background
-% C:       Matrix of temporal components   
+% C:       Matrix of temporal components
 % f:       Temporal background
-% P:       Struct for neuron parameters   
+% P:       Struct for neuron parameters
 % RESULTS: Results of the CNMF algorithm on individual patches
 % YrA:     Residual signal at the level of each component
 %
@@ -91,27 +91,25 @@ end
 if nargin < 3 || isempty(patches)
     patches = construct_patches(sizY(1:end-1),[50,50]);
 end
+n_patches = length(patches);
 
-Yc = cell(length(patches),1);
+Yc = cell(n_patches,1);
 if ~memmaped
-    for i = 1:length(patches)
+    for i = 1:n_patches
         if length(sizY) == 3
             Yc{i} = Y(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),:);
         else
             Yc{i} = Y(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6),:);
         end
     end
-end        
+end
 
 if nargin < 2 || isempty(K)
     K = 10;
 end
 
-RESULTS(length(patches)) = ...
-    struct('A', [], 'b', [], 'C', [], 'f', [], 'S', [], 'P', []);
-
 %% running CNMF on each patch, in parallel
-n_patches = length(patches);
+RESULTS(n_patches) = struct('A', [], 'b', [], 'C', [], 'f', [], 'S', [], 'P', []);
 parfor i = 1:n_patches
     if length(sizY) == 3
         if memmaped
@@ -137,7 +135,7 @@ end
 %% combine results into one structure
 fprintf('Combining results from different patches... \n');
 d = prod(sizY(1:end-1));
-A = sparse(d,length(patches)*K);
+A = sparse(d,n_patches*K);
 P.sn = zeros(sizY(1:end-1));
 if isfield(RESULTS(1).P,'sn_ds'); P.sn_ds = zeros(sizY(1:end-1)); end
 IND = zeros(sizY(1:end-1));
@@ -154,18 +152,18 @@ if options.cluster_pixels
         P.psdx = zeros(patches{end}(2),patches{end}(4),patches{end}(6),size(RESULTS(1).P.psdx,2));
     end
 end
-    
+
 cnt = 0;
-B = sparse(prod(sizY(1:end-1)),length(patches));
+B = sparse(prod(sizY(1:end-1)),n_patches);
 MASK = zeros(sizY(1:end-1));
-F = zeros(length(patches),sizY(end));
-for i = 1:length(patches)
+F = zeros(n_patches,sizY(end));
+for i = 1:n_patches
     for k = 1:K
         if k <= size(RESULTS(i).A,2)
             cnt = cnt + 1;
             Atemp = zeros(sizY(1:end-1));
             if length(sizY) == 3
-                Atemp(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4)) = reshape(RESULTS(i).A(:,k),patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1);            
+                Atemp(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4)) = reshape(RESULTS(i).A(:,k),patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1);
             else
                 Atemp(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6)) = reshape(full(RESULTS(i).A(:,k)),patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1,patches{i}(6)-patches{i}(5)+1);
             end
@@ -177,7 +175,7 @@ for i = 1:length(patches)
         b_temp(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4)) = reshape(RESULTS(i).b,patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1);
         MASK(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4)) = MASK(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4)) + 1;
         P.sn(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4)) = reshape(RESULTS(i).P.sn,patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1);
-        if isfield(RESULTS(i).P,'sn_ds'); P.sn_ds(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4)) = reshape(RESULTS(i).P.sn_ds,patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1); end        
+        if isfield(RESULTS(i).P,'sn_ds'); P.sn_ds(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4)) = reshape(RESULTS(i).P.sn_ds,patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1); end
         IND(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4)) = IND(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4)) + 1;
         if options.cluster_pixels
             P.active_pixels(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4)) = P.active_pixels(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4)) + ...
@@ -189,7 +187,7 @@ for i = 1:length(patches)
         b_temp(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6)) = reshape(full(RESULTS(i).b),patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1,patches{i}(6)-patches{i}(5)+1);
         MASK(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6)) = MASK(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6)) + 1;
         P.sn(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6)) = reshape(RESULTS(i).P.sn,patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1,patches{i}(6)-patches{i}(5)+1);
-        if isfield(RESULTS(i).P,'sn_ds'); P.sn_ds(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6)) = reshape(RESULTS(i).P.sn_ds,patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1,patches{i}(6)-patches{i}(5)+1);  end             
+        if isfield(RESULTS(i).P,'sn_ds'); P.sn_ds(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6)) = reshape(RESULTS(i).P.sn_ds,patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1,patches{i}(6)-patches{i}(5)+1);  end
         IND(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6)) = IND(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6)) + 1;
         if options.cluster_pixels
             P.active_pixels(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6)) = P.active_pixels(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6)) + ...
