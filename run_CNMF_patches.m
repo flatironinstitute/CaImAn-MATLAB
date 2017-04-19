@@ -36,16 +36,11 @@ function [A,b,C,f,S,P,RESULTS,YrA] = run_CNMF_patches(data,K,patches,tau,p,optio
 %
 % Author: Eftychios A. Pnevmatikakis, Simons Foundation, 2015, 2016
 
-defoptions = CNMFSetParms;
-
-if nargin < 6 || isempty(options)
-    options = defoptions;
+if nargin < 6
+    options = CNMFSetParms();
+else
+    options = CNMFSetParms(options);
 end
-
-if ~isfield(options,'cluster_pixels') || isempty(options.cluster_pixels); options.cluster_pixels = defoptions.cluster_pixels; end
-if ~isfield(options,'create_memmap') || isempty(options.create_memmap); options.create_memmap = defoptions.create_memmap; end
-if ~isfield(options,'gnb') || isempty(options.gnb); options.gnb = defoptions.gnb; end
-if ~isfield(options,'classify_comp') || isempty(options.classify_comp); options.classify_comp = defoptions.classify_comp; end
 
 memmaped = isobject(data);
 if memmaped
@@ -72,11 +67,11 @@ else  % create a memory mapped object named data_file.mat
         data = Yr;
     end
 end
-
 F_dark = double(F_dark);
-if ~isfield(options,'d1') || isempty(options.d1); options.d1 = sizY(1); end
-if ~isfield(options,'d2') || isempty(options.d2); options.d2 = sizY(2); end
-if ~isfield(options,'d3') || isempty(options.d3)
+
+if isempty(options.d1); options.d1 = sizY(1); end
+if isempty(options.d2); options.d2 = sizY(2); end
+if isempty(options.d3)
     if length(sizY) == 3
         options.d3 = 1;
     else
@@ -114,7 +109,7 @@ end
 RESULTS(length(patches)) = struct();
 
 %% running CNMF on each patch, in parallel
-parfor i = 1:length(patches)    
+parfor i = 1:length(patches)
     if length(sizY) == 3
         if memmaped
             Y = data.Y(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),:);
