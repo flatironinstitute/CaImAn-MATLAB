@@ -1,5 +1,5 @@
 function [A,b,C,f,S,P,RESULTS,YrA] = run_CNMF_patches(data,K,patches,tau,p,options)
-% RUN_CNMF_PATCHES - apply CNMF algorithm on overlapping patches
+% RUN_CNMF_PATCHES - apply CNMF algorithm on overlapping patches in parallel
 %
 %   [A,b,C,f,S,P,RESULTS,YrA] = run_CNMF_patches(data,K,patches,tau,p,options)
 %
@@ -43,28 +43,29 @@ else
 end
 
 memmaped = isobject(data);
-if memmaped
-    sizY = data.sizY;
-    if ~ismember('F_dark',who(data))
-        if ismember('nY',who(data))
-            data.F_dark = data.nY;
-        else
-            data.F_dark = 0;
-        end
-    end
-    F_dark = data.F_dark;
-else  % create a memory mapped object named data_file.mat
+if ~memmaped
     Y = data;
-    clear data;
+    clear data;  % TODO check if necessary
     sizY = size(Y);
     Yr = reshape(Y,prod(sizY(1:end-1)),[]);
     F_dark = min(Yr(:));
+
+    % create a read-only memory mapped object named data_file.mat
     if options.create_memmap
         save('data_file.mat','Yr','Y','F_dark','sizY','-v7.3');
-        data = matfile('data_file.mat','Writable',true);
+        data = matfile('data_file.mat','Writable',false);
         memmaped = true;
     else
         data = Yr;
+    end
+else
+    sizY = data.sizY;
+    if ismember('F_dark',who(data))
+        F_dark = data.F_dark;
+    elseif ismember('nY',who(data))
+        F_dark = data.nY;
+    else
+        F_dark = 0;
     end
 end
 F_dark = double(F_dark);
@@ -106,61 +107,31 @@ if nargin < 2 || isempty(K)
     K = 10;
 end
 
-RESULTS(length(patches)) = struct();
+RESULTS(length(patches)) = ...
+    struct('A', [], 'b', [], 'C', [], 'f', [], 'S', [], 'P', []);
 
 %% running CNMF on each patch, in parallel
-parfor i = 1:length(patches)
+n_patches = length(patches);
+parfor i = 1:n_patches
     if length(sizY) == 3
         if memmaped
-            Y = data.Y(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),:);
+            Yp = data.Y(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),:);
         else
-            Y = Yc{i};
+            Yp = Yc{i};
         end
-        [d1,d2,T] = size(Y);
+        [d1,d2,~] = size(Yp);
         d3 = 1;
     else
         if memmaped
-            Y = data.Y(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6),:);
+            Yp = data.Y(patches{i}(1):patches{i}(2),patches{i}(3):patches{i}(4),patches{i}(5):patches{i}(6),:);
         else
-            Y = Yc{i};
+            Yp = Yc{i};
         end
-        [d1,d2,d3,T] = size(Y);
-    end
-    Y = double(Y - F_dark);
-    Y(isnan(Y)) = F_dark;
-    d = d1*d2*d3;
-    options_temp = options;
-    options_temp.d1 = d1; options_temp.d2 = d2; options_temp.d3 = d3;
-    options_temp.nb = 1;
-    [P,Y] = preprocess_data(Y,p);
-    [Ain,Cin,bin,fin] = initialize_components(Y,K,tau,options_temp,P);  % initialize
-    Yr = reshape(Y,d,T);
-    options_temp.spatial_parallel = 0;  % turn off parallel updating for spatial components
-    [A,b,Cin,P] = update_spatial_components(Yr,Cin,fin,[Ain,bin],P,options_temp);
-    P.p = 0;
-    options_temp.temporal_parallel = 0;
-    [C,f,P,S] = update_temporal_components(Yr,A,b,Cin,fin,P,options_temp);  % turn off parallel updating for temporal components
-    if ~isempty(A) && ~isempty(C)
-        [Am,Cm,~,~,P] = merge_components(Yr,A,b,C,f,P,S,options_temp);
-        [A2,b2,Cm,P] = update_spatial_components(Yr,Cm,f,[Am,b],P,options_temp);
-        P.p = p;
-        [C2,f2,P2,S2] = update_temporal_components(Yr,A2,b2,Cm,f,P,options_temp);
-    else
-        A2 = A;
-        b2 = b;
-        C2 = C;
-        f2 = f;
-        S2 = S;
-        P2 = P;
+        [d1,d2,d3,~] = size(Yp);
     end
 
-    RESULTS(i).A = A2;
-    RESULTS(i).C = C2;
-    RESULTS(i).b = b2;
-    RESULTS(i).f = f2;
-    RESULTS(i).S = S2;
-    RESULTS(i).P = P2;
-    fprintf(['Finished processing patch # ',num2str(i),' out of ',num2str(length(patches)), '.\n']);
+    RESULTS(i) = process_patch(Yp, [d1, d2, d3], F_dark, K, p, tau, options);
+    fprintf(['Finished processing patch # ',num2str(i),' out of ',num2str(n_patches), '.\n']);
 end
 
 %% combine results into one structure
@@ -328,4 +299,40 @@ Pm.p = 0;
 [C,f,P,S,YrA] = update_temporal_components_fast(data,A,b,C,fin,Pm,options);
 fprintf(' done. \n');
 
+end
+
+function result = process_patch(Y, dims, F_dark, K, p, tau, options)
+    % helper function to apply CNMF to a small patch
+
+    options.d1 = dims(1);
+    options.d2 = dims(2);
+    options.d3 = dims(3);
+    options.nb = 1;
+    options.temporal_parallel = 0; % turn off parallel updating for temporal components
+    options.spatial_parallel = 0;  % turn off parallel updating for spatial components
+
+    Y = double(Y - F_dark);
+    Y(isnan(Y)) = F_dark;
+
+    [P,Y] = preprocess_data(Y,p);
+    Yr = reshape(Y,prod(dims),[]);
+
+    [Ain,Cin,bin,fin] = initialize_components(Y,K,tau,options,P);
+    [A,b,Cin,P] = update_spatial_components(Yr,Cin,fin,[Ain,bin],P,options);
+    P.p = 0;
+    [C,f,P,S] = update_temporal_components(Yr,A,b,Cin,fin,P,options);
+
+    if ~isempty(A) && ~isempty(C)
+        [Am,Cm,~,~,P] = merge_components(Yr,A,b,C,f,P,S,options);
+        [A,b,Cm,P] = update_spatial_components(Yr,Cm,f,[Am,b],P,options);
+        P.p = p;
+        [C,f,P,S] = update_temporal_components(Yr,A,b,Cm,f,P,options);
+    end
+
+    result.A = A;
+    result.b = b;
+    result.C = C;
+    result.f = f;
+    result.S = S;
+    result.P = P;
 end
