@@ -1,5 +1,8 @@
 function [A,b,C,f,S,P,RESULTS,YrA] = run_CNMF_patches(data,K,patches,tau,p,options)
-
+% RUN_CNMF_PATCHES - apply CNMF algorithm on overlapping patches
+%
+%   [A,b,C,f,S,P,RESULTS,YrA] = run_CNMF_patches(data,K,patches,tau,p,options)
+%
 % Run the constrained NMF algorithm on a large dataset by operating on
 % spatially overlapping patches in parallel and then merging the results.
 % The inputs is memory mapped, allowing for large datasets to be processed
@@ -7,33 +10,30 @@ function [A,b,C,f,S,P,RESULTS,YrA] = run_CNMF_patches(data,K,patches,tau,p,optio
 % identification of weaker neurons without the need of normalization.
 % The components are also classified by retaining only the components that
 % correlate well with the raw data through classify_comp_corr.m
-
+%
 % INPUTS:
-
-% data   :   .mat file containing
-%   data.Y      (the data matrix in the original dimensions)
-%   data.Yr     (the data matrix reshaped in 2d format)
-%   data.sizY   (dimensions of the original dataset)
-%   data.nY     (minimum value of dataset)
-% OR the original dataset in 3d/4d format in which case the user chooses 
-% whether to create a memory mapped file 
-
-% K      :   number of components to be found in each patch
-% patches:   cell array containing the start and end points of each patch   
-% tau    :   half-size of each cell for initializing the components
-% p      :   order of autoregressive progress
-% options:   struct for algorithm parameters
-
+% data:    .mat file containing
+%            data.Y      (the data matrix in the original dimensions)
+%            data.Yr     (the data matrix reshaped in 2d format)
+%            data.sizY   (dimensions of the original dataset)
+%            data.nY     (minimum value of dataset)
+%          OR the original dataset in 3d/4d format in which case the user
+%          chooses whether to create a memory mapped file 
+% K:       number of components to be found in each patch
+% patches: cell array containing the start and end points of each patch   
+% tau:     half-size of each cell for initializing the components
+% p:       order of autoregressive progress
+% options: struct for algorithm parameters
+%
 % OUTPUTS:
-
-% A      :   Matrix of spatial components
-% b      :   Spatial background
-% C      :   Matrix of temporal components   
-% f      :   Temporal background
-% P      :   Struct for neuron parameters   
-% RESULTS:   Results of the CNMF algorithm on individual patches
-% YrA    :   Residual signal at the level of each component
-
+% A:       Matrix of spatial components
+% b:       Spatial background
+% C:       Matrix of temporal components   
+% f:       Temporal background
+% P:       Struct for neuron parameters   
+% RESULTS: Results of the CNMF algorithm on individual patches
+% YrA:     Residual signal at the level of each component
+%
 % Author: Eftychios A. Pnevmatikakis, Simons Foundation, 2015, 2016
 
 defoptions = CNMFSetParms;
