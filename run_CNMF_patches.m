@@ -70,9 +70,10 @@ else
 end
 F_dark = double(F_dark);
 
-if isempty(options.d1); options.d1 = sizY(1); end
-if isempty(options.d2); options.d2 = sizY(2); end
-if length(sizY) == 4 && options.d3 ~= sizY(3)
+% ensure correct dimensions options
+options.d1 = sizY(1);
+options.d2 = sizY(2);
+if length(sizY) == 4
     options.d3 = sizY(3);
 end
 
@@ -264,9 +265,6 @@ Pm.C_throw = Cm(~ind,:);
 %% update spatial components
 fprintf('Updating spatial components...');
 options.nb = options.gnb;
-options.d1 = sizY(1);
-options.d2 = sizY(2);
-if length(sizY) == 4; options.d3 = sizY(3); end
 if ~isfield(Pm,'mis_values'); Pm.mis_values = []; end
 if ~isfield(Pm,'mis_entries'); Pm.mis_entries = []; end
 [A,b,C,Pm] = update_spatial_components(data,C,fin,[A,bin],Pm,options);
