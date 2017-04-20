@@ -56,7 +56,7 @@ if ~memmaped
         data = matfile('data_file.mat','Writable',false);
         memmaped = true;
     else
-        data = Yr;
+        data = single(Yr);
     end
 else
     sizY = data.sizY;
@@ -72,12 +72,8 @@ F_dark = double(F_dark);
 
 if isempty(options.d1); options.d1 = sizY(1); end
 if isempty(options.d2); options.d2 = sizY(2); end
-if isempty(options.d3)  % TODO problematic with default option d3 = 1
-    if length(sizY) == 3
-        options.d3 = 1;
-    else
-        options.d3 = sizY(3);
-    end
+if length(sizY) == 4 && options.d3 ~= sizY(3)
+    options.d3 = sizY(3);
 end
 
 if nargin < 5 || isempty(p)
@@ -244,7 +240,11 @@ if options.classify_comp
     options.space_thresh = 0.3;
     options.time_thresh = 0.3;
     options.max_pr_thr = 0.75;
-    [rval_space,rval_time,ind_space,ind_time] = classify_comp_corr(data,Am,Cm,bin,fin,options);
+    if ~memmaped
+        [rval_space,rval_time,ind_space,ind_time] = classify_comp_corr(Y,Am,Cm,bin,fin,options);
+    else
+        [rval_space,rval_time,ind_space,ind_time] = classify_comp_corr(data,Am,Cm,bin,fin,options);
+    end
     ind = ind_space & ind_time;
     fprintf(' done. \n');
 else
