@@ -72,7 +72,7 @@ F_dark = double(F_dark);
 
 if isempty(options.d1); options.d1 = sizY(1); end
 if isempty(options.d2); options.d2 = sizY(2); end
-if isempty(options.d3)
+if isempty(options.d3)  % TODO problematic with default option d3 = 1
     if length(sizY) == 3
         options.d3 = 1;
     else
@@ -89,7 +89,7 @@ if nargin < 4 || isempty(tau)
 end
 
 if nargin < 3 || isempty(patches)
-    patches = construct_patches(sizY(1:end-1),[50,50]);
+    patches = construct_patches(sizY(1:end-1),[50,50]);  % TODO fix default for 3d case
 end
 n_patches = length(patches);
 
@@ -108,22 +108,16 @@ end
 %% running CNMF on each patch, in parallel
 RESULTS(n_patches) = struct('A', [], 'b', [], 'C', [], 'f', [], 'S', [], 'P', []);
 parfor i = 1:n_patches
+    if memmaped
+        patch_idx = patch_to_indices(patches{i});
+        Yp = data.Y(patch_idx{:},:);
+    else
+        Yp = Yc{i};
+    end
     if length(sizY) == 3
-        if memmaped
-            patch_idx = patch_to_indices(patches{i});
-            Yp = data.Y(patch_idx{:},:);
-        else
-            Yp = Yc{i};
-        end
         [d1,d2,~] = size(Yp);
         d3 = 1;
     else
-        if memmaped
-            patch_idx = patch_to_indices(patches{i});
-            Yp = data.Y(patch_idx{:},:);
-        else
-            Yp = Yc{i};
-        end
         [d1,d2,d3,~] = size(Yp);
     end
 
@@ -167,33 +161,20 @@ for i = 1:n_patches
         end
         cnt = cnt + 1;
         Atemp = zeros(sizY(1:end-1));
-        if length(sizY) == 3
-            Atemp(patch_idx{:}) = reshape(RESULTS(i).A(:,k),patch_size);
-        else
-            Atemp(patch_idx{:}) = reshape(full(RESULTS(i).A(:,k)),patch_size);
-        end
+        Atemp(patch_idx{:}) = reshape(full(RESULTS(i).A(:,k)),patch_size);
         A(:,cnt) = sparse(Atemp(:));
     end
-    if length(sizY) == 3
-        b_temp = sparse(sizY(1),sizY(2));
-        b_temp(patch_idx{:}) = reshape(RESULTS(i).b,patch_size);
-        MASK(patch_idx{:}) = MASK(patch_idx{:}) + 1;
-        P.sn(patch_idx{:}) = reshape(RESULTS(i).P.sn,patch_size);
-        if isfield(RESULTS(i).P,'sn_ds'); P.sn_ds(patch_idx{:}) = reshape(RESULTS(i).P.sn_ds,patch_size); end
-        if options.cluster_pixels
-            P.active_pixels(patch_idx{:}) = P.active_pixels(patch_idx{:}) + reshape(RESULTS(i).P.active_pixels,patch_size);
-            P.psdx(patch_idx{:},:) = reshape(RESULTS(i).P.psdx,patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1,[]);
-        end
-    else
-        b_temp = zeros(sizY(1),sizY(2),sizY(3));
-        b_temp(patch_idx{:}) = reshape(full(RESULTS(i).b),patch_size);
-        MASK(patch_idx{:}) = MASK(patch_idx{:}) + 1;
-        P.sn(patch_idx{:}) = reshape(RESULTS(i).P.sn,patch_size);
-        if isfield(RESULTS(i).P,'sn_ds'); P.sn_ds(patch_idx{:}) = reshape(RESULTS(i).P.sn_ds,patch_size); end
-        if options.cluster_pixels
-            P.active_pixels(patch_idx{:}) = P.active_pixels(patch_idx{:}) + reshape(RESULTS(i).P.active_pixels,patch_size);
-            P.psdx(patch_idx{:}, :) = reshape(RESULTS(i).P.psdx,patches{i}(2)-patches{i}(1)+1,patches{i}(4)-patches{i}(3)+1, patches{i}(6)-patches{i}(5)+1,[]);
-        end
+    b_temp = zeros(sizY(1:end-1));
+    b_temp(patch_idx{:}) = reshape(full(RESULTS(i).b),patch_size);
+    MASK(patch_idx{:}) = MASK(patch_idx{:}) + 1;
+    P.sn(patch_idx{:}) = reshape(RESULTS(i).P.sn,patch_size);
+    if isfield(RESULTS(i).P,'sn_ds')
+        P.sn_ds(patch_idx{:}) = reshape(RESULTS(i).P.sn_ds,patch_size);
+    end
+    if options.cluster_pixels
+        P.active_pixels(patch_idx{:}) = P.active_pixels(patch_idx{:}) + reshape(RESULTS(i).P.active_pixels,patch_size);
+        patch_size_cell = num2cell(patch_size);
+        P.psdx(patch_idx{:},:) = reshape(RESULTS(i).P.psdx,patch_size_cell{:},[]);
     end
     P.b = [P.b;RESULTS(i).P.b];
     P.c1 = [P.c1;RESULTS(i).P.c1];
@@ -299,6 +280,11 @@ fprintf(' done. \n');
 
 end
 
+function idx = patch_to_indices(patch)
+    % helper function to build indices vector from patch start/stop indices
+    idx = arrayfun(@(x,y) x:y, patch(1:2:end), patch(2:2:end), 'un', false);
+end
+
 function result = process_patch(Y, dims, F_dark, K, p, tau, options)
     % helper function to apply CNMF to a small patch
 
@@ -333,9 +319,4 @@ function result = process_patch(Y, dims, F_dark, K, p, tau, options)
     result.f = f;
     result.S = S;
     result.P = P;
-end
-
-function idx = patch_to_indices(patch)
-    % helper function to build indices vector from patch start/stop indices
-    idx = arrayfun(@(x,y) x:y, patch(1:2:end), patch(2:2:end), 'un', false);
 end
