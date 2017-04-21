@@ -156,11 +156,11 @@ for i = 1:n_patches
         end
         cnt = cnt + 1;
         Atemp = zeros(sizY(1:end-1));
-        Atemp(patch_idx{:}) = reshape(full(RESULTS(i).A(:,k)),patch_size);
+        Atemp(patch_idx{:}) = reshape(full(RESULTS(i).A(:,k)),patch_size);  % TODO full not neeeded if ndims(Y) == 3
         A(:,cnt) = sparse(Atemp(:));
     end
     b_temp = zeros(sizY(1:end-1));
-    b_temp(patch_idx{:}) = reshape(full(RESULTS(i).b),patch_size);
+    b_temp(patch_idx{:}) = reshape(full(RESULTS(i).b),patch_size);  % TODO full not neeeded if ndims(Y) == 3
     MASK(patch_idx{:}) = MASK(patch_idx{:}) + 1;
     P.sn(patch_idx{:}) = reshape(RESULTS(i).P.sn,patch_size);
     if isfield(RESULTS(i).P,'sn_ds')
