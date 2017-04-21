@@ -38,13 +38,24 @@ d = size(A,1);
 T = size(C,2);
 
 if nargin < 9
-    C_corr = corr(full(C(1:nr,:)'));
-    FF1 = triu(C_corr)>= thr;                           % find graph of strongly correlated temporal components
     
     A_corr = triu(A(:,1:nr)'*A(:,1:nr));                
     A_corr(1:nr+1:nr^2) = 0;
     FF2 = A_corr > 0;                                   % find graph of overlapping spatial components
     
+    %C_corr = corr(full(C(1:nr,:)'));
+    C_corr = zeros(nr);
+    for i = 1:nr
+        overlap_indeces = find(A_corr(i,:));
+        if ~isempty(overlap_indeces)
+            corr_values = corr(C(i,:)',C(overlap_indeces,:)');
+            C_corr(i,overlap_indeces) = corr_values;
+            C_corr(overlap_indeces,i) = corr_values;
+        end
+    end
+    FF1 = triu(C_corr)>= thr;                           % find graph of strongly correlated temporal components
+    
+       
     FF3 = and(FF1,FF2);                                 % intersect the two graphs
     [l,c] = graph_connected_comp(sparse(FF3+FF3'));     % extract connected components
     MC = [];
