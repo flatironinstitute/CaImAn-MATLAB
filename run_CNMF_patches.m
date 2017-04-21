@@ -92,36 +92,44 @@ if nargin < 3 || isempty(patches)
 end
 n_patches = length(patches);
 
-Yc = cell(n_patches,1);
-if ~memmaped
-    for i = 1:n_patches
-        patch_idx = patch_to_indices(patches{i});
-        Yc{i} = Y(patch_idx{:}, :);
-    end
-end
-
 if nargin < 2 || isempty(K)
     K = 10;
 end
 
 %% running CNMF on each patch, in parallel
 RESULTS(n_patches) = struct('A', [], 'b', [], 'C', [], 'f', [], 'S', [], 'P', []);
-parfor i = 1:n_patches
-    if memmaped
+
+if memmaped
+    parfor i = 1:n_patches
         patch_idx = patch_to_indices(patches{i});
         Yp = data.Y(patch_idx{:},:);
-    else
-        Yp = Yc{i};
-    end
-    if length(sizY) == 3
-        [d1,d2,~] = size(Yp);
-        d3 = 1;
-    else
-        [d1,d2,d3,~] = size(Yp);
+        if length(sizY) == 3
+            [d1,d2,~] = size(Yp);
+            d3 = 1;
+        else
+            [d1,d2,d3,~] = size(Yp);
+        end
+        RESULTS(i) = process_patch(Yp, [d1, d2, d3], F_dark, K, p, tau, options);
+        fprintf(['Finished processing patch # ',num2str(i),' out of ',num2str(n_patches), '.\n']);
     end
 
-    RESULTS(i) = process_patch(Yp, [d1, d2, d3], F_dark, K, p, tau, options);
-    fprintf(['Finished processing patch # ',num2str(i),' out of ',num2str(n_patches), '.\n']);
+else  % avoid copying the entire dataset to each worker, for in-memory data
+    for i = n_patches:-1:1
+        patch_idx = patch_to_indices(patches{i});
+        Yp = Y(patch_idx{:},:);
+        if length(sizY) == 3
+            [d1,d2,~] = size(Yp);
+            d3 = 1;
+        else
+            [d1,d2,d3,~] = size(Yp);
+        end
+        future_results(i) = parfeval(@process_patch, 1, Yp, [d1, d2, d3], F_dark, K, p, tau, options);
+    end
+    for i = 1:n_patches
+        [idx, value] = fetchNext(future_results);
+        RESULTS(idx) = value;
+        fprintf(['Finished processing patch # ',num2str(i),' out of ',num2str(n_patches), '.\n']);
+    end
 end
 
 %% combine results into one structure
