@@ -132,15 +132,6 @@ if isfield(RESULTS(1).P,'sn_ds')
     P.sn_ds = zeros(sizY(1:end-1));
 end
 
-if options.cluster_pixels
-    P.active_pixels = zeros(sizY(1:end-1));
-    if length(sizY) == 3
-        P.psdx = zeros(patches{end}(2),patches{end}(4),size(RESULTS(1).P.psdx,2));
-    else
-        P.psdx = zeros(patches{end}(2),patches{end}(4),patches{end}(6),size(RESULTS(1).P.psdx,2));
-    end
-end
-
 cnt = 0;
 d = prod(sizY(1:end-1));
 A = sparse(d,n_patches*K);
@@ -152,7 +143,7 @@ for i = 1:n_patches
     patch_size = patches{i}(2:2:end) - patches{i}(1:2:end) + 1;
     for k = 1:K
         if k > size(RESULTS(i).A,2)
-            continue
+            break;
         end
         cnt = cnt + 1;
         Atemp = zeros(sizY(1:end-1));
@@ -161,21 +152,16 @@ for i = 1:n_patches
     end
     b_temp = zeros(sizY(1:end-1));
     b_temp(patch_idx{:}) = reshape(full(RESULTS(i).b),patch_size);  % TODO full not neeeded if ndims(Y) == 3
+    B(:,i) = sparse(b_temp(:));
     MASK(patch_idx{:}) = MASK(patch_idx{:}) + 1;
     P.sn(patch_idx{:}) = reshape(RESULTS(i).P.sn,patch_size);
     if isfield(RESULTS(i).P,'sn_ds')
         P.sn_ds(patch_idx{:}) = reshape(RESULTS(i).P.sn_ds,patch_size);
     end
-    if options.cluster_pixels
-        P.active_pixels(patch_idx{:}) = P.active_pixels(patch_idx{:}) + reshape(RESULTS(i).P.active_pixels,patch_size);
-        patch_size_cell = num2cell(patch_size);
-        P.psdx(patch_idx{:},:) = reshape(RESULTS(i).P.psdx,patch_size_cell{:},[]);
-    end
     P.b = [P.b;RESULTS(i).P.b];
     P.c1 = [P.c1;RESULTS(i).P.c1];
     P.gn = [P.gn;RESULTS(i).P.gn];
     P.neuron_sn = [P.neuron_sn;RESULTS(i).P.neuron_sn];
-    B(:,i) = sparse(b_temp(:));
     F(i,:) = RESULTS(i).f;
 end
 A(:,cnt+1:end) = [];
@@ -190,6 +176,17 @@ S(ff,:) = [];
 fprintf(' done. \n');
 
 if options.cluster_pixels
+    P.active_pixels = zeros(sizY(1:end-1));
+    psdx_size = [patches{end}(2:2:end), size(RESULTS(1).P.psdx,2)];
+    P.psdx = zeros(psdx_size);
+
+    for i = 1:n_patches
+        patch_idx = patch_to_indices(patches{i});
+        patch_size = patches{i}(2:2:end) - patches{i}(1:2:end) + 1;
+        P.active_pixels(patch_idx{:}) = P.active_pixels(patch_idx{:}) + reshape(RESULTS(i).P.active_pixels,patch_size);
+        P.psdx(patch_idx{:},:) = reshape(RESULTS(i).P.psdx,[patch_size, psdx_size(end)]);
+    end
+
     % estimate active pixels
     fprintf('Classifying pixels...')
     if length(sizY) == 3
