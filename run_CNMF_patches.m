@@ -103,13 +103,7 @@ if memmaped
     parfor i = 1:n_patches
         patch_idx = patch_to_indices(patches{i});
         Yp = data.Y(patch_idx{:},:);
-        if length(sizY) == 3
-            [d1,d2,~] = size(Yp);
-            d3 = 1;
-        else
-            [d1,d2,d3,~] = size(Yp);
-        end
-        RESULTS(i) = process_patch(Yp, [d1, d2, d3], F_dark, K, p, tau, options);
+        RESULTS(i) = process_patch(Yp,F_dark, K, p, tau, options);
         fprintf(['Finished processing patch # ',num2str(i),' out of ',num2str(n_patches), '.\n']);
     end
 
@@ -117,13 +111,7 @@ else  % avoid copying the entire dataset to each worker, for in-memory data
     for i = n_patches:-1:1
         patch_idx = patch_to_indices(patches{i});
         Yp = Y(patch_idx{:},:);
-        if length(sizY) == 3
-            [d1,d2,~] = size(Yp);
-            d3 = 1;
-        else
-            [d1,d2,d3,~] = size(Yp);
-        end
-        future_results(i) = parfeval(@process_patch, 1, Yp, [d1, d2, d3], F_dark, K, p, tau, options);
+        future_results(i) = parfeval(@process_patch, 1, Yp, F_dark, K, p, tau, options);
     end
     for i = 1:n_patches
         [idx, value] = fetchNext(future_results);
@@ -293,12 +281,17 @@ function idx = patch_to_indices(patch)
     idx = arrayfun(@(x,y) x:y, patch(1:2:end), patch(2:2:end), 'un', false);
 end
 
-function result = process_patch(Y, dims, F_dark, K, p, tau, options)
+function result = process_patch(Y, F_dark, K, p, tau, options)
     % helper function to apply CNMF to a small patch
 
-    options.d1 = dims(1);
-    options.d2 = dims(2);
-    options.d3 = dims(3);
+    sizY = size(Y);
+    options.d1 = sizY(1);
+    options.d2 = sizY(2);
+    if ndims(Y) == 3
+        options.d3 = 1;
+    else
+        options.d3 = sizY(3);
+    end
     options.nb = 1;
     options.temporal_parallel = 0;  % turn off parallel updating for temporal components
     options.spatial_parallel = 0;  % turn off parallel updating for spatial components
@@ -307,7 +300,7 @@ function result = process_patch(Y, dims, F_dark, K, p, tau, options)
     Y(isnan(Y)) = F_dark;
 
     [P,Y] = preprocess_data(Y,p,options);
-    Yr = reshape(Y,prod(dims),[]);
+    Yr = reshape(Y,[],sizY(end));
 
     [Ain,Cin,bin,fin] = initialize_components(Y,K,tau,options,P);
     [A,b,Cin,P] = update_spatial_components(Yr,Cin,fin,[Ain,bin],P,options);
