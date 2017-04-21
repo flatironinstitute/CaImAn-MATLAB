@@ -300,13 +300,13 @@ function result = process_patch(Y, dims, F_dark, K, p, tau, options)
     options.d2 = dims(2);
     options.d3 = dims(3);
     options.nb = 1;
-    options.temporal_parallel = 0; % turn off parallel updating for temporal components
+    options.temporal_parallel = 0;  % turn off parallel updating for temporal components
     options.spatial_parallel = 0;  % turn off parallel updating for spatial components
 
     Y = double(Y - F_dark);
     Y(isnan(Y)) = F_dark;
 
-    [P,Y] = preprocess_data(Y,p);
+    [P,Y] = preprocess_data(Y,p,options);
     Yr = reshape(Y,prod(dims),[]);
 
     [Ain,Cin,bin,fin] = initialize_components(Y,K,tau,options,P);
