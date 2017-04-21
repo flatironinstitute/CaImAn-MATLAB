@@ -55,6 +55,8 @@ if ~memmaped
         save('data_file.mat','Yr','Y','F_dark','sizY','-v7.3');
         data = matfile('data_file.mat','Writable',false);
         memmaped = true;
+    elseif isa(Yr, 'single') || isa(Yr, 'double')
+        data = Yr;
     else
         data = single(Yr);
     end
