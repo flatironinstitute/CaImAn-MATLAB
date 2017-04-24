@@ -134,12 +134,10 @@ end
 cnt = 0;
 d = prod(sizY(1:end-1));
 A = sparse(d,n_patches*K);
-Abis = sparse(d,n_patches*K);
 B = sparse(d,n_patches);
 MASK = zeros(sizY(1:end-1));
 F = zeros(n_patches,sizY(end));
 for i = 1:n_patches
-    patch_idx = patch_to_indices(patches{i});
     patch_lin_idx = patch_to_linear(patches{i}, sizY);
     patch_size = patches{i}(2:2:end) - patches{i}(1:2:end) + 1;
     for k = 1:K
@@ -150,10 +148,10 @@ for i = 1:n_patches
         A(patch_lin_idx,cnt) = RESULTS(i).A(:,k);
     end
     B(patch_lin_idx,i) = RESULTS(i).b;
-    MASK(patch_idx{:}) = MASK(patch_idx{:}) + 1;
-    P.sn(patch_idx{:}) = reshape(RESULTS(i).P.sn,patch_size);
+    MASK(patch_lin_idx) = MASK(patch_lin_idx) + 1;
+    P.sn(patch_lin_idx) = reshape(RESULTS(i).P.sn,patch_size);
     if isfield(RESULTS(i).P,'sn_ds')
-        P.sn_ds(patch_idx{:}) = reshape(RESULTS(i).P.sn_ds,patch_size);
+        P.sn_ds(patch_lin_idx) = reshape(RESULTS(i).P.sn_ds,patch_size);
     end
     P.b = [P.b;RESULTS(i).P.b];
     P.c1 = [P.c1;RESULTS(i).P.c1];
