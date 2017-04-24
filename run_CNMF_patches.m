@@ -50,7 +50,7 @@ if ~memmaped
     Yr = reshape(Y,[],sizY(end));
     F_dark = min(Yr(:));
 
-    % create a read-only memory mapped object named data_file.mat
+    % create a memory mapped object named data_file.mat and open it read-only
     if options.create_memmap
         save('data_file.mat','Yr','Y','F_dark','sizY','-v7.3');
         data = matfile('data_file.mat','Writable',false);
@@ -122,7 +122,6 @@ end
 
 %% combine results into one structure
 fprintf('Combining results from different patches... \n');
-
 P.sn = zeros(sizY(1:end-1));
 P.b = {};
 P.c1 = {};
@@ -135,24 +134,22 @@ end
 cnt = 0;
 d = prod(sizY(1:end-1));
 A = sparse(d,n_patches*K);
+Abis = sparse(d,n_patches*K);
 B = sparse(d,n_patches);
 MASK = zeros(sizY(1:end-1));
 F = zeros(n_patches,sizY(end));
 for i = 1:n_patches
     patch_idx = patch_to_indices(patches{i});
+    patch_lin_idx = patch_to_linear(patches{i}, sizY);
     patch_size = patches{i}(2:2:end) - patches{i}(1:2:end) + 1;
     for k = 1:K
         if k > size(RESULTS(i).A,2)
             break;
         end
         cnt = cnt + 1;
-        Atemp = zeros(sizY(1:end-1));
-        Atemp(patch_idx{:}) = reshape(full(RESULTS(i).A(:,k)),patch_size);  % TODO full not neeeded if ndims(Y) == 3
-        A(:,cnt) = sparse(Atemp(:));
+        A(patch_lin_idx,cnt) = RESULTS(i).A(:,k);
     end
-    b_temp = zeros(sizY(1:end-1));
-    b_temp(patch_idx{:}) = reshape(full(RESULTS(i).b),patch_size);  % TODO full not neeeded if ndims(Y) == 3
-    B(:,i) = sparse(b_temp(:));
+    B(patch_lin_idx,i) = RESULTS(i).b;
     MASK(patch_idx{:}) = MASK(patch_idx{:}) + 1;
     P.sn(patch_idx{:}) = reshape(RESULTS(i).P.sn,patch_size);
     if isfield(RESULTS(i).P,'sn_ds')
@@ -175,7 +172,9 @@ C(ff,:) = [];
 S(ff,:) = [];
 fprintf(' done. \n');
 
+% estimate active pixels
 if options.cluster_pixels
+    fprintf('Classifying pixels...')
     P.active_pixels = zeros(sizY(1:end-1));
     psdx_size = [patches{end}(2:2:end), size(RESULTS(1).P.psdx,2)];
     P.psdx = zeros(psdx_size);
@@ -187,8 +186,6 @@ if options.cluster_pixels
         P.psdx(patch_idx{:},:) = reshape(RESULTS(i).P.psdx,[patch_size, psdx_size(end)]);
     end
 
-    % estimate active pixels
-    fprintf('Classifying pixels...')
     if length(sizY) == 3
         X = P.psdx(:,:,1:min(size(P.psdx,3),500));
     else
@@ -276,6 +273,15 @@ end
 function idx = patch_to_indices(patch)
     % helper function to build indices vector from patch start/stop indices
     idx = arrayfun(@(x,y) x:y, patch(1:2:end), patch(2:2:end), 'un', false);
+end
+
+function idx = patch_to_linear(patch, sizY)
+    % helper function to build linear indices from patch start/stop indices
+    slice_idx = patch_to_indices(patch);
+    subs_idx = cell(1, numel(slice_idx));
+    [subs_idx{:}] = ndgrid(slice_idx{:});
+    subs_idx = cellfun(@(x) x(:), subs_idx, 'un', false);
+    idx = sub2ind(sizY(1:end-1), subs_idx{:});
 end
 
 function result = process_patch(Y, F_dark, K, p, tau, options)
