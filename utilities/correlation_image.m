@@ -21,6 +21,7 @@ if nargin<5;     flag_norm = false; end
 if ismatrix(Y)
     Y = reshape(Y,d1,d2,size(Y,2));
 end
+if ~strcmpi(class(Y),'single'); Y = single(Y); end
 if (nargin<2);   sz = [0,1,0; 1,0,1; 0,1,0]; end
 
 [d1,d2,~] = size(Y);    % image dimension
