@@ -21,6 +21,8 @@
         if N < sizY(end)
            %Y = reshape(Y,prod(sizY(1:end-1)),[]);
            switch ndims(Y), 
+               case 2,
+                    Y(:,N+1:end) = [];
                case 3, 
                     Y(:,:,N+1:end) = [];
                case 4, 
