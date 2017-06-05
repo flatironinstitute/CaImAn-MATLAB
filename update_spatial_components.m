@@ -50,21 +50,26 @@ if ~isfield(options,'tsub') || isempty(options.tsub); tsub = 1; else tsub = opti
 if nargin < 2 || (isempty(A_) && isempty(C))  % at least either spatial or temporal components should be provided
     error('Not enough input arguments')
 else
-    if ~isempty(C); K = size(C,1); elseif islogical(A_); K = size(A_,2); else K = size(A_2,2) - options.nb; end
+    if ~isempty(C); K = size(C,1); else K = size(A_,2) - options.nb; end
 end
 
 if nargin < 5 || isempty(P); P = preprocess_data(Y,1); end  % etsimate noise values if not present
 if nargin < 4 || isempty(A_); 
     IND = ones(d,size(C,1)); 
 else
-    if islogical(A_)     % check if search locations have been provided, otherwise estimate them
-        IND = A_;
+    if islogical(A_)     % check if search locations have been provided, otherwise estimate them        
+        IND = A_(:,1:K);
         if isempty(C)    
             INDav = double(IND)/diag(sum(double(IND)));          
             px = (sum(IND,2)>0);
             f = mean(Y(~px,:));
             b = max(Y*f',0)/norm(f)^2;
             C = max(INDav'*Y - (INDav'*b)*f,0);
+        end
+        if strcmpi(options.spatial_method,'regularized')
+            A_ = max((Y - b*f)*C'/(C*C'),0);
+            A_ = A_.*IND;
+            A_ = [A_,b];
         end
     else
         IND = determine_search_location(A_(:,1:K),method,options);
