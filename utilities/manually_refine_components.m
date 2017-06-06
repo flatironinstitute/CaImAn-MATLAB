@@ -1,16 +1,24 @@
-function [A,C,newcenters] = manually_refine_components(Y,A,C,centers,img,sx,options)
+function [A,C,newcenters,CC] = manually_refine_components(Y,A,C,centers,img,sx,options)
 % function that allows to add or remove components. 
 % Usage: 
 % after runnning use left click to remove and right click to add components
 % at specific locations. Hit enter when done
 % Inputs
 % ------
+% Y:       data loaded in memory
+% A:       current set of spatial components (excluding background)
+% C:       current set of temporal components (excluding background)
 % centers: coordinates of the centers of the components
-% img: image used to identify components (for instance NCA
+% img:     image used to identify components (for instance correlation image)
+% sx:      half-width of search window
+% options: options structure
 % 
 % Returns:
 % --------
+% A:          updated set of spatial components
+% C:          updated set of temporal components
 % newcenters: updated component centers
+% CC:         contour plots of components
 
 defoptions = CNMFSetParms;
 if nargin < 7 || isempty(options); options = defoptions; end
@@ -30,7 +38,7 @@ end
 
 min_distance_point_selection=2;
 x=1;
-T = size(C,2);
+[K,T] = size(C);
 newcenters=[centers];
 % ident_point=[0,0];
 fig = figure;
@@ -41,10 +49,14 @@ imagesc(img,[min(img(:)),max(img(:))]);
     xlabel({'Press left click to add new component, right click to remove existing component'; 'Press enter to exit'},'fontweight','bold');
     drawnow;
     cmap = colormap;
+    CC = cell(size(A,2),1);
 for i = 1:size(A,2)
     a_srt = sort(A(:,i),'descend');
     ff = find(cumsum(a_srt.^2) >= cont_threshold*sum(a_srt.^2),1,'first');
-    contour(reshape(A(:,i),options.d1,options.d2),[0,0]+a_srt(ff),'Linecolor',[1,0,1]/2);
+    CC{i} = contour(reshape(A(:,i),options.d1,options.d2),[0,0]+a_srt(ff),'Linecolor',[1,0,1]/2);
+    CC{i}(CC{i}<1) = NaN;
+    CC{i}(:,CC{i}(1,:)>options.d2) = NaN;
+    CC{i}(:,CC{i}(2,:)>options.d1) = NaN;
     hold on;
 end
     
@@ -71,22 +83,26 @@ while ~isempty(x)
             if int_y(end)>options.d2
                 int_y = int_y - (int_y(end)-options.d2);
             end
-            Ypatch = reshape(Y(int_x,int_y,:),(2*sx+1)^2,size(C,2));
-            Ypatch = bsxfun(@minus, Ypatch, median(Ypatch,2));
             [INT_x,INT_y] = meshgrid(int_x,int_y);
             coor = sub2ind([options.d1,options.d2],INT_x(:),INT_y(:));
+            Ypatch = reshape(Y(int_x,int_y,:),(2*sx+1)^2,T);                        
             Y_res = Ypatch - A(coor,:)*C;
+            Y_res = bsxfun(@minus, Y_res, median(Y_res,2));
             [atemp, ctemp, ~, ~, newcenter, ~] = greedyROI(reshape(Y_res,2*sx+1,2*sx+1,T), 1, options);
             %[atemp, ctemp] = initialize_components(reshape(Y_res,2*sx+1,2*sx+1,T), 1,sx,options);  % initialize
             % find contour
             a_srt = sort(atemp,'descend');
             ff = find(cumsum(a_srt.^2) >= cont_threshold*sum(a_srt.^2),1,'first');
-            A(coor,end+1) = atemp/norm(atemp);
-            C(end+1,:) = ctemp*norm(atemp);
+            K = K + 1;
+            A(coor,K) = atemp/norm(atemp);
+            C(K,:) = ctemp*norm(atemp);
             new_center = com(A(:,end),options.d1,options.d2);
             newcenters(end,:) = new_center;
             scatter(new_center(2),new_center(1),'mo'); hold on; 
-            contour(reshape(A(:,end),options.d1,options.d2),[0,0]+a_srt(ff),'Linecolor',[1,0,1]/2);
+            CC{K} = contour(reshape(A(:,end),options.d1,options.d2),[0,0]+a_srt(ff),'Linecolor',[1,0,1]/2);
+            CC{K}(CC{K}<1) = NaN;
+            CC{K}(:,CC{K}(1,:)>options.d2) = NaN;
+            CC{K}(:,CC{K}(2,:)>options.d1) = NaN;
             hold on;
             colormap(fig,cmap);
             
@@ -97,7 +113,6 @@ while ~isempty(x)
 %                atemp = max(Y_res*ctemp',0)/norm(ctemp)^2;
 %             end
             
-            
         elseif button==3
             [m,id]=min(sum(bsxfun(@minus,newcenters,[y,x]).^2,2));            
             ident_point=[newcenters(id,2),newcenters(id,1)];
@@ -106,6 +121,8 @@ while ~isempty(x)
                 newcenters(id,:)=[]; 
                 A(:,id) = [];
                 C(id,:) = [];
+                CC(id) = [];
+                K = K - 1;
                 % replot after removing
                 clf;
                 imagesc(img,[min(img(:)),max(img(:))]);
@@ -115,11 +132,16 @@ while ~isempty(x)
                     xlabel({'Press left click to add new component, right click to remove existing component'; 'Press enter to exit'},'fontweight','bold');
                     drawnow;
                     cmap = colormap;
-                for i = 1:size(A,2)
-                    a_srt = sort(A(:,i),'descend');
-                    ff = find(cumsum(a_srt.^2) >= cont_threshold*sum(a_srt.^2),1,'first');
-                    contour(reshape(A(:,i),options.d1,options.d2),[0,0]+a_srt(ff),'Linecolor',[1,0,1]/2);
-                    hold on;
+                    
+                for i = 1:K
+                    cont = CC{i}; %medfilt1(CC{i}')';
+                    if size(cont,2) > 1
+                        plot(cont(1,2:end-1),cont(2,2:end-1),'Color',[1,0,1]/2); hold on;
+                    end
+                    %a_srt = sort(A(:,i),'descend');
+                    %ff = find(cumsum(a_srt.^2) >= cont_threshold*sum(a_srt.^2),1,'first');
+                    %contour(reshape(A(:,i),options.d1,options.d2),[0,0]+a_srt(ff),'Linecolor',[1,0,1]/2);
+                    %hold on;
                 end
             else
                 disp('Selection too far from any point')
