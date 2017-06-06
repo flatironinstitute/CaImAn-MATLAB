@@ -226,6 +226,7 @@ end
 fprintf(' done. \n');
 
 %% classify components
+options.classify_comp = false; % components are now classified within each patch
 if options.classify_comp
     fprintf('Classifying components...')
     options.space_thresh = 0.3;
@@ -296,7 +297,10 @@ function result = process_patch(Y, F_dark, K, p, tau, options)
     options.nb = 1;
     options.temporal_parallel = 0;  % turn off parallel updating for temporal components
     options.spatial_parallel = 0;  % turn off parallel updating for spatial components
-
+    options.space_thresh = 0.3;
+    options.time_thresh = 0.3;
+    options.max_pr_thr = 0.75;  
+    
     Y = double(Y - F_dark);
     Y(isnan(Y)) = F_dark;
 
@@ -313,12 +317,20 @@ function result = process_patch(Y, F_dark, K, p, tau, options)
         [A,b,Cm,P] = update_spatial_components(Yr,Cm,f,[Am,b],P,options);
         P.p = p;
         [C,f,P,S] = update_temporal_components(Yr,A,b,Cm,f,P,options);
-    end
-
-    result.A = A;
+        [rval_space,rval_time,ind_space,ind_time] = classify_comp_corr(Y,A,C,b,f,options);
+        ind = ind_space & ind_time;
+        P.rval_space = rval_space;
+        P.rval_time = rval_time;
+        P.ind_space = ind_space;
+        P.ind_time = ind_time;
+        P.A_throw = A(:,~ind);
+        P.C_throw = C(~ind,:);
+    end    
+    result.A = A(:,ind);
     result.b = b;
-    result.C = C;
+    result.C = C(ind,:);
     result.f = f;
     result.S = S;
-    result.P = P;
+    result.P = P;  
+
 end
