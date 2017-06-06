@@ -28,20 +28,14 @@ Related packages
 
 This repository contains a MATLAB implementation of the spatio-temporal demixing, i.e., (source extraction) code for large scale calcium imaging data. Related code can be found in the following links:
 
-## Matlab 
+# Matlab 
 - [Constrained deconvolution and source extraction with CNMF (this package)](https://github.com/epnev/ca_source_extraction)
 - [MCMC spike inference](https://github.com/epnev/continuous_time_ca_sampler)
 - [Group LASSO initialization and spatial CNMF](https://github.com/danielso/ROI_detect)
 
-## Python
-- [Constrained deconvolution for neural activity (spike) extraction](https://github.com/epnev/constrained_foopsi_python)
-- [Source extraction with CNMF](https://github.com/agiovann/Constrained_NMF)
-- [Group LASSO initialization and spatial CNMF](https://github.com/danielso/ROI_detect)
+# Python
 
-## Integration with other libraries
-- [SIMA](http://www.losonczylab.org/sima/1.3/): The [constrained deconvolution](https://github.com/losonczylab/sima/blob/master/sima/spikes.py) method has been integrated with SIMA, a Python based library for calcium imaging data analysis.
-- [Thunder](http://thunder-project.org/): The [group LASSO initialization and spatial CNMF](https://github.com/j-friedrich/thunder/tree/LocalNMF) method has been integrated with Thunder, a library for large scale neural data analysis with Spark.
-
+A complete analysis pipeline including motion correction, source extraction and activity deconvolution is performed through the package [CaImAn](https://github.com/simonsfoundation/caiman) 
 
 Usage and Documentation
 =======
