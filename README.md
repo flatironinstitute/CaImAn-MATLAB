@@ -39,7 +39,7 @@ A complete analysis pipeline including motion correction, source extraction and 
 
 Usage and Documentation
 =======
-Check the demo scripts and documentation.pdf to get started.
+Check the demo scripts and the [wiki](https://github.com/epnev/ca_source_extraction/wiki) to get started.
 
 Dependencies
 ========
