@@ -253,7 +253,7 @@ if options.temporal_parallel
                             btemp(jj) = mean(SAMPLES.Cb);
                             c1temp(jj) = mean(SAMPLES.Cin);
                             sntemp(jj) = sqrt(mean(SAMPLES.sn2));
-                            gtemp{jj} = mean(exp(-1./SAMPLES.g))';
+                            gtemp{jj} = mean(exp(-1./SAMPLES.g));
                             samples_mcmc(jj) = SAMPLES; % FN added.
                     end
                 end
@@ -262,11 +262,11 @@ if options.temporal_parallel
             S(O{jo}(:),:) = Stemp; 
             if p > 0
                 if strcmpi(method,'constrained_foopsi') || strcmpi(method,'MCMC');
-                    P.b(O{jo}) = num2cell(btemp);
-                    P.c1(O{jo}) = num2cell(c1temp);
-                    P.neuron_sn(O{jo}) = num2cell(sntemp);
+                    P.b(O{jo},1) = num2cell(btemp);
+                    P.c1(O{jo},1) = num2cell(c1temp);
+                    P.neuron_sn(O{jo},1) = num2cell(sntemp);
                     for jj = 1:length(O{jo})
-                        P.gn(O{jo}(jj)) = gtemp(jj);
+                        P.gn(O{jo}(jj),1) = gtemp(jj);
                     end
                                       
                     if strcmpi(method,'MCMC');
