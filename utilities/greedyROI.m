@@ -218,6 +218,9 @@ for r = 1:length(K)
 end
 res = reshape(Y,d,T) + repmat(med(:),1,T);
 
+%% clear data matrix from local memory (avoid out-of-memory? see greedyROI_corr.m)
+clear Y
+
 %[b_in,f_in] = nnmf(max(res,0),nb);
 %[b_in,f_in] = nnsvd(max(res,0),nb);
 f_in = [mean(res);rand(nb-1,T)];
