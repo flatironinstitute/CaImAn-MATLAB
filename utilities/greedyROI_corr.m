@@ -195,6 +195,9 @@ Cin(Cin<0) = 0;
 if save_avi; avi_file.close(); end
 res = bsxfun(@plus, Y, Y_median);
 
+%% clear data matrix from local memory (avoid out-of-memory in nnmf)
+clear Y
+
 %% initialize background
 tsub = max(1, round(T/1000));
 [bin, f] = nnmf(max(res(:, 1:tsub:T), 0), nb);
