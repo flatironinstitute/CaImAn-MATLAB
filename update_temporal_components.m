@@ -190,8 +190,8 @@ p = P.p;
 options.p = P.p;
 C = double(C);
 if options.temporal_parallel
-    for iter = 1:ITER
-        [O,lo] = update_order(A(:,1:K));
+    [O,lo] = update_order_greedy(A(:,1:K));
+    for iter = 1:ITER        
         for jo = 1:length(O)
             %Ytemp = YrA(:,O{jo}(:)) + Cin(O{jo},:)';
             %Ytemp = YrA(O{jo}(:),:) + Cin(O{jo},:);
