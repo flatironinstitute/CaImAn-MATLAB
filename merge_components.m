@@ -33,7 +33,12 @@ if ~isfield(options,'deconv_method') || isempty(options.deconv_method); options.
 if ~isfield(options,'fast_merge') || isempty(options.fast_merge); options.fast_merge = defoptions.fast_merge; end  % flag for using fast merging
 
 nr = size(A,2);
-%[d,T] = size(Y);
+
+if nr == 0
+    merged_ROIs = [];
+    return
+end
+
 d = size(A,1);
 T = size(C,2);
 
