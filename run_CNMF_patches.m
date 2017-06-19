@@ -217,10 +217,10 @@ fprintf(' done. \n');
 
 %% compute spatial and temporal background using a rank-1 fit
 fprintf('Computing background components...')
-fin = [mean(F);rand(options.gnb-1,length(F))];
+fin = [mean(F,1);rand(options.gnb-1,length(F))];
 for iter = 1:150
     fin = diag(sqrt(sum(fin.^2,2)))\fin;
-    bin = max(B*(F*fin')/(fin*fin'),0);
+    bin = full(max(B*(F*fin')/(fin*fin'),0));
     fin = max((bin'*bin)\(bin'*B)*F,0);
 end
 fprintf(' done. \n');
@@ -299,8 +299,8 @@ function result = process_patch(Y, F_dark, K, p, tau, options)
     options.spatial_parallel = 0;  % turn off parallel updating for spatial components
     options.space_thresh = 0.3;
     options.time_thresh = 0.3;
-    options.max_pr_thr = 0.75;  
-    
+    options.max_pr_thr = 0.75;
+
     Y = double(Y - F_dark);
     Y(isnan(Y)) = F_dark;
 
@@ -325,12 +325,11 @@ function result = process_patch(Y, F_dark, K, p, tau, options)
         P.ind_time = ind_time;
         P.A_throw = A(:,~ind);
         P.C_throw = C(~ind,:);
-    end    
+    end
     result.A = A(:,ind);
     result.b = b;
     result.C = C(ind,:);
     result.f = f;
     result.S = S;
-    result.P = P;  
-
+    result.P = P;
 end
