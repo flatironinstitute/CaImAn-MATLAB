@@ -9,7 +9,9 @@ classdef TestRunCNMFPatches < matlab.unittest.TestCase
     end
 
     properties (ClassSetupParameter)
-        sizY = struct('data2d', [128, 128, 500], 'data3d', [128, 128, 7, 100]);
+        sizY = struct('data2d', [128, 128, 500], ...
+                      'data2d_small', [25, 25, 500], ...
+                      'data3d', [128, 128, 7, 100]);
         memory_mapped = struct('memmapped', true, 'inRAM', false);
     end
 
