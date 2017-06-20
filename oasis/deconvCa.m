@@ -71,7 +71,8 @@ end
 
 % tuning parameter for enforcing sparsity
 if ~exist('lambda', 'var') || isempty(lambda)
-    lambda = 0;   % tuning parameter
+    lambda = 0;
+    %lambda = norm(kernel.fhandle(kernel.pars,1:kernel.nMax))*sn*norminv(0.99);   % tuning parameter
 end
 
 % weight for each frame
@@ -82,11 +83,6 @@ elseif length(theta)==T
 else
     disp('elements in theta should be equal to elements in y');
     return;
-end
-
-% tuning parameter for enforcing sparsity
-if ~exist('lambda', 'var') || isempty(lambda)
-    lambda = 0;   % tuning parameter
 end
 
 %% running OASIS

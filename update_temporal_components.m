@@ -85,6 +85,14 @@ if (strcmpi(method,'noise_constrained') || strcmpi(method,'project')) && ~isfiel
 else
     G = speye(T);
 end
+K = size(A,2);
+if K == 0    
+    C = [];
+    if exist('fin','var'); f = fin; else f = []; end
+    S = [];
+    YrA = [];
+    return
+end
 
 ff = find(sum(A)==0);
 if ~isempty(ff)

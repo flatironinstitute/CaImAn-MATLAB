@@ -52,6 +52,12 @@ if nargin < 2 || (isempty(A_) && isempty(C))  % at least either spatial or tempo
 else
     if ~isempty(C); K = size(C,1); else K = size(A_,2) - options.nb; end
 end
+if K == 0
+    A = [];
+    b = full(A_(:,K+1:end));
+    C = [];
+    return
+end
 
 if nargin < 5 || isempty(P); P = preprocess_data(Y,1); end  % etsimate noise values if not present
 if nargin < 4 || isempty(A_); 

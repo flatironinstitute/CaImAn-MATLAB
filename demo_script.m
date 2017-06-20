@@ -64,7 +64,7 @@ P.p = 0;    % set AR temporarily to zero for speed
 [ROIvars.rval_space,ROIvars.rval_time,ROIvars.max_pr,ROIvars.sizeA,keep] = classify_components(Y,A,C,b,f,YrA,options);
 
 %% run GUI for modifying component selection (optional, close twice to save values)
-run_GUI = true;
+run_GUI = false;
 if run_GUI
     Coor = plot_contours(A,Cn,options,1); close;
     GUIout = ROI_GUI(A,options,Cn,Coor,keep,ROIvars);   
