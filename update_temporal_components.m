@@ -91,6 +91,10 @@ if K == 0
     if exist('fin','var'); f = fin; else f = []; end
     S = [];
     YrA = [];
+    P.b = [];
+    P.c1 = [];
+    P.neuron_sn = [];
+    P.gn = [];
     return
 end
 
