@@ -91,6 +91,15 @@ if ~isfield(options,'deconv_method') || isempty(options.deconv_method); method =
 if ~isfield(options,'bas_nonneg'); options.bas_nonneg = defoptions.bas_nonneg; end
 if ~isfield(options,'fudge_factor'); options.fudge_factor = defoptions.fudge_factor; end
 
+K = size(A,2);
+if K == 0    
+    C = [];
+    if exist('fin','var'); f = fin; else f = []; end
+    S = [];
+    YrA = [];
+    return
+end
+
 ff = find(sum(A)==0);
 if ~isempty(ff)
     A(:,ff) = [];
