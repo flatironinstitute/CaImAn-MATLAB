@@ -25,10 +25,15 @@ if isfield(params, 'search_method'); method=params.search_method; else method='e
 if and(isfield(params, 'bSiz'), strcmpi(method, 'dilate'))
     params.se = strel('disk', params.bSiz);
 end
+if isfield(params,'init_method'); init_method = params.init_method; else init_method = 'greedy'; end
+
 Y = reshape(Y,size(A,1),[]);
 % search locations
-IND = determine_search_location(A,method,params);
-%IND = true(size(A));
+if strcmpi(init_method,'greedy') || strcmpi(init_method,'greedy_corr');
+    IND = determine_search_location(A,method,params);
+else
+    IND = true(size(A));
+end
 %% update spatial and temporal components neuron by neurons
 Yac = max(Y - b*f,0);
 for miter=1:maxIter

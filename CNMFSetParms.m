@@ -316,11 +316,11 @@ Values = [
     % CLASSIFY COMPONENTS PIXELS (classify_components_pixels.m)
     {0.8}
     % CLASSIFY COMPONENTS with CORRELATION (classify_comp_corr.m)
-    {0.4}
-    {0.4}
+    {0.35}
+    {0.35}
     {0.1}
-    {20}
-    {-2:6}
+    {10}
+    {-2:7}
     {10}
     % ORDER COMPONENTS (order_components.m)
     {3}
