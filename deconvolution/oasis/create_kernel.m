@@ -15,7 +15,7 @@ function kernel = create_kernel(kernel_type, pars, nMax, lb, ub, bound_pars)
 
 %% kernel size 
 if ~exist('nMax', 'var') || isempty(nMax)
-    nMax = 50;
+    nMax = 100;
 end
 kernel.nMax = nMax; 
 
@@ -77,7 +77,7 @@ end
 
 % bound the parameters of not 
 if ~exist('bound_pars', 'var')||isempty(bound_pars)
-    kernel.bound_pars = false; 
+    kernel.bound_pars = true; 
 else
     kernel.bound_pars = bound_pars; 
 end

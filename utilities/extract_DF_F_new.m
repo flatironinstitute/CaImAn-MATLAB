@@ -53,7 +53,7 @@ AA = A'*A;
 AA(1:K+1:end) = 0;
 
 Cf = bsxfun(@times,C - Bas,nA(:).^2);
-C2 = AA*bas_val + (A'*b)*f;
+C2 = repmat(AA*bas_val,1,T) + (A'*b)*f;
 
 if isempty(options.df_window) || (options.df_window > size(C,2))
     if options.df_prctile == 50
