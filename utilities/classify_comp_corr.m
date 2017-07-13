@@ -104,7 +104,7 @@ if memmaped
             end
             y_temp = reshape(y_temp,[],length(indeces));
             mY_space = double(mean(y_temp,2) - b_temp*mean(f(:,indeces),2));
-            mY_time = double(mean(y_temp)-mean(b_temp)*f(:,indeces));
+            mY_time = double(mean(y_temp,1)-mean(b_temp,1)*f(:,indeces));
             rval_space(i) = corr(full(a_temp(:)),mY_space);
             rval_time(i) = corr(C(i,indeces)',mY_time');
         else
@@ -113,7 +113,7 @@ if memmaped
         end
     end
 else
-    for i = 1:K_m
+    parfor i = 1:K_m
         ovlp_cmp = find(tAA(:,i));
         indeces = LOCS{i};
         for j = 1:length(ovlp_cmp)
@@ -142,7 +142,7 @@ else
             end               
             y_temp = reshape(y_temp,[],length(indeces));
             mY_space = double(mean(y_temp,2) - b_temp*mean(f(:,indeces),2));
-            mY_time = double(mean(y_temp)-mean(b_temp)*f(:,indeces));
+            mY_time = double(mean(y_temp,1)-mean(b_temp,1)*f(:,indeces));
             rval_space(i) = corr(full(a_temp(:)),mY_space);
             rval_time(i) = corr(C(i,indeces)',mY_time');
         else

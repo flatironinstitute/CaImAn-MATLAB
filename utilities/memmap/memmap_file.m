@@ -30,7 +30,7 @@ if nargin < 2 || isempty(sframe)
 end
 
 if isempty(chunksize)
-    Y = tiff_reader(filename,sframe,num2read);
+    Y = read_file(filename,sframe,num2read);
     sizY = size(Y);
     Yr = reshape(Y,prod(sizY(1:end-1)),[]);
     nY = min(Yr(:));
