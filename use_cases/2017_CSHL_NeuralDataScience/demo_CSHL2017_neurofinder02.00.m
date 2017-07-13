@@ -3,22 +3,27 @@ addpath(genpath('../../../ca_source_extraction'));  % add packages to matlab pat
 addpath(genpath('../../../NoRMCorre'));
 gcp;    % start a local cluster
 
-foldername = '/Users/epnevmatikakis/Documents/Ca_datasets/Neurofinder/neurofinder.02.00/images';
+foldername = '/mnt/xfs1/home/agiovann/Downloads/neurofinder.02.00/images';
     % change foldername to where the data is saved 
 files = subdir(fullfile(foldername,'*.tif*'));
-numFiles = length(files);
-
-%% concatenate files (this will take some time)
-tic;
-Ycon = concatenate_files(files,fullfile(foldername,'neurofinder0200.tif'),'tif');
+numFiles = length(files)
+%% read neurofinder
+tic
+delete(fullfile(foldername,'neurofinder0200.tif'))
+Ycon = read_neurofinder(foldername,fullfile(foldername,'neurofinder0200.tif'));
 toc
+%%
+minY = quantile(Ycon(1:1e7),0.0005);
+maxY = quantile(Ycon(1:1e7),1-0.0005);
+%%
+play_movie({Ycon},{'Y'},minY,maxY)
+clear Y_con
 %% construct a memory mapped file
 tic;
 data = memmap_file(fullfile(foldername,'neurofinder0200.tif'));
 toc
 
 %% now perform source extraction by splitting the FOV in patches
-
 sizY = size(data,'Y');
 patch_size = [48,48];                   % size of each patch along each dimension (optional, default: [32,32])
 overlap = [8,8];                        % amount of overlap in each dimension (optional, default: [4,4])
@@ -46,16 +51,10 @@ tic;
 [A,b,C,f,S,P,RESULTS,YrA] = run_CNMF_patches(data,K,patches,tau,p,options);
 [ROIvars.rval_space,ROIvars.rval_time,ROIvars.max_pr,ROIvars.sizeA,keep] = classify_components(data,A,C,b,f,YrA,options);
 toc
-
+%%
+Cn = correlation_image_max(data);
 %% a simple GUI for further classification
 Coor = plot_contours(A,Cn,options,1); close;
-% run_GUI = 0;
-% if run_GUI
-%     GUIout = ROI_GUI(A,options,Cn,Coor,keep,ROIvars);   
-%     options = GUIout{2};
-%     keep = GUIout{3};    
-% end
-
 %% view contour plots of selected and rejected components (optional)
 keep = (ROIvars.rval_space>.7 & ROIvars.rval_time>0);
 throw = ~keep;
