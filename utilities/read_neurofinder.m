@@ -15,5 +15,7 @@ for i = 1:length(files)
         disp(i)
     end
 end
-disp('saving to tif')
-saveastiff(cast(imgs,data_type),output_name,opts_tiff);
+if ~isempty(output_name)
+    disp('saving to tif')
+    saveastiff(cast(imgs,data_type),output_name,opts_tiff);
+end
