@@ -1,31 +1,42 @@
-clear;
+clear all classes;
 addpath(genpath('../../../ca_source_extraction'));  % add packages to matlab path
 addpath(genpath('../../../NoRMCorre'));
 gcp;    % start a local cluster
 
-foldername = '/Users/epnevmatikakis/Documents/Ca_datasets/Neurofinder/neurofinder.02.00/images';
+foldername = '/mnt/xfs1/home/agiovann/Downloads/neurofinder.02.00/images';
     % change foldername to where the data is saved 
 files = subdir(fullfile(foldername,'*.tif*'));
-numFiles = length(files);
+numFiles = length(files)
 
-%% concatenate files (this will take some time)
-tic;
-Ycon = concatenate_files(files,fullfile(foldername,'neurofinder0200.tif'),'tif');
+%% read neurofinder
+tic
+delete(fullfile(foldername,'neurofinder0200.tif'))
+Ycon = read_neurofinder(foldername,fullfile(foldername,'neurofinder0200.tif'));
+% Ycon = read_neurofinder(foldername,[]);
 toc
+%%
+minY = quantile(Ycon(1:1e7),0.0005);
+maxY = quantile(Ycon(1:1e7),1-0.0005);
+%%
+play_movie({Ycon},{'Y'},minY,maxY)
+% clear Y_con
+%% rigid motion correct
+options_rg = NoRMCorreSetParms('d1',size(Ycon,1),'d2',size(Ycon,2),'bin_width',100,'max_shift',15);
+delete(options_rg.mem_filename)
+[M_rg,shifts_rg,template_rg] = normcorre_batch(single(Ycon),options_rg); 
 %% construct a memory mapped file
 tic;
 data = memmap_file(fullfile(foldername,'neurofinder0200.tif'));
 toc
 
 %% now perform source extraction by splitting the FOV in patches
-
 sizY = size(data,'Y');
-patch_size = [48,48];                   % size of each patch along each dimension (optional, default: [32,32])
-overlap = [8,8];                        % amount of overlap in each dimension (optional, default: [4,4])
+patch_size = [32,32];                   % size of each patch along each dimension (optional, default: [32,32])
+overlap = [10,10];                        % amount of overlap in each dimension (optional, default: [4,4])
 
 patches = construct_patches(sizY(1:end-1),patch_size,overlap);
-K = 6;                                            % number of components to be found
-tau = 7;                                          % std of gaussian kernel (size of neuron) 
+K = 5;                                            % number of components to be found
+tau = 5;                                          % std of gaussian kernel (half size of neuron) 
 p = 0;                                            % order of autoregressive system (p = 0 no dynamics, p=1 just decay, p = 2, both rise and decay)
 
 options = CNMFSetParms(...
@@ -46,18 +57,14 @@ tic;
 [A,b,C,f,S,P,RESULTS,YrA] = run_CNMF_patches(data,K,patches,tau,p,options);
 [ROIvars.rval_space,ROIvars.rval_time,ROIvars.max_pr,ROIvars.sizeA,keep] = classify_components(data,A,C,b,f,YrA,options);
 toc
-
+%%
+Cn = correlation_image_max(data);
 %% a simple GUI for further classification
 Coor = plot_contours(A,Cn,options,1); close;
-% run_GUI = 0;
-% if run_GUI
-%     GUIout = ROI_GUI(A,options,Cn,Coor,keep,ROIvars);   
-%     options = GUIout{2};
-%     keep = GUIout{3};    
-% end
-
+traces = C+YrA;
+[fitness,erfc,sd_r,md] = compute_event_exceptionality(traces,0);
 %% view contour plots of selected and rejected components (optional)
-keep = (ROIvars.rval_space>.7 & ROIvars.rval_time>0);
+keep = (ROIvars.rval_space>.8 | fitness<-50);
 throw = ~keep;
 figure;
     ax1 = subplot(121); plot_contours(A(:,keep),Cn,options,0,[],Coor,1,find(keep)); title('Selected components','fontweight','bold','fontsize',14);
