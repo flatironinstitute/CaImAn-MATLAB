@@ -6,7 +6,7 @@ gcp;    % start a local cluster
 foldername = '/Users/epnevmatikakis/Documents/Ca_datasets/Neurofinder/neurofinder.02.00/images';
     % change foldername to where the data is saved 
 files = subdir(fullfile(foldername,'image*.tif*'));
-numFiles = length(files)
+numFiles = length(files);
 
 %% read neurofinder frames and combine them in a single tiff file
 tic
@@ -18,11 +18,11 @@ else
 end
 toc
 %% get dynamic range for showing movies
-minY = quantile(Ycon(1:1e7),0.0005);
-maxY = quantile(Ycon(1:1e7),1-0.0005);
+minY = quantile(Ycon(1:1e7),0.002);
+maxY = quantile(Ycon(1:1e7),1-0.002);
 %%
 play_movie({Ycon},{'Y'},minY,maxY)
-clear Ycon
+%clear Ycon
 %% perform rigid motion correction and save output as a tiff file
 options_rg = NoRMCorreSetParms('d1',512,'d2',512,...
         'bin_width',200,'max_shift',15,'output_type','tif',...
@@ -41,15 +41,15 @@ if ~exist(fullfile(foldername,'neurofinder0200_rig.mat'),'file')
 else
     data = matfile(fullfile(foldername,'neurofinder0200_rig.mat'));
 end
-
+toc
 %% now perform source extraction by splitting the FOV in patches
 
 sizY = size(data,'Y');
-patch_size = [32,32];                   % size of each patch along each dimension (optional, default: [32,32])
+patch_size = [42,42];                   % size of each patch along each dimension (optional, default: [32,32])
 overlap = [5,5];                      % amount of overlap in each dimension (optional, default: [4,4])
 
 patches = construct_patches(sizY(1:end-1),patch_size,overlap);
-K = 5;                                            % number of components to be found
+K = 6;                                            % number of components to be found
 tau = 5;                                          % std of gaussian kernel (half size of neuron) 
 p = 0;                                            % order of autoregressive system (p = 0 no dynamics, p=1 just decay, p = 2, both rise and decay)
 
@@ -69,40 +69,64 @@ options = CNMFSetParms(...
 
 tic;
 [A,b,C,f,S,P,RESULTS,YrA] = run_CNMF_patches(data,K,patches,tau,p,options);
-[ROIvars.rval_space,ROIvars.rval_time,ROIvars.max_pr,ROIvars.sizeA,keep] = classify_components(data,A,C,b,f,YrA,options);
-toc
+toc;
 
-%% compute correlation image 
+%% compute max-correlation image (just for visualization purposes)
 Cn = correlation_image_max(data);
 
 %% a simple GUI for further classification
-Coor = plot_contours(A,Cn,options,1); close;
-%traces = C+YrA;
-%tic; [fitness,erfc,sd_r,md] = compute_event_exceptionality(traces,0); toc
+Coor = plot_contours(A,Cn,options,1,[]); close;
 
-%% 
-run_GUI = false;
-if run_GUI
-    GUIout = ROI_GUI(A,options,Cn,Coor,keep,ROIvars);   
-    options = GUIout{2};
-    keep = GUIout{3};    
-end
+%% Evalute components to screen for false positive events
+tic;
+[ROIvars.rval_space,ROIvars.rval_time,ROIvars.max_pr,ROIvars.sizeA,keep] = classify_components(data,A,C,b,f,YrA,options);
+toc
+
+traces = prctfilt(C+YrA,8,1000,100);
+fitness = compute_event_exceptionality(traces,0);
+fitness_delta = compute_event_exceptionality(diff(traces,[],2),0);
 
 
 %% view contour plots of selected and rejected components (optional)
-%keep = (ROIvars.rval_space>.8 | fitness<-50);
+keep = (fitness_delta < - 25 | fitness < - 25 | ROIvars.rval_space> 0.75) & ROIvars.sizeA > 10 & ROIvars.sizeA < 320  ; 
 throw = ~keep;
 figure;
     ax1 = subplot(121); plot_contours(A(:,keep),Cn,options,0,[],Coor,1,find(keep)); title('Selected components','fontweight','bold','fontsize',14);
     ax2 = subplot(122); plot_contours(A(:,throw),Cn,options,0,[],Coor,1,find(throw));title('Rejected components','fontweight','bold','fontsize',14);
     linkaxes([ax1,ax2],'xy')
-%% inspect components
-plot_components_GUI(data,A(:,keep),C(keep,:),b,f,Cn,options);
 
-%% refine temporal components
+
+%% keep only the selected components and refine them
 A_keep = A(:,keep);
 C_keep = C(keep,:);
-[C2,f2,P2,S2,YrA2] = update_temporal_components(data,A_keep,b,C_keep,f,P,options);
+tic;
+options.nb = size(b,2);
+[A2,b2,C2,P2] = update_spatial_components(data,C_keep,f,[A_keep,b],P,options);
+P2.p = 0;
+[C2,f2,P2,S2,YrA2] = update_temporal_components(data,A2,b2,C2,f,P2,options);
+toc
+
+Coor2 = plot_contours(A2,Cn,options,1,[]); close
+%% Evalute components to screen for false positive 
+
+tic;
+[ROIvars2.rval_space,ROIvars2.rval_time,ROIvars2.max_pr,ROIvars2.sizeA,keep2] = classify_components(data,A2,C2,b2,f2,YrA2,options);
+toc
+traces2 = prctfilt(C2+YrA2,8,1000,100);
+
+[fitness2,erc,sd_r,md] = compute_event_exceptionality(traces2,0);
+[fitness_delta2,erc,sd_r,md] = compute_event_exceptionality(diff(traces2,[],2),0);
+
+%%
+keep2 = (fitness_delta2 < - 30 | fitness2 < - 35 | ROIvars2.rval_space> 0.8) & ROIvars2.sizeA > 20 & ROIvars2.sizeA < 200 & ROIvars2.rval_time> 0.75 ; 
+throw2 = ~keep2;
+figure;
+    ax1 = subplot(121); plot_contours(A2(:,keep2),Cn,options,0,[],Coor2,1,find(keep2)); title('Selected components','fontweight','bold','fontsize',14);
+    ax2 = subplot(122); plot_contours(A2(:,throw2),Cn,options,0,[],Coor2,1,find(throw2));title('Rejected components','fontweight','bold','fontsize',14);
+    linkaxes([ax1,ax2],'xy')
+
+%% inspect components
+plot_components_GUI(data,A2,C2,b2,f2,Cn,options);
 
 %% detrend fluorescence and extract DF/F values
 df_percentile = 30;

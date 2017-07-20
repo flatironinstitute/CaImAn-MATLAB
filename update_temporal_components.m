@@ -121,8 +121,10 @@ if isempty(fin) || nargin < 5   % temporal background missing
 end
 
 % construct product A'*Y
-AY = mm_fun(A,Y);
-bY = mm_fun(b,Y);
+AY = mm_fun([A,double(b)],Y);
+bY = AY(size(A,2)+1:end,:);
+AY = AY(1:size(A,2),:);
+
 % step = 5e3;
 % if memmaped
 %     AY = zeros(size(A,2),T);

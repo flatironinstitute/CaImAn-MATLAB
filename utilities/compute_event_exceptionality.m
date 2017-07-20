@@ -70,10 +70,10 @@ pd = makedist('Normal',mu,sigma);
 erf = 1 - cdf(pd,z);
 % use logarithm so that multiplication becomes sum
 erf = log(erf);
-filt = ones(N,1);
+filt = ones(1,N);
 % moving sum
-erfc = conv2(filt,1,erf,'same');
-erfc = erfc (:,1:T);
+erfc = conv2(1,filt,erf,'same');
+erfc = erfc(:,1:T);
 
 % select the maximum value of such probability for each trace
 fitness = min(erfc, [], 2);

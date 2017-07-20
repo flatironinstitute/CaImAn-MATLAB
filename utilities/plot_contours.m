@@ -71,11 +71,11 @@ fontname = 'helvetica';
     if ~(nargin < 6 || isempty(Coor))
         CC = Coor;
         for j = 1:length(ind_show)
-            i = ind_show(j);
-            cont = medfilt1(Coor{i}')';
-            if size(cont,2) > 1
+            i = ind_show(j);            
+            if size(Coor{i},2) > 1
+                cont = medfilt1(Coor{i}')';
                 plot(cont(1,2:end),cont(2,2:end),'Color',cmap(j+size(Aor,2),:), 'linewidth', ln_wd); hold on;
-            end
+            end            
         end
     else
         CC = cell(size(Aor,2),1);
