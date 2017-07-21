@@ -23,6 +23,9 @@ elseif ~ismatrix(X)
     X = reshape(X,[],sizX(end));
 end
 
+window = min(window,sizX(end));
+shift = min(shift,window);
+
 Xpad = [X(:,1:ceil((window-1)/2)),X,X(:,sizX(end) - (ceil((window-1)/2)-1:-1:0))];
 
 blocks_end = window:shift:size(Xpad,2);

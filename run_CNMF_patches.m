@@ -253,19 +253,29 @@ Pm.rval_time = rval_time;
 Pm.A_throw = Am(:,~ind);
 Pm.C_throw = Cm(~ind,:);
 
-%% update spatial components
-fprintf('Updating spatial components...');
-options.nb = options.gnb;
-if ~isfield(Pm,'mis_values'); Pm.mis_values = []; end
-if ~isfield(Pm,'mis_entries'); Pm.mis_entries = []; end
-[A,b,C,Pm] = update_spatial_components(data,C,fin,[A,bin],Pm,options);
-fprintf(' done. \n');
+%% update again before screening
+if (0)
+    % update spatial components
+    fprintf('Updating spatial components...');
+    options.nb = options.gnb;
+    if ~isfield(Pm,'mis_values'); Pm.mis_values = []; end
+    if ~isfield(Pm,'mis_entries'); Pm.mis_entries = []; end
+    [A,b,C,Pm] = update_spatial_components(data,C,fin,[A,bin],Pm,options);
+    fprintf(' done. \n');
 
-%% update temporal components
-fprintf('Updating temporal components... ')
-Pm.p = 0;
-[C,f,P,S,YrA] = update_temporal_components_fast(data,A,b,C,fin,Pm,options);
-fprintf(' done. \n');
+    % update temporal components
+    fprintf('Updating temporal components... ')
+    Pm.p = 0;
+    [C,f,P,S,YrA] = update_temporal_components_fast(data,A,b,C,fin,Pm,options);
+    fprintf(' done. \n');
+else
+    b = bin;
+    f = fin;
+    AY = mm_fun([A,double(b)],data);
+    AA = [A,double(b)]'*[A,double(b)];
+    YrA = bsxfun(@times, 1./sum([A,double(b)].^2)',AY - AA*[C;f]);
+    YrA = YrA(1:size(C,1),:);
+end
 
 end
 

@@ -22,7 +22,7 @@ function varargout = ROI_GUI(varargin)
 
 % Edit the above text to modify the response to help ROI_GUI
 
-% Last Modified by GUIDE v2.5 06-Feb-2017 13:07:59
+% Last Modified by GUIDE v2.5 20-Jul-2017 12:00:06
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -76,6 +76,10 @@ set(handles.slider_max,'Value',handles.options.max_size_thr);
 set(handles.maxcellsize,'string',num2str(handles.options.max_size_thr));
 set(handles.slider_min,'Value',handles.options.min_size_thr);
 set(handles.mincellsize,'string',num2str(handles.options.min_size_thr));
+
+set(handles.slider_max_prob,'Value',handles.options.max_pr_thr);
+set(handles.maxevex,'string',num2str(handles.options.max_pr_thr));
+
 axes(handles.template_fig);
 colormap gray
 plot_contours(handles.A,handles.template,handles.options,0,[],handles.CC,[],find(handles.keep)); 
@@ -140,10 +144,30 @@ set(handles.numcells,'string',num2str(handles.cellnum));
 set(handles.computing_text,'Visible','off');
 guidata(hObject, handles);
 
+
+
+%% MAX EVENT EXCEPTIONALITY
+% --- Executes on slider movement.
+function slider_max_prob_Callback(hObject, eventdata, handles)
+% hObject    handle to slider_max_prob (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'Value') returns position of slider
+%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
+handles.options.max_pr_thr = get(hObject,'Value');
+set(handles.maxevex,'string',num2str(handles.options.max_pr_thr));
+set(handles.computing_text,'Visible','on');
+[handles.A_keep,handles.keep,handles.cellnum] = replot(handles.A,handles.template,handles.options,handles.template_fig,handles.CC,handles.ROIvars);
+set(handles.numcells,'string',num2str(handles.cellnum));
+set(handles.computing_text,'Visible','off');
+guidata(hObject, handles);
+
 %% PLOT
 function [A_keep,keep,cellnum] = replot(A,template,options,fig,CC,ROIvars)
 
-keep = (ROIvars.rval_space > options.space_thresh) & (ROIvars.rval_time > options.time_thresh) & (ROIvars.max_pr > options.max_pr_thr) & (ROIvars.sizeA >= options.min_size_thr) & (ROIvars.sizeA <= options.max_size_thr);
+keep = (ROIvars.rval_space > options.space_thresh) & (ROIvars.rval_time > options.time_thresh) & (ROIvars.max_pr > options.max_pr_thr) & ... 
+    (ROIvars.sizeA >= options.min_size_thr) & (ROIvars.sizeA <= options.max_size_thr); % & (ROIvars.max_pr <= options.maxevex) & (ROIvars.max_pr >= options.minevex);
 A_keep = A(:,keep);    
 axes(fig);
 plot_contours(A_keep,template,options,0,[],CC,[],find(keep)); 
@@ -232,6 +256,44 @@ if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColo
 end
 
 function mincellsize_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+
+
+% --- Executes during object creation, after setting all properties.
+function slider_max_prob_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to slider_max_prob (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: slider controls usually have a light gray background.
+if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor',[.9 .9 .9]);
+end
+
+
+
+function maxevex_Callback(hObject, eventdata, handles)
+% hObject    handle to maxevex (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of maxevex as text
+%        str2double(get(hObject,'String')) returns contents of maxevex as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function maxevex_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to maxevex (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
