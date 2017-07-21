@@ -9,10 +9,10 @@ if ~exist(filename,'file');
     fprintf('done. \n');
 end
 
-addpath(genpath('../../ca_source_extraction-master'));  % add packages to matlab path
-addpath(genpath('NoRMCorre-master'));
-addpath(genpath('ca_source_extraction'));  % add packages to matlab path
-addpath(genpath('NoRMCorre'));
+addpath(genpath('../../../ca_source_extraction-master'));  % add packages to matlab path
+addpath(genpath('../../../NoRMCorre-master'));
+addpath(genpath('../../../ca_source_extraction'));  % add packages to matlab path
+addpath(genpath('../../../NoRMCorre'));
 
 %% read file and determine dynamic range
 
@@ -148,22 +148,19 @@ figure;
     ax2 = subplot(122); plot_contours(A(:,throw),Cn,options,0,[],Coor,1,find(throw));title('Rejected components','fontweight','bold','fontsize',14);
     linkaxes([ax1,ax2],'xy')
 %% inspect components
+
 plot_components_GUI(M_nr,A(:,keep),C(keep,:),b,f,Cn,options);
 
 %% refine temporal components
 A_keep = A(:,keep);
 C_keep = C(keep,:);
+P.p = 0;
 [C2,f2,P2,S2,YrA2] = update_temporal_components(reshape(M_nr,[],T),A_keep,b,C_keep,f,P,options);
 
 %% detrend fluorescence and extract DF/F values
 
-df_percentile = 30;
-window = 1000; 
-
-F = diag(sum(A_keep.^2))*(C2 + YrA2);  % fluorescence
-Fd = prctfilt(F,df_percentile,window);                      % detrended fluorescence
-Bc = prctfilt((A_keep'*b)*f2,30,1000,300,0) + (F-Fd);       % background + baseline for each component
-F_dff = Fd./Bc;
+options.df_window = 1000; 
+[F_dff,F0] = detrend_df_f(A_keep,b,C2,f2,YrA2,options);
 
 %% deconvolve data
 

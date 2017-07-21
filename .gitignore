@@ -12,3 +12,5 @@ endoscope/demos/demos_labs/*.*
 *.zip
 
 dendritic_demo.tif
+
+use_cases/2017_CSHL_NeuralDataScience/demoSue2x.tif

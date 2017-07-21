@@ -276,7 +276,7 @@ else
     YrA = bsxfun(@times, 1./sum([A,double(b)].^2)',AY - AA*[C;f]);
     YrA = YrA(1:size(C,1),:);
 end
-
+P.p = p;
 end
 
 function idx = patch_to_indices(patch)
