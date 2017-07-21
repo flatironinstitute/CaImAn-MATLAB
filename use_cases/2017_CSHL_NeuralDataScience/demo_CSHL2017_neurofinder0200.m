@@ -114,8 +114,8 @@ tic;
 toc
 traces2 = prctfilt(C2+YrA2,8,1000,100);
 
-[fitness2,erc,sd_r,md] = compute_event_exceptionality(traces2,0);
-[fitness_delta2,erc,sd_r,md] = compute_event_exceptionality(diff(traces2,[],2),0);
+fitness2 = compute_event_exceptionality(traces2,0);
+fitness_delta2, = compute_event_exceptionality(diff(traces2,[],2),0);
 
 %%
 keep2 = (fitness_delta2 < - 30 | fitness2 < - 35 | ROIvars2.rval_space> 0.8) & ROIvars2.sizeA > 20 & ROIvars2.sizeA < 200 & ROIvars2.rval_time> 0.75 ; 
@@ -126,16 +126,15 @@ figure;
     linkaxes([ax1,ax2],'xy')
 
 %% inspect components
-plot_components_GUI(data,A2,C2,b2,f2,Cn,options);
+A_keep2 = A2(:,keep2);
+C_keep2 = C2(keep2,:);
+
+plot_components_GUI(data,A_keep2,C_keep2,b2,f2,Cn,options);
 
 %% detrend fluorescence and extract DF/F values
-df_percentile = 30;
-window = 1000; 
 
-F = diag(sum(A_keep.^2))*(C2 + YrA2);  % fluorescence
-Fd = prctfilt(F,df_percentile,window);                      % detrended fluorescence
-Bc = prctfilt((A_keep'*b)*f2,30,1000,300,0) + (F-Fd);       % background + baseline for each component
-F_dff = Fd./Bc;
+options.df_window = 1000; 
+[F_dff,F0] = detrend_df_f(A_keep2,b2,C_keep2,f2,YrA2(keep2,:),options);
 
 %% deconvolve data
 
