@@ -89,7 +89,6 @@ end
 %% repeat
 updateSpatial(obj, Yr);
 updateTemporal(obj, Yr);
-
 %% do some plotting
 [srt] = orderROIs(obj);     % order components
 K_m = size(obj.C,1);

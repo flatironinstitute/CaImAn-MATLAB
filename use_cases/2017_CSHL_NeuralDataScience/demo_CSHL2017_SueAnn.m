@@ -58,6 +58,27 @@ options_nr = NoRMCorreSetParms('d1',size(Y,1),'d2',size(Y,2),...
                     'bin_width',100,'max_shift',15,'max_dev',8);
 
 [M_nr,shifts_nr,template_nr] = normcorre_batch(Y,options_nr,template_rg); 
+
+%% plot shifts        
+
+shifts_r = squeeze(cat(3,shifts_rg(:).shifts));
+shifts_n = cat(ndims(shifts_nr(1).shifts)+1,shifts_nr(:).shifts);
+shifts_n = reshape(shifts_n,[],ndims(Y)-1,T);
+shifts_x = squeeze(shifts_n(:,2,:))';
+shifts_y = squeeze(shifts_n(:,1,:))';
+
+patch_id = 1:size(shifts_x,2);
+str = strtrim(cellstr(int2str(patch_id.')));
+str = cellfun(@(x) ['patch # ',x],str,'un',0);
+
+figure;
+    ax1 = subplot(311); plot(1:T,cY,1:T,cM_rg,1:T,cM_nr); legend('raw data','rigid','non-rigid'); title('correlation coefficients','fontsize',14,'fontweight','bold')
+            set(gca,'Xtick',[])
+    ax2 = subplot(312); plot(shifts_x); hold on; plot(shifts_r(:,2),'--k','linewidth',2); title('displacements along x','fontsize',14,'fontweight','bold')
+            set(gca,'Xtick',[])
+    ax3 = subplot(313); plot(shifts_y); hold on; plot(shifts_r(:,1),'--k','linewidth',2); title('displacements along y','fontsize',14,'fontweight','bold')
+            xlabel('timestep','fontsize',14,'fontweight','bold')
+    linkaxes([ax1,ax2,ax3],'x')
                 
 %% view (downsampled) data
 
@@ -82,26 +103,7 @@ figure;
     subplot(2,3,6); scatter(cM_rg,cM_nr); hold on; plot([0.95*min(cM_rg),1.05*max(cM_nr)],[0.95*min(cM_rg),1.05*max(cM_nr)],'--r'); axis square;
         xlabel('rigid corrected','fontsize',14,'fontweight','bold'); ylabel('non-rigid corrected','fontsize',14,'fontweight','bold');
     linkaxes(ax,'xy')
-%% plot shifts        
 
-shifts_r = squeeze(cat(3,shifts_rg(:).shifts));
-shifts_n = cat(ndims(shifts_nr(1).shifts)+1,shifts_nr(:).shifts);
-shifts_n = reshape(shifts_n,[],ndims(Y)-1,T);
-shifts_x = squeeze(shifts_n(:,2,:))';
-shifts_y = squeeze(shifts_n(:,1,:))';
-
-patch_id = 1:size(shifts_x,2);
-str = strtrim(cellstr(int2str(patch_id.')));
-str = cellfun(@(x) ['patch # ',x],str,'un',0);
-
-figure;
-    ax1 = subplot(311); plot(1:T,cY,1:T,cM_rg,1:T,cM_nr); legend('raw data','rigid','non-rigid'); title('correlation coefficients','fontsize',14,'fontweight','bold')
-            set(gca,'Xtick',[])
-    ax2 = subplot(312); plot(shifts_x); hold on; plot(shifts_r(:,2),'--k','linewidth',2); title('displacements along x','fontsize',14,'fontweight','bold')
-            set(gca,'Xtick',[])
-    ax3 = subplot(313); plot(shifts_y); hold on; plot(shifts_r(:,1),'--k','linewidth',2); title('displacements along y','fontsize',14,'fontweight','bold')
-            xlabel('timestep','fontsize',14,'fontweight','bold')
-    linkaxes([ax1,ax2,ax3],'x')
 
 %% now perform source extraction by splitting the FOV in patches
 
