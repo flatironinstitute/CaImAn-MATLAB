@@ -1,4 +1,4 @@
-function [CC,jsf] = plot_contours(Aor,Cn,options,display_numbers,max_number,Coor, ln_wd, ind_show)
+function [CC,jsf,im] = plot_contours(Aor,Cn,options,display_numbers,max_number,Coor, ln_wd, ind_show)
 
 % save and plot the contour traces of the found spatial components against
 % a specified background image. The contour can be determined in two ways:
@@ -61,7 +61,7 @@ if ~isfield(options,'maxthr') || isempty(options.maxthr); options.maxthr = defop
 fontname = 'helvetica';
 
     [d1,d2] = size(Cn);
-    imagesc(Cn,[min(Cn(:)),max(Cn(:))]);
+    im =imagesc(Cn,[min(Cn(:)),max(Cn(:))]);
     axis tight; axis equal; 
     posA = get(gca,'position');
     set(gca,'position',posA);
