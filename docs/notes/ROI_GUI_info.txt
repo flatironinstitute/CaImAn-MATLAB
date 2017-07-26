@@ -1,0 +1,23 @@
+######################################
+########## DISCARDING INFO ###########
+
+In the GUI to refine the component, 
+be carefull in using discarding 
+
+
+Nonetheless, if you have used it by mistake:
+
+you can set a breakpoint somewhere in 
+the replot function in the ROI GUI matlab file.
+once it is done, just change one variable.
+
+now go in the terminal of matlab 
+and save your undiscarded idx that you can find in 
+handles.keep as a list of bool
+and your discarded one un handles.disc
+as a list of bool with true meaning 
+discarded. 
+if you change the right index into false again, 
+you will have directly un discarded this component.
+
+Jérémie KALFON
