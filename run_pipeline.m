@@ -177,7 +177,7 @@ for i = 1:numFiles
     b_us{i} = max(mm_fun(f_us{i},h5_files(i).name) - A_keep*(C_us{i}*f_us{i}'),0)/norm(f_us{i})^2;
 end
 
-prctfun = @(data) prctfilt(data,30,1000,300);       % first detrend fluorescence (remove 20%th percentile on a rolling 1000 timestep window)
+prctfun = @(data) prctfilt(data,30,1000,300);       % first detrend fluorescence (remove 20th percentile on a rolling 1000 timestep window)
 F_us = cellfun(@plus,C_us,YrA_us,'un',0);           % cell array for projected fluorescence
 Fd_us = cellfun(prctfun,F_us,'un',0);               % detrended fluorescence
 

@@ -83,8 +83,8 @@ tic;
 toc
 
 traces = prctfilt(C+YrA,8,1000,100);
-fitness = compute_event_exceptionality(traces,0);
-fitness_delta = compute_event_exceptionality(diff(traces,[],2),0);
+ROIvars.fitness = compute_event_exceptionality(traces,0);
+ROIvars.fitness_delta = compute_event_exceptionality(diff(traces,[],2),0);
 
 
 %% view contour plots of selected and rejected components (optional)
@@ -95,6 +95,14 @@ figure;
     ax2 = subplot(122); plot_contours(A(:,throw),Cn,options,0,[],Coor,1,find(throw));title('Rejected components','fontweight','bold','fontsize',14);
     linkaxes([ax1,ax2],'xy')
 
+%% run GUI for modifying component selection (optional, close twice to save values)
+run_GUI = true;
+if run_GUI
+    %Coor = plot_contours(A,Cn,options,1); close;
+    GUIout = ROI_GUI(A,options,Cn,Coor,keep,ROIvars);   
+    options = GUIout{2};
+    keep = GUIout{3};    
+end  
 
 %% keep only the selected components and refine them
 A_keep = A(:,keep);
