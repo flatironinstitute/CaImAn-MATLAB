@@ -10,11 +10,6 @@ function [fitness,erfc,sd_r,md] = compute_event_exceptionality(traces,robust_std
     
     Parameters:
     -----------
-    Y: array
-        movie x,y,t
-
-    A: sparse array
-        spatial components
 
     traces: array
         Fluorescence traces

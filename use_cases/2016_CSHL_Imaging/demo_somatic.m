@@ -61,6 +61,7 @@ clear Y;
 P.p = 0;    % set AR temporarily to zero for speed
 [C,f,P,S] = update_temporal_components(Yr,A,b,Cin,fin,P,options);
 
+
 %% merge found components
 [Am,Cm,K_m,merged_ROIs,P,Sm] = merge_components(Yr,A,b,C,f,P,S,options);
 
