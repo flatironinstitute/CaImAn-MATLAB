@@ -30,9 +30,10 @@ end
 F = diag(sum(A.^2))*(C + YrA);                                                     % fluorescence
 if isempty(options.df_window) || (options.df_window > size(C,2))
     Fd = prctile(F,options.df_prctile,2);
-    F0 = repmat(prctile((A'*b)*f,options.df_prctile) - Fd,1,size(C,2)) + F;
+    F0 = repmat(prctile((A'*b)*f,options.df_prctile,2) + Fd,1,size(C,2));
+    F_dff = (F - repmat(Fd,1,size(C,2)))./F0;
 else
     Fd = prctfilt(F,options.df_prctile,options.df_window);                             % detrended fluorescence
     F0 = prctfilt((A'*b)*f,options.df_prctile,options.df_window,[],0) + (F-Fd);       % background + baseline for each component
+    F_dff = Fd./F0;
 end
-F_dff = Fd./F0;
