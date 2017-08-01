@@ -75,7 +75,7 @@ if true
     ROIvars.cm = com(A,options.d1,options.d2);
     
     ROIvars.C = C;
-    Coor = plot_contours(A,Cn,options,1); close;
+    [Coor,~,~] = plot_contours(A,Cn,options,1); close;
     GUIout = ROI_GUI(A,options,Cn,Coor,keep,ROIvars);   
     options = GUIout{2};
     keep = GUIout{3};    
@@ -117,7 +117,7 @@ K_m = size(C_or,1);
 [C_df,~] = extract_DF_F(Yr,A_or,C_or,P_or,options); % extract DF/F values (optional)
 
 figure;
-[Coor,json_file] = plot_contours(A_or,Cn,options,1); % contour plot of spatial footprints
+[Coor,json_file,~] = plot_contours(A_or,Cn,options,1); % contour plot of spatial footprints
 %savejson('jmesh',json_file,'filename');        % optional save json file with component coordinates (requires matlab json library)
 
 %% display components
