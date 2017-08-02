@@ -40,14 +40,14 @@ options = CNMFSetParms(...
 
 % display centers of found components
 Cn =  correlation_image(Y); %reshape(P.sn,d1,d2);  %max(Y,[],3); %std(Y,[],3); % image statistic (only for display purposes)
-figure;imagesc(Cn);
-    axis equal; axis tight; hold all;
-    scatter(center(:,2),center(:,1),'mo');
-    title('Center of ROIs found from initialization algorithm');
-    drawnow;
+% figure;imagesc(Cn);
+%     axis equal; axis tight; hold all;
+%     scatter(center(:,2),center(:,1),'mo');
+%     title('Center of ROIs found from initialization algorithm');
+%     drawnow;
 
 %% manually refine components (optional)
-refine_components = false;  % flag for manual refinement
+refine_components = true;  % flag for manual refinement
 if refine_components
     [Ain,Cin,center] = manually_refine_components(Y,Ain,Cin,center,Cn,tau,options);
 end
@@ -75,7 +75,7 @@ if true
     ROIvars.cm = com(A,options.d1,options.d2);
     
     ROIvars.C = C;
-    [Coor,~,~] = plot_contours(A,Cn,options,1); close;
+    Coor = plot_contours(A,Cn,options,1); close;
     GUIout = ROI_GUI(A,options,Cn,Coor,keep,ROIvars);   
     options = GUIout{2};
     keep = GUIout{3};    
