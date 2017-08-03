@@ -40,14 +40,14 @@ options = CNMFSetParms(...
 
 % display centers of found components
 Cn =  correlation_image(Y); %reshape(P.sn,d1,d2);  %max(Y,[],3); %std(Y,[],3); % image statistic (only for display purposes)
-figure;imagesc(Cn);
-    axis equal; axis tight; hold all;
-    scatter(center(:,2),center(:,1),'mo');
-    title('Center of ROIs found from initialization algorithm');
-    drawnow;
+% figure;imagesc(Cn);
+%     axis equal; axis tight; hold all;
+%     scatter(center(:,2),center(:,1),'mo');
+%     title('Center of ROIs found from initialization algorithm');
+%     drawnow;
 
 %% manually refine components (optional)
-refine_components = false;  % flag for manual refinement
+refine_components = true;  % flag for manual refinement
 if refine_components
     [Ain,Cin,center] = manually_refine_components(Y,Ain,Cin,center,Cn,tau,options);
 end
@@ -117,7 +117,7 @@ K_m = size(C_or,1);
 [C_df,~] = extract_DF_F(Yr,A_or,C_or,P_or,options); % extract DF/F values (optional)
 
 figure;
-[Coor,json_file] = plot_contours(A_or,Cn,options,1); % contour plot of spatial footprints
+[Coor,json_file,~] = plot_contours(A_or,Cn,options,1); % contour plot of spatial footprints
 %savejson('jmesh',json_file,'filename');        % optional save json file with component coordinates (requires matlab json library)
 
 %% display components
