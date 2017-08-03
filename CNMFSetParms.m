@@ -363,8 +363,8 @@ Values = [
     {0.15}
     {0.8}
     % parameters for computing event exceptionality (compute_event_exceptionality.m)
-    {-50}
-    {-50}
+    {-15}
+    {-5}
     ];
 
 for j = 1:m

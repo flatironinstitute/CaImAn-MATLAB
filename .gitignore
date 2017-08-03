@@ -108,3 +108,4 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.gitignore.io/api/git,macos,linux,matlab,windows
+demo_script_old.m
