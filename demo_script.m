@@ -40,14 +40,14 @@ options = CNMFSetParms(...
 
 % display centers of found components
 Cn =  correlation_image(Y); %reshape(P.sn,d1,d2);  %max(Y,[],3); %std(Y,[],3); % image statistic (only for display purposes)
-% figure;imagesc(Cn);
-%     axis equal; axis tight; hold all;
-%     scatter(center(:,2),center(:,1),'mo');
-%     title('Center of ROIs found from initialization algorithm');
-%     drawnow;
+figure;imagesc(Cn);
+    axis equal; axis tight; hold all;
+    scatter(center(:,2),center(:,1),'mo');
+    title('Center of ROIs found from initialization algorithm');
+    drawnow;
 
 %% manually refine components (optional)
-refine_components = true;  % flag for manual refinement
+refine_components = false;  % flag for manual refinement
 if refine_components
     [Ain,Cin,center] = manually_refine_components(Y,Ain,Cin,center,Cn,tau,options);
 end
@@ -60,21 +60,12 @@ Yr = reshape(Y,d,T);
 P.p = 0;    % set AR temporarily to zero for speed
 [C,f,P,S,YrA] = update_temporal_components(Yr,A,b,Cin,fin,P,options);
 
+%% classify components
+[ROIvars.rval_space,ROIvars.rval_time,ROIvars.max_pr,ROIvars.sizeA,keep] = classify_components(Y,A,C,b,f,YrA,options);
+
 %% run GUI for modifying component selection (optional, close twice to save values)
-
-if true
-    % classify components
-    [ROIvars.rval_space,ROIvars.rval_time,ROIvars.max_pr,ROIvars.sizeA,keep] = classify_components(Y,A,C,b,f,YrA,options);
-
-    % compute time variation 
-    traces = prctfilt(C+YrA,8,1000,100);
-    ROIvars.fitness = compute_event_exceptionality(traces,0);
-    ROIvars.fitness_delta = compute_event_exceptionality(diff(traces,[],2),0);
-    
-    % compute center of mass
-    ROIvars.cm = com(A,options.d1,options.d2);
-    
-    ROIvars.C = C;
+run_GUI = false;
+if run_GUI
     Coor = plot_contours(A,Cn,options,1); close;
     GUIout = ROI_GUI(Yra,A,P,options,Cn,Coor,keep,ROIvars,b,f,S);   
     options = GUIout{2};
@@ -117,7 +108,7 @@ K_m = size(C_or,1);
 [C_df,~] = extract_DF_F(Yr,A_or,C_or,P_or,options); % extract DF/F values (optional)
 
 figure;
-[Coor,json_file,~] = plot_contours(A_or,Cn,options,1); % contour plot of spatial footprints
+[Coor,json_file] = plot_contours(A_or,Cn,options,1); % contour plot of spatial footprints
 %savejson('jmesh',json_file,'filename');        % optional save json file with component coordinates (requires matlab json library)
 
 %% display components

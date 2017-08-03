@@ -59,6 +59,17 @@ options_nr = NoRMCorreSetParms('d1',size(Y,1),'d2',size(Y,2),...
 
 [M_nr,shifts_nr,template_nr] = normcorre_batch(Y,options_nr,template_rg); 
 
+%% view (downsampled) data
+
+M_nrs = downsample_data(M_nr,'time',tsub);
+play_movie({Y_sub,M_rgs,M_nrs},{'raw data','rigid','pw-rigid'},minY,maxY);
+
+%% compute some metrics for motion correction quality assessment
+
+[cY,mY,vY] = motion_metrics(Y,options_rg.max_shift);
+[cM_rg,mM_rg,vM_rg] = motion_metrics(M_rg,options_rg.max_shift);
+[cM_nr,mM_nr,vM_nr] = motion_metrics(M_nr,options_rg.max_shift);
+
 %% plot shifts        
 
 shifts_r = squeeze(cat(3,shifts_rg(:).shifts));
@@ -78,18 +89,7 @@ figure;
             set(gca,'Xtick',[])
     ax3 = subplot(313); plot(shifts_y); hold on; plot(shifts_r(:,1),'--k','linewidth',2); title('displacements along y','fontsize',14,'fontweight','bold')
             xlabel('timestep','fontsize',14,'fontweight','bold')
-    linkaxes([ax1,ax2,ax3],'x')
-                
-%% view (downsampled) data
-
-M_nrs = downsample_data(M_nr,'time',tsub);
-play_movie({Y_sub,M_rgs,M_nrs},{'raw data','rigid','pw-rigid'},minY,maxY);
-
-%% compute some metrics for motion correction quality assessment
-
-[cY,mY,vY] = motion_metrics(Y,options_rg.max_shift);
-[cM_rg,mM_rg,vM_rg] = motion_metrics(M_rg,options_rg.max_shift);
-[cM_nr,mM_nr,vM_nr] = motion_metrics(M_nr,options_rg.max_shift);
+    linkaxes([ax1,ax2,ax3],'x')                
 
 
 %% plot metrics
