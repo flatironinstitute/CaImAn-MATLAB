@@ -76,7 +76,7 @@ if true
     
     ROIvars.C = C;
     Coor = plot_contours(A,Cn,options,1); close;
-    GUIout = ROI_GUI(A,options,Cn,Coor,keep,ROIvars);   
+    GUIout = ROI_GUI(Yra,A,P,options,Cn,Coor,keep,ROIvars,b,f,S);   
     options = GUIout{2};
     keep = GUIout{3};    
 end
