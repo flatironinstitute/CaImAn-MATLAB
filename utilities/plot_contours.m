@@ -67,7 +67,7 @@ fontname = 'helvetica';
     set(gca,'position',posA);
     hold on;
     
-    cmap = hot(3*size(Aor,2));
+    cmap = parula(3*size(Aor,2)); %can be 'hot'
     if ~(nargin < 6 || isempty(Coor))
         CC = Coor;
         for j = 1:length(ind_show)

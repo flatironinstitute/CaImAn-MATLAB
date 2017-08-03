@@ -42,7 +42,7 @@ function varargout = ROI_GUI(varargin)
 
 % Edit the above text to modify the response to help ROI_GUI
 
-% Last Modified by GUIDE v2.5 31-Jul-2017 11:38:11
+% Last Modified by GUIDE v2.5 02-Aug-2017 12:27:12
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -72,6 +72,25 @@ function ROI_GUI_OpeningFcn(hObject, eventdata, handles, varargin)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to ROI_GUI (see VARARGIN)
+%      varargin : 
+%           ROIvars : for each ROI/neuron (see CNMFsetparams for further
+%           documentation)
+%               size
+%               fitness
+%               fitness delta
+%               spatial corr
+%               temporal corr
+%               
+%
+%
+%           A :
+%           options : initial threshold values on the informtation of
+%           ROIvars
+%           template : 
+%           CC : 
+%           keep : 
+%           P :
+%           Y :
 
 % Choose default command line output for ROI_GUI
 handles.output = hObject;
@@ -87,13 +106,26 @@ hanldes.iscomputed =false;
 handles.simplekeep = zeros(size(handles.sizetrain));
 handles.genval = 0; 
 handles.isdiscarded = false;
+handles.shownum  =0;
+handles.MAXCELLSIZE=500;
+handles.isextracted = false;
+handles.isrefined = false;
+handles.isdeconvolved = false;
+handles.saving = false;
+
 %from varargin
-handles.A = varargin{1};
-handles.options = varargin{2};
-handles.template = varargin{3};
-handles.CC = varargin{4};
-handles.keep = varargin{5};
-handles.ROIvars = varargin{6};
+handles.Y = varargin{1}
+handles.A = varargin{2};
+handles.P = varargin{3}
+handles.options = varargin{4};
+handles.template = varargin{5};
+handles.CC = varargin{6};
+handles.keep = varargin{7};
+handles.ROIvars = varargin{8};
+handles.b = varargin{9};
+handles.f = varargin{10};
+handles.S = varargin{11};
+
 
 handles.cellnum = sum(handles.keep);
 
@@ -124,6 +156,7 @@ handles.keep = (handles.ROIvars.rval_space > handles.options.space_thresh) &...
 (handles.ROIvars.fitness_delta <= handles.options.min_fitness_delta);
 handles.A_keep = handles.A(:,handles.keep); 
 handles.disc = zeros(size(handles.keep));
+handles.accp = zeros(size(handles.keep));
 axes(handles.template_fig);
 colormap gray
 
@@ -458,21 +491,29 @@ function Switchmode_Callback(hObject, eventdata, handles)
 if ~ handles.selection
     if handles.isdiscarded 
         handles.isdiscarded =false;
-        set(handles.Switchmode,'String','Accepted');
-        set(handles.Switchmode,'ForegroundColor',[.0,1.0,.0]);
+        set(handles.Switchmode,'String','discarded');
+        set(handles.Switchmode,'ForegroundColor',[1.0,.0,.0]);
         set(handles.remove_accept,'String','BAD');
         set(handles.remove_accept,'ForegroundColor',[1.0,.0,.0]);
     else
         handles.isdiscarded =true;
-        set(handles.Switchmode,'String','discarded');
-        set(handles.Switchmode,'ForegroundColor',[1.0,.0,.0]);
+        set(handles.Switchmode,'String','Accepted');
+        set(handles.Switchmode,'ForegroundColor',[.0,1.0,.0]);
         set(handles.remove_accept,'String','GOOD');
         set(handles.remove_accept,'ForegroundColor',[.0,1.0,.0]);
     end
+    %guidata(hObject, handles);
     handles = replot(handles,eventdata);
     guidata(hObject, handles);
 end
 
+function ordercomp_Callback(hObject, eventdata, handles)
+if ~ handles.selection
+    [handles.A,handles.ROIvars.C,~,~] = order_ROIs(handles.A,handles.ROIvars.C);
+    handles.shownum = 1;
+    handles = replot(handles,eventdata);
+    guidata(hObject,handles);
+end
 
 function find_Callback(hObject, eventdata, handles)
 if ~ handles.selection
@@ -547,7 +588,7 @@ idx = false;
 K = size(handles.A);
 if not(handles.selection)
     for i = 1:K(2)
-        if (handles.keep(i)==1 && not(handles.isdiscarded)) || (handles.keep(i)==0 && not(handles.isdiscarded))
+        if (handles.keep(i)==1 && not(handles.isdiscarded)) || (handles.keep(i)==0 && handles.isdiscarded)
             x = handles.ROIvars.cm(i,2);
             y = handles.ROIvars.cm(i,1);
             distx = abs(x - coorx);
@@ -579,8 +620,17 @@ if idx
     set(handles.spacecorr,'String',num2str(handles.ROIvars.rval_time(idx)));
     set(handles.fitness,'String',num2str(handles.ROIvars.fitness(idx)));
     axes(figc);
-    plot(handles.ROIvars.C(idx,:));
-    
+    if handles.isdeconvolved
+        T = zeros(size(handles.ROIvars.C(2));
+        plot(1:T,F_dff(i,:),'--k'); hold all; plot(1:T,C_dec(i,:),'r','linewidth',2);
+        spt = find(S(i,:));
+        if spt(1) == 1; spt(1) = []; end
+        hold on; scatter(spt,repmat(-0.25,1,length(spt)),'m*')
+        title(['Component ',num2str(i)]);
+        legend('Fluorescence DF/F','Deconvolved','Spikes')
+    else
+        plot(handles.ROIvars.C(idx,:));
+    end
 else 
     set(handles.choosetext,'Visible','on');
     set(handles.num_disp,'String','none');
@@ -603,11 +653,13 @@ function remove_accept_Callback(hObject, eventdata, handles)
 if handles.idx && ~ handles.selection
     if handles.isdiscarded
         display('accepting');
+        handles.accp(handles.idx)=1;
         handles.disc(handles.idx)=0;
         handles = replot(handles,eventdata);
     else
         display('deletion');
         handles.disc(handles.idx)=1;
+        handles.accp(handles.idx)=0;
         handles = replot(handles,eventdata);
     end
     guidata(hObject, handles);
@@ -616,20 +668,37 @@ end
 function [handles] = replot(handles,eventdata)
 if not(handles.selection)
     if not(handles.isimple) % computing by comparing everything
-        handles.keep = (handles.ROIvars.rval_space > handles.options.space_thresh) & (handles.ROIvars.rval_time > handles.options.time_thresh) & ... 
-            (handles.ROIvars.sizeA >= handles.options.min_size_thr) & (handles.ROIvars.sizeA <= handles.options.max_size_thr) & ...
-            (handles.ROIvars.fitness <= handles.options.min_fitness) & (handles.ROIvars.fitness_delta <= handles.options.min_fitness_delta) ...
-            & not(handles.disc);
+        handles.keep = or(handles.accp,((handles.ROIvars.rval_space > handles.options.space_thresh) & ...
+            (handles.ROIvars.rval_time > handles.options.time_thresh) & ... 
+            (handles.ROIvars.sizeA >= handles.options.min_size_thr) & ...
+            (handles.ROIvars.sizeA <= handles.options.max_size_thr) & ...
+            (handles.ROIvars.fitness <= handles.options.min_fitness) & ...
+            (handles.ROIvars.fitness_delta <= handles.options.min_fitness_delta) ...
+            & not(handles.disc)));
     else % how we compute the keep for the simple mode, we discard the one that the user discarded himself
-        handles.keep = handles.simplekeep & not(handles.disc);
+        handles.keep = (handles.simplekeep & not(handles.disc)) | handles.accp;
+        handles.shownum = 0;
     end
     if handles.isdiscarded
        handles.A_keep = handles.A(:,not(handles.keep));
+       axes(handles.template_fig);
+       [~,json_file,im] = plot_contours(handles.A_keep,handles.template,...
+        handles.options,handles.shownum,[],handles.CC,[],find(not(handles.keep))); 
     else
        handles.A_keep = handles.A(:,handles.keep);
+       axes(handles.template_fig);
+       [~,json_file,im] = plot_contours(handles.A_keep,handles.template,...
+        handles.options,handles.shownum,[],handles.CC,[],find(handles.keep)); 
     end
-    axes(handles.template_fig);
-    [~,~,im] = plot_contours(handles.A_keep,handles.template,handles.options,0,[],handles.CC,[],find(handles.keep)); 
+    if handles.saving
+        [filename, pathname] = uiputfile({'*.json'},'Save as');
+        if isequal(filename,0) || isequal(pathname,0)
+            disp('User selected Cancel')
+        else
+           savejson('jmesh',json_file,fullfile(pathname,filename)); 
+           disp(['User selected ',fullfile(pathname,filename)])
+        end
+    end
     disp('replot')
     set(im,'ButtonDownFcn',@(hObject,eventdata)ROI_GUI('template_fig_ButtonDownFcn',hObject,eventdata,guidata(hObject)));
     handles.cellnum = sum(handles.keep);
@@ -649,27 +718,56 @@ end
 
 % --- Executes on button press in refine.
 function refine_Callback(hObject, eventdata, handles)
-if ~ handles.selection
+if ~ handles.selection && ~ handles.isrefined && ~ handles.isextracted && ~ handles.isdeconvolved 
+    handles.shownum = 0;
+    handles.P.p = 2;    % restore AR value
+
+    % A first merge 
+    %check that there is an updated keep here
+
+    [handles.A,handles.ROIvars.C,~,~,handles.P,handles.S] = merge_components(handles.Y,handles.A(:,handles.keep),...
+        handles.b,handles.ROIvars.C(handles.keep,:),handles.f,handles.P,handles.S,handles.options);
+
+    [handles.A,handles.b,handles.ROIvars.C] = update_spatial_components(handles.Y,handles.ROIvars.C,...
+        handles.f,[handles.A,handles.b],handles.P,handles.options);
+
+    [handles.ROIvars.C,handles.f,handles.P,handles.S,handles.Y] = update_temporal_components(...
+        handles.Y,handles.A,handles.b,handles.ROIvars.C,handles.f,handles.P,handles.options);
+    handles.isrefined = true;
+    display('refined')
+    handles = replot(handles,eventdata);
+    set(handles.refine,'ForegroundColor',[1.0,.0,.0]);
+    guidata(hObject,handles);
 end 
 
 function extract_Callback(hObject, eventdata, handles)
-if ~ handles.selection
-end
+
 
 function deconvolve_Callback(hObject, eventdata, handles)
-if ~ handles.selection
+%deconvolve and extract
+if ~ handles.selection && handles.isrefined && ~ handles.isdeconvolved 
+    handles.shownum = 0;
+    [handles.ROIvars.C,~] = extract_DF_F(handles.Y,handles.A,handles.ROIvars.C,handles.P,handles.options);
+    K = size(handles.A,2);
+    handles.ROIvars.Cdec = zeros(size(handles.ROIvars.C));
+    handles.kernels = cell(K,1);
+    for i = 1:K
+        [handles.ROIvars.Cdec(i,:),handles.S(i,:),handles.kernels{i}] = deconvCa(...
+            handles.ROIvars.C(i,:), [], 3, true, false, [], 20, [], 0);
+    end
+    handles.isdeconvolved = true;
+    handles = replot(handles,eventdata);
+    display('deconvolved and extracted')
+    set(handles.deconvolve,'ForegroundColor',[1.0,.0,.0]);
+    guidata(hObject,handles);
 end
 
 function save_Callback(hObject, eventdata, handles)
 if ~ handles.selection
-    
+    handles.saving = true;
+    handles = replot(handles,eventdata);
+    guidata(hObject,handles);
 end
-
-
-%% PLOT
-
-
-
 
 
 % %% EXPORT BUTTON
@@ -778,11 +876,10 @@ function figure1_ButtonDownFcn(hObject,~,handles)
 
 
 function handles = compute_simple(handles)
-%normalizing
-MAXcellsize = 500; %% to be defined somwhere else
+
                                                            %REVIEW
 set(handles.computing_text,'Visible','on');
-
+%normalizing
 val = handles.ROIvars;
 K = size(handles.A);
 for i = 1:K
@@ -890,5 +987,6 @@ guidata(handles.figure1, handles);
 % end
 % llh = llh(2:iter);
 % model.w = w;
+
 
 
