@@ -1,4 +1,4 @@
-function [CC,jsf,im] = plot_contours(Aor,Cn,options,display_numbers,max_number,Coor, ln_wd, ind_show)
+function [CC,jsf,im] = plot_contours(Aor,Cn,options,display_numbers,max_number,Coor, ln_wd, ind_show,cm)
 
 % save and plot the contour traces of the found spatial components against
 % a specified background image. The contour can be determined in two ways:
@@ -22,8 +22,13 @@ function [CC,jsf,im] = plot_contours(Aor,Cn,options,display_numbers,max_number,C
 % Author: Eftychios A. Pnevmatikakis
 %           Simons Foundation, 2016
 
-defoptions = CNMFSetParms;
 
+defoptions = CNMFSetParms;
+[d1,d2] = size(Cn);
+
+if nargin < 9 || isempty(cm);
+    cm=com(Aor(:,1:end),d1,d2);
+end
 if nargin < 8 || isempty(ind_show);
     ind_show = 1:size(Aor,2);
 end
@@ -60,21 +65,20 @@ if ~isfield(options,'maxthr') || isempty(options.maxthr); options.maxthr = defop
 
 fontname = 'helvetica';
 
-    [d1,d2] = size(Cn);
     im =imagesc(Cn,[min(Cn(:)),max(Cn(:))]);
     axis tight; axis equal; 
     posA = get(gca,'position');
     set(gca,'position',posA);
     hold on;
     
-    cmap = parula(3*size(Aor,2)); %can be 'hot'
+    cmap = parula(size(Aor,2)+5); %can be 'hot'
     if ~(nargin < 6 || isempty(Coor))
         CC = Coor;
         for j = 1:length(ind_show)
             i = ind_show(j);            
             if size(Coor{i},2) > 1
                 cont = medfilt1(Coor{i}')';
-                plot(cont(1,2:end),cont(2,2:end),'Color',cmap(j+size(Aor,2),:), 'linewidth', ln_wd); hold on;
+                plot(cont(1,2:end),cont(2,2:end),'Color',cmap(j,:), 'linewidth', ln_wd); hold on;
             end            
         end
     else
@@ -90,7 +94,7 @@ fontname = 'helvetica';
                 temp =  cumsum(temp);
                 ff = find(temp > (1-thr)*temp(end),1,'first');
                 if ~isempty(ff)
-                    CC{i} = contour(reshape(A_temp,d1,d2),[0,0]+A_temp(ind(ff)),'LineColor',cmap(i+size(Aor,2),:), 'linewidth', ln_wd);
+                    CC{i} = contour(reshape(A_temp,d1,d2),[0,0]+A_temp(ind(ff)),'LineColor',cmap(i,:), 'linewidth', ln_wd);
                     fp = find(A_temp >= A_temp(ind(ff)));
                     [ii,jj] = ind2sub([d1,d2],fp);
                     CR{i,1} = [ii,jj]';
@@ -109,7 +113,7 @@ fontname = 'helvetica';
                 if ~isempty(BW2)
                     for ii = 1:length(BW2)
                         BW2{ii} = fliplr(BW2{ii});
-                        plot(BW2{ii}(:,1),BW2{ii}(:,2),'Color',cmap(i+size(Aor,2),:), 'linewidth', ln_wd);
+                        plot(BW2{ii}(:,1),BW2{ii}(:,2),'Color',cmap(i,:), 'linewidth', ln_wd);
                     end
                     CC{i} = BW2{1}';
                     fp = find(BW);
@@ -121,10 +125,9 @@ fontname = 'helvetica';
             end
         end
     end
-    cm = com(Aor(:,1:end),d1,d2);
     if display_numbers
         lbl = strtrim(cellstr(num2str((1:size(Aor,2))')));
-        text(round(cm(1:max_number,2)),round(cm(1:max_number,1)),lbl(1:max_number),'color',[0,0,0],'fontsize',16,'fontname',fontname,'fontweight','bold');
+        text(round(cm(1:max_number,2)),round(cm(1:max_number,1)),strtrim(cellstr(num2str(ind_show))),'color',[1,.5 ,0],'fontsize',16,'fontname',fontname,'fontweight','bold');
     end
     axis off;
     if ~(nargin < 6 || isempty(Coor))
