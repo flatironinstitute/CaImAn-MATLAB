@@ -33,7 +33,6 @@ options = CNMFSetParms(...
 %% Data pre-processing
 
 [P,Y] = preprocess_data(Y,p);
-
 %% fast initialization of spatial components using greedyROI and HALS
 
 [Ain,Cin,bin,fin,center] = initialize_components(Y,K,tau,options,P);  % initialize
@@ -47,7 +46,7 @@ figure;imagesc(Cn);
     drawnow;
 
 %% manually refine components (optional)
-refine_components = false;  % flag for manual refinement
+refine_components = true;  % flag for manual refinement
 if refine_components
     [Ain,Cin,center] = manually_refine_components(Y,Ain,Cin,center,Cn,tau,options);
 end
@@ -63,11 +62,19 @@ P.p = 0;    % set AR temporarily to zero for speed
 %% classify components
 [ROIvars.rval_space,ROIvars.rval_time,ROIvars.max_pr,ROIvars.sizeA,keep] = classify_components(Y,A,C,b,f,YrA,options);
 
-%% run GUI for modifying component selection (optional, close twice to save values)
-run_GUI = false;
+%% run GUI will let you, refine the components manually, change the parameters and see the results,
+% analyse the trace of each components, use a classification algorithm to
+% find the components instead, add and remove components, save the ROIS
+% and finish the pipeline with button clicks. 
+
+%it is still an optional method.
+run_GUI = true;
 if run_GUI
+    ROIvars.C = C;
     Coor = plot_contours(A,Cn,options,1); close;
-    GUIout = ROI_GUI(Yra,A,P,options,Cn,Coor,keep,ROIvars,b,f,S);   
+    % here is what the GUI needs to receive in parameters
+    GUIout = ROI_GUI(Y ,A ,P ,options ,Cn ,Coor ,keep ,ROIvars ,b ,f ,S,Yra);   
+    pause;
     options = GUIout{2};
     keep = GUIout{3};    
 end

@@ -18,25 +18,51 @@ function varargout = ROI_GUI(varargin)
 %      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
 %      instance to run (singleton)".
 %             
+%       
+%       DOCUMENTATION :
+%           this will create a User interface for the rest of the pipeline described in demoscript and 
+%           demo pipeline. LOOK at demo pipeline to understand how to use this GUI and what to pass it
+%           
+%           It is a mix of everyhting found in those pipelines. In the future it will be also called by 
+%           the initialization GUI 
+%
+%           run GUI will let you, refine the components manually, change the parameters and see the results,
+%           analyse the trace of each components, use a classification algorithm to
+%           find the components instead, add and remove components, save the ROIS
+%           and finish the pipeline with button clicks. 
+%           It is still an optional method.
+%
+%
 %      varargin : 
 %           ROIvars : for each ROI/neuron (see CNMFsetparams for further
 %           documentation)
-%               size
+%               sizeA
 %               fitness
-%               fitness delta
-%               spatial corr
-%               temporal corr
-%               
-%
-%
-%           A :
+%               fitness_delta
+%               rval_space : spatial corr
+%               rva_time : temporal corr
+%               C
+%           A 
 %           options : initial threshold values on the informtation of
-%           ROIvars
-%           template : 
-%           CC : 
-%           keep : 
-%        
-%          
+%           ROIvars : values for the ROIS
+%           template : Cn
+%           b : bakcground
+%           f : background activity
+%           Y 
+%           P : parmaters found during the preprocessing
+%           (OPTIONAL)
+%           Coor coordingates of the contours
+%           keep : kept values after classifying
+%           S : infered spikes
+%
+%
+%   varargout :
+%       Same as varargin
+%       +
+%       ROIvars.fitness
+%              .fitness_delta
+%              .cm  : center of mass
+%       A_keep
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
@@ -72,26 +98,6 @@ function ROI_GUI_OpeningFcn(hObject, eventdata, handles, varargin)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to ROI_GUI (see VARARGIN)
-%      varargin : 
-%           ROIvars : for each ROI/neuron (see CNMFsetparams for further
-%           documentation)
-%               size
-%               fitness
-%               fitness delta
-%               spatial corr
-%               temporal corr
-%               
-%
-%
-%           A :
-%           options : initial threshold values on the informtation of
-%           ROIvars
-%           template : 
-%           CC : 
-%           keep : 
-%           P :
-%           Y :
-
 % Choose default command line output for ROI_GUI
 handles.output = hObject;
 
@@ -112,11 +118,12 @@ handles.isextracted = false;
 handles.isrefined = false;
 handles.isdeconvolved = false;
 handles.saving = false;
+handles.hasnew =false;
 
 %from varargin
-handles.Y = varargin{1}
+handles.Y = varargin{1};
 handles.A = varargin{2};
-handles.P = varargin{3}
+handles.P = varargin{3};
 handles.options = varargin{4};
 handles.template = varargin{5};
 handles.CC = varargin{6};
@@ -125,9 +132,20 @@ handles.ROIvars = varargin{8};
 handles.b = varargin{9};
 handles.f = varargin{10};
 handles.S = varargin{11};
-
-
+handles.YrA = varargin{12};
+% compute center of mass
+handles.ROIvars.cm = com(handles.A,handles.options.d1,handles.options.d2);
+[d1,d2,handles.T] = size(handles.Y);                                % dimensions of dataset
+handles.d = d1*d2;
+handles.Yr = reshape(handles.Y,handles.d,handles.T);
 handles.cellnum = sum(handles.keep);
+handles.newneur = zeros(handles.cellnum);
+
+
+% compute time variation of the components ( needed in the GUI )
+traces = prctfilt(handles.ROIvars.C+handles.YrA,8,1000,100);
+handles.ROIvars.fitness = compute_event_exceptionality(traces,0);
+handles.ROIvars.fitness_delta = compute_event_exceptionality(diff(traces,[],2),0);
 
 %we will define C graph and info of the neuron once a click has been made
 set(handles.min_fit_delta,'String',num2str(handles.options.min_fitness_delta));
@@ -167,6 +185,7 @@ set(im,'HitTest','on');
 axes(handles.traceplot);
 plot(handles.ROIvars.C(1,:));
 guidata(hObject, handles);
+uiwait()
 
 % --- Outputs from this function are returned to the command line.
 function varargout = ROI_GUI_OutputFcn(hObject, eventdata, handles)
@@ -347,118 +366,122 @@ end
 
 %% infer the weights and stuff
 function simplemode_Callback(hObject, eventdata, handles)
-if handles.iscomputed && ~ handles.isimple % we go direclty into the simple mode
-    handles.isimple =true;
+if ~ handles.hasnew
+    if handles.iscomputed && ~ handles.isimple % we go direclty into the simple mode
+        handles.isimple =true;
 
-    set(handles.SliderGeneral,'Visible','on');
-    set(handles.textGeneral,'Visible','on');
-    set(handles.General,'Visible','on');
-    set(handles.text53,'Visible','on');
-    set(handles.text52,'Visible','on');
+        set(handles.SliderGeneral,'Visible','on');
+        set(handles.textGeneral,'Visible','on');
+        set(handles.General,'Visible','on');
+        set(handles.text53,'Visible','on');
+        set(handles.text52,'Visible','on');
 
-    set(handles.text23,'Visible','off');
-    set(handles.text24,'Visible','off');
-    set(handles.text25,'Visible','off');
-    set(handles.text26,'Visible','off');
-    set(handles.text36,'Visible','off');
-    set(handles.test35,'Visible','off');
-    set(handles.text37,'Visible','off');
-    set(handles.text38,'Visible','off');
-    set(handles.text39,'Visible','off');
-    set(handles.text40,'Visible','off');
-    set(handles.text15,'Visible','off');
-    set(handles.text14,'Visible','off');
-    set(handles.text16,'Visible','off');
-    set(handles.text17,'Visible','off');
-    set(handles.text19,'Visible','off');
-    set(handles.text20,'Visible','off');
+        set(handles.text23,'Visible','off');
+        set(handles.text24,'Visible','off');
+        set(handles.text25,'Visible','off');
+        set(handles.text26,'Visible','off');
+        set(handles.text36,'Visible','off');
+        set(handles.test35,'Visible','off');
+        set(handles.text37,'Visible','off');
+        set(handles.text38,'Visible','off');
+        set(handles.text39,'Visible','off');
+        set(handles.text40,'Visible','off');
+        set(handles.text15,'Visible','off');
+        set(handles.text14,'Visible','off');
+        set(handles.text16,'Visible','off');
+        set(handles.text17,'Visible','off');
+        set(handles.text19,'Visible','off');
+        set(handles.text20,'Visible','off');
 
-    set(handles.mincellsize,'Visible','off');
-    set(handles.maxcellsize,'Visible','off');
-    set(handles.min_fit,'Visible','off');
-    set(handles.min_fit_delta,'Visible','off');
-    set(handles.rval_t,'Visible','off');
-    set(handles.rval_sp,'Visible','off');
+        set(handles.mincellsize,'Visible','off');
+        set(handles.maxcellsize,'Visible','off');
+        set(handles.min_fit,'Visible','off');
+        set(handles.min_fit_delta,'Visible','off');
+        set(handles.rval_t,'Visible','off');
+        set(handles.rval_sp,'Visible','off');
 
-    set(handles.Slider_min,'Visible','off');
-    set(handles.Slider_max,'Visible','off');
-    set(handles.Slider_min_fit,'Visible','off');
-    set(handles.Slider_min_fit_delta,'Visible','off');
-    set(handles.Slider_rval_t,'Visible','off');
-    set(handles.Slider_rval_sp,'Visible','off');
+        set(handles.Slider_min,'Visible','off');
+        set(handles.Slider_max,'Visible','off');
+        set(handles.Slider_min_fit,'Visible','off');
+        set(handles.Slider_min_fit_delta,'Visible','off');
+        set(handles.Slider_rval_t,'Visible','off');
+        set(handles.Slider_rval_sp,'Visible','off');
 
-    set(handles.ismin,'Visible','off');
-    set(handles.ismax,'Visible','off');
-    set(handles.isfit,'Visible','off');
-    set(handles.isfitdelta,'Visible','off');
-    set(handles.ispace,'Visible','off');
-    set(handles.istimecorr,'Visible','off');
-    
-    set(handles.simplemode,'String','Regular Mode');
-    handles.selection =false;   
-    set(handles.badcomp_simple,'Visible','off');
-    set(handles.goodcomp_simple,'Visible','off');
-    set(handles.switchmode,'Visible','on');
-    set(handles.find,'Visible','on');
-    set(handles.remove_accept,'Visible','on');
-else
-    if ~ handles.iscomputed
-        handles.selection=true;
-        set(handles.badcomp_simple,'Visible','on');
-        set(handles.goodcomp_simple,'Visible','on');
-        set(handles.switchmode,'Visible','off');
-        set(handles.find,'Visible','off');
-        set(handles.remove_accept,'Visible','off');
-    else 
-        if handles.isimple
-                handles.isimple =false;
+        set(handles.ismin,'Visible','off');
+        set(handles.ismax,'Visible','off');
+        set(handles.isfit,'Visible','off');
+        set(handles.isfitdelta,'Visible','off');
+        set(handles.ispace,'Visible','off');
+        set(handles.istimecorr,'Visible','off');
+        
+        set(handles.simplemode,'String','Regular Mode');
+        handles.selection =false;   
+        set(handles.badcomp_simple,'Visible','off');
+        set(handles.goodcomp_simple,'Visible','off');
+        set(handles.switchmode,'Visible','on');
+        set(handles.find,'Visible','on');
+        set(handles.remove_accept,'Visible','on');
+    else
+        if ~ handles.iscomputed
+            handles.selection=true;
+            set(handles.badcomp_simple,'Visible','on');
+            set(handles.goodcomp_simple,'Visible','on');
+            set(handles.switchmode,'Visible','off');
+            set(handles.find,'Visible','off');
+            set(handles.remove_accept,'Visible','off');
+        else 
+            if handles.isimple
+                    handles.isimple =false;
 
-                set(handles.SliderGeneral,'Visible','off');
-                set(handles.textGeneral,'Visible','off');
-                set(handles.General,'Visible','off');
-                set(handles.text53,'Visible','off');
-                set(handles.text52,'Visible','off');
+                    set(handles.SliderGeneral,'Visible','off');
+                    set(handles.textGeneral,'Visible','off');
+                    set(handles.General,'Visible','off');
+                    set(handles.text53,'Visible','off');
+                    set(handles.text52,'Visible','off');
 
-                set(handles.text23,'Visible','on');
-                set(handles.text24,'Visible','on');
-                set(handles.text25,'Visible','on');
-                set(handles.text26,'Visible','on');
-                set(handles.text36,'Visible','on');
-                set(handles.test35,'Visible','on');
-                set(handles.text37,'Visible','on');
-                set(handles.text38,'Visible','on');
-                set(handles.text39,'Visible','on');
-                set(handles.text40,'Visible','on');
-                set(handles.text15,'Visible','on');
-                set(handles.text14,'Visible','on');
-                set(handles.text16,'Visible','on');
-                set(handles.text17,'Visible','on');
-                set(handles.text19,'Visible','on');
-                set(handles.text20,'Visible','on');
+                    set(handles.text23,'Visible','on');
+                    set(handles.text24,'Visible','on');
+                    set(handles.text25,'Visible','on');
+                    set(handles.text26,'Visible','on');
+                    set(handles.text36,'Visible','on');
+                    set(handles.test35,'Visible','on');
+                    set(handles.text37,'Visible','on');
+                    set(handles.text38,'Visible','on');
+                    set(handles.text39,'Visible','on');
+                    set(handles.text40,'Visible','on');
+                    set(handles.text15,'Visible','on');
+                    set(handles.text14,'Visible','on');
+                    set(handles.text16,'Visible','on');
+                    set(handles.text17,'Visible','on');
+                    set(handles.text19,'Visible','on');
+                    set(handles.text20,'Visible','on');
 
-                set(handles.mincellsize,'Visible','on');
-                set(handles.maxcellsize,'Visible','on');
-                set(handles.min_fit,'Visible','on');
-                set(handles.min_fit_delta,'Visible','on');
-                set(handles.rval_t,'Visible','on');
-                set(handles.rval_sp,'Visible','on');
+                    set(handles.mincellsize,'Visible','on');
+                    set(handles.maxcellsize,'Visible','on');
+                    set(handles.min_fit,'Visible','on');
+                    set(handles.min_fit_delta,'Visible','on');
+                    set(handles.rval_t,'Visible','on');
+                    set(handles.rval_sp,'Visible','on');
 
-                set(handles.Slider_min,'Visible','on');
-                set(handles.Slider_max,'Visible','on');
-                set(handles.Slider_min_fit,'Visible','on');
-                set(handles.Slider_min_fit_delta,'Visible','on');
-                set(handles.Slider_rval_t,'Visible','on');
-                set(handles.Slider_rval_sp,'Visible','on');
+                    set(handles.Slider_min,'Visible','on');
+                    set(handles.Slider_max,'Visible','on');
+                    set(handles.Slider_min_fit,'Visible','on');
+                    set(handles.Slider_min_fit_delta,'Visible','on');
+                    set(handles.Slider_rval_t,'Visible','on');
+                    set(handles.Slider_rval_sp,'Visible','on');
 
-                set(handles.ismin,'Visible','on');
-                set(handles.ismax,'Visible','on');
-                set(handles.isfit,'Visible','on');
-                set(handles.isfitdelta,'Visible','on');
-                set(handles.ispace,'Visible','on');
-                set(handles.istimecorr,'Visible','on');
-                set(handles.simplemode,'String','Simple Mode');
-        end 
+                    set(handles.ismin,'Visible','on');
+                    set(handles.ismax,'Visible','on');
+                    set(handles.isfit,'Visible','on');
+                    set(handles.isfitdelta,'Visible','on');
+                    set(handles.ispace,'Visible','on');
+                    set(handles.istimecorr,'Visible','on');
+                    set(handles.simplemode,'String','Simple Mode');
+            end 
+        end
     end
+else 
+        set(handles.unrefinedtext,'Visible','on');
 end
 guidata(hObject, handles);
 
@@ -508,63 +531,63 @@ if ~ handles.selection
 end
 
 function ordercomp_Callback(hObject, eventdata, handles)
-if ~ handles.selection
-    [handles.A,handles.ROIvars.C,~,~] = order_ROIs(handles.A,handles.ROIvars.C);
-    handles.shownum = 1;
-    handles = replot(handles,eventdata);
-    guidata(hObject,handles);
+if ~ handles.selection 
+    if ~ handles.hasnew
+        [handles.A,handles.ROIvars.C,~,~] = order_ROIs(handles.A,handles.ROIvars.C);
+        handles.shownum = 1;
+        handles = replot(handles,eventdata);
+        guidata(hObject,handles);
+    else 
+        set(handles.unrefinedtext,'Visible','on');
+        guidata(hObject,handles);
+    end
 end
 
 function find_Callback(hObject, eventdata, handles)
-if ~ handles.selection
+if ~ handles.selection && ~ handles.isrefined
     disp('we will soon find it ')
-%     axes(handles.template_fig);
-%     [x,y,button]=ginput(1)
-%     pixel=round([x y]);
-%     if button==1
-%         disp(['Adding pixel at:' num2str(fliplr(pixel))])
-%         newcenters=[newcenters; fliplr(pixel)];
-%         int_x = round(newcenters(end,1)) + (-sx:sx);
-%         if int_x(1)<1
-%             int_x = int_x + 1 - int_x(1);
-%         end
-%         if int_x(end)>options.d1
-%             int_x = int_x - (int_x(end)-options.d1);
-%         end
-%         int_y = round(newcenters(end,2)) + (-sx:sx);
-%         if int_y(1)<1
-%             int_y = int_y + 1 - int_y(1);
-%         end
-%         if int_y(end)>options.d2
-%             int_y = int_y - (int_y(end)-options.d2);
-%         end
-%         [INT_x,INT_y] = meshgrid(int_x,int_y);
-%         coor = sub2ind([options.d1,options.d2],INT_x(:),INT_y(:));
-%         Ypatch = reshape(Y(int_x,int_y,:),(2*sx+1)^2,T);                        
-%         Y_res = Ypatch - A(coor,:)*C;
-%         Y_res = bsxfun(@minus, Y_res, median(Y_res,2));
-%         [atemp, ctemp, ~, ~, newcenter, ~] = greedyROI(reshape(Y_res,2*sx+1,2*sx+1,T), 1, options);
-%         %[atemp, ctemp] = initialize_components(reshape(Y_res,2*sx+1,2*sx+1,T), 1,sx,options);  % initialize
-%         % find contour
-%         a_srt = sort(atemp,'descend');
-%         ff = find(cumsum(a_srt.^2) >= cont_threshold*sum(a_srt.^2),1,'first');
-%         K = K + 1;
-%         A(coor,K) = atemp/norm(atemp);
-%         C(K,:) = ctemp*norm(atemp);
-%         new_center = com(A(:,end),options.d1,options.d2);
-%         newcenters(end,:) = new_center;
-%         scatter(new_center(2),new_center(1),'mo'); hold on; 
-%         CC{K} = contour(reshape(A(:,end),options.d1,options.d2),[0,0]+a_srt(ff),'Linecolor',[1,0,1]/2);
-%         CC{K}(CC{K}<1) = NaN;
-%         CC{K}(:,CC{K}(1,:)>options.d2) = NaN;
-%         CC{K}(:,CC{K}(2,:)>options.d1) = NaN;
-%         hold on;
-%         colormap(fig,cmap);
-%         
-%         drawnow;
-%     end
+    axes(handles.template_fig);
+    [x,y,button]=ginput(1)
+    pixel=round([x y]);
+    if button==1
+        disp(['Adding pixel at:' num2str(fliplr(pixel))])
+        handles.ROIvars.cm=[handles.ROIvars.cm; fliplr(pixel)];
+        int_x = round(handles.ROIvars.cm(end,1)) + (-handles.options.gSig:handles.options.gSig);
+        if int_x(1)<1
+            int_x = int_x + 1 - int_x(1);
+        end
+        if int_x(end)>handles.options.d1
+            int_x = int_x - (int_x(end)-handles.options.d1);
+        end
+        int_y = round(handles.ROIvars.cm(end,2)) + (-handles.options.gSig:handles.options.gSig);
+        if int_y(1)<1
+            int_y = int_y + 1 - int_y(1);
+        end
+        if int_y(end)>handles.options.d2
+            int_y = int_y - (int_y(end)-handles.options.d2);
+        end
+        [INT_x,INT_y] = meshgrid(int_x,int_y);
+        coor = sub2ind([handles.options.d1,handles.options.d2],INT_x(:),INT_y(:));
+        Ypatch = reshape(handles.Y(int_x,int_y,:),(2*handles.options.gSig+1)^2,size(handles.ROIvars.C,2));                        
+        Yres = Ypatch - handles.A(coor,:)*handles.ROIvars.C;
+        Yres = bsxfun(@minus, Yres, median(Yres,2));
+        [atemp, ctemp, ~, ~, ~, ~] = greedyROI(reshape(Yres,2*handles.options.gSig+1,...
+            2*handles.options.gSig+1,handles.T), 1, handles.options);
+        %[atemp, ctemp] = initialize_components(reshape(Y_res,2*sx+1,2*sx+1,T), 1,sx,options);  % initialize
+        % find contour
+        K = size(handles.A,2) + 1;
+        handles.accp(K) = 1;
+        handles.newneur(K) = 1;
+        handles.keep(K)=1;
+        handles.A(coor,K) = atemp/norm(atemp);
+        handles.ROIvars.C(K,:) = ctemp*norm(atemp);
+        new_center = com(handles.A(:,end),handles.options.d1,handles.options.d2);
+        handles.ROIvars.cm(end,:) = new_center;
+        handles.hasnew =true;
+        handles = replot(handles,eventdata);
+        guidata(hObject,handles);
+    end
 end
-
 
 
 %% click on the fig
@@ -585,10 +608,11 @@ coory = coor(1,2);
 %hratio = height / handles.options.d1;
 %wratio = width / handles.options.d2;
 idx = false;
-K = size(handles.A);
-if not(handles.selection)
-    for i = 1:K(2)
+K = size(handles.A,2);
+if ~ handles.selection
+    for i = 1:K
         if (handles.keep(i)==1 && not(handles.isdiscarded)) || (handles.keep(i)==0 && handles.isdiscarded)
+            disp('test')
             x = handles.ROIvars.cm(i,2);
             y = handles.ROIvars.cm(i,1);
             distx = abs(x - coorx);
@@ -611,25 +635,33 @@ if not(handles.selection)
 end
 display(idx)
 if idx
-    set(handles.choosetext,'Visible','off');
-    handles.traceplot = handles.ROIvars.C(idx,:);
-    set(handles.num_disp,'String',num2str(idx));
-    %set info neur    
-    set(handles.timecorr,'String',num2str(handles.ROIvars.rval_space(idx)));
-    set(handles.cellsize,'String',num2str(handles.ROIvars.sizeA(idx)));
-    set(handles.spacecorr,'String',num2str(handles.ROIvars.rval_time(idx)));
-    set(handles.fitness,'String',num2str(handles.ROIvars.fitness(idx)));
-    axes(figc);
-    if handles.isdeconvolved
-        T = zeros(size(handles.ROIvars.C(2));
-        plot(1:T,F_dff(i,:),'--k'); hold all; plot(1:T,C_dec(i,:),'r','linewidth',2);
-        spt = find(S(i,:));
-        if spt(1) == 1; spt(1) = []; end
-        hold on; scatter(spt,repmat(-0.25,1,length(spt)),'m*')
-        title(['Component ',num2str(i)]);
-        legend('Fluorescence DF/F','Deconvolved','Spikes')
-    else
+    if handles.newneur(idx) == 1
+        set(handles.unrefinedtext,'Visible','on');
+        set(handles.choosetext,'Visible','on');
+        axes(figc);
         plot(handles.ROIvars.C(idx,:));
+    else
+        set(handles.unrefinedtext,'Visible','off');
+        set(handles.choosetext,'Visible','off');
+        handles.traceplot = handles.ROIvars.C(idx,:);
+        set(handles.num_disp,'String',num2str(idx));
+        %set info neur    
+        set(handles.timecorr,'String',num2str(handles.ROIvars.rval_space(idx)));
+        set(handles.cellsize,'String',num2str(handles.ROIvars.sizeA(idx)));
+        set(handles.spacecorr,'String',num2str(handles.ROIvars.rval_time(idx)));
+        set(handles.fitness,'String',num2str(handles.ROIvars.fitness(idx)));
+        axes(figc);
+        if handles.isdeconvolved % TO debug
+            T = zeros(size(handles.ROIvars.C(2)));
+            plot(1:T,handles.C(handles.idx,:),'--k'); hold all; plot(1:T,handles.Cdec(handles.idx,:),'r','linewidth',2);
+            spt = find(handles.S(handles.idx,:));
+            if spt(1) == 1; spt(1) = []; end
+            hold on; scatter(spt,repmat(-0.25,1,length(spt)),'m*')
+            title(['Component ',num2str(handles.idx)]);
+            legend('Fluorescence DF/F','Deconvolved','Spikes')
+        else
+            plot(handles.ROIvars.C(idx,:));
+        end
     end
 else 
     set(handles.choosetext,'Visible','on');
@@ -668,27 +700,28 @@ end
 function [handles] = replot(handles,eventdata)
 if not(handles.selection)
     if not(handles.isimple) % computing by comparing everything
-        handles.keep = or(handles.accp,((handles.ROIvars.rval_space > handles.options.space_thresh) & ...
+        original = size(find(handles.newneur),2)
+        handles.keep(1:end-original) = ((handles.ROIvars.rval_space > handles.options.space_thresh) & ...
             (handles.ROIvars.rval_time > handles.options.time_thresh) & ... 
             (handles.ROIvars.sizeA >= handles.options.min_size_thr) & ...
             (handles.ROIvars.sizeA <= handles.options.max_size_thr) & ...
             (handles.ROIvars.fitness <= handles.options.min_fitness) & ...
-            (handles.ROIvars.fitness_delta <= handles.options.min_fitness_delta) ...
-            & not(handles.disc)));
+            (handles.ROIvars.fitness_delta <= handles.options.min_fitness_delta));            
     else % how we compute the keep for the simple mode, we discard the one that the user discarded himself
-        handles.keep = (handles.simplekeep & not(handles.disc)) | handles.accp;
+        handles.keep = handles.simplekeep 
         handles.shownum = 0;
     end
+    handles.keep = or(and(handles.keep,not(handles.disc)),handles.accp);
     if handles.isdiscarded
        handles.A_keep = handles.A(:,not(handles.keep));
        axes(handles.template_fig);
        [~,json_file,im] = plot_contours(handles.A_keep,handles.template,...
-        handles.options,handles.shownum,[],handles.CC,[],find(not(handles.keep))); 
+     handles.options,handles.shownum,[],handles.CC,[],find(not(handles.keep)),handles.ROIvars.cm(not(handles.keep),:)); 
     else
        handles.A_keep = handles.A(:,handles.keep);
        axes(handles.template_fig);
        [~,json_file,im] = plot_contours(handles.A_keep,handles.template,...
-        handles.options,handles.shownum,[],handles.CC,[],find(handles.keep)); 
+            handles.options,handles.shownum,[],handles.CC,[],find(handles.keep),handles.ROIvars.cm(handles.keep,:)); 
     end
     if handles.saving
         [filename, pathname] = uiputfile({'*.json'},'Save as');
@@ -717,37 +750,51 @@ end
 %% FINISHING PIPELINE FUNCTIONS
 
 % --- Executes on button press in refine.
-function refine_Callback(hObject, eventdata, handles)
+function refine_Callback(hObject, eventdata, handles) %totest *2
 if ~ handles.selection && ~ handles.isrefined && ~ handles.isextracted && ~ handles.isdeconvolved 
     handles.shownum = 0;
-    handles.P.p = 2;    % restore AR value
+    if hanldes.hasnew 
+        %redo the pipeline
+        handles.Yr = reshape(handles.Y,handles.d,handles.T);
+        [handles.A,handles.b,Cin] = update_spatial_components(...
+            handles.Yr,handles.ROIvars.C,handles.f,[handles.A,handles.b],handles.P,handles.options);
+        %% update temporal components
+        handles.P.p = 0;    % set AR temporarily to zero for speed
+        [handles.ROIvars.C,handles.f,handles.P,handles.S,handles.YrA] = update_temporal_components(...
+            handles.Yr,handles.A,handles.b,handles.ROIvars.C,handles.f,handles.P,handles.options);
 
-    % A first merge 
-    %check that there is an updated keep here
+        [handles.ROIvars.rval_space,handles.ROIvars.rval_time,~,handles.ROIvars.sizeA,~] = classify_components(...
+            handles.Y,handles.A,handles.ROIvars.C,handles.b,handles.f,handles.YrA,handles.options);
+        
+        traces = prctfilt(handles.ROIvars.C+handles.YrA,8,1000,100);
+        handles.ROIvars.fitness = compute_event_exceptionality(traces,0);
+        handles.ROIvars.fitness_delta = compute_event_exceptionality(diff(traces,[],2),0);
+    else
+        handles.P.p = 2;    % restore AR value
+        % A first merge 
+        %check that there is an updated keep here
+        [handles.A,handles.ROIvars.C,~,~,handles.P,handles.S] = merge_components(handles.Yr,handles.A(:,handles.keep),...
+            handles.b,handles.ROIvars.C(handles.keep,:),handles.f,handles.P,handles.S,handles.options);
 
-    [handles.A,handles.ROIvars.C,~,~,handles.P,handles.S] = merge_components(handles.Y,handles.A(:,handles.keep),...
-        handles.b,handles.ROIvars.C(handles.keep,:),handles.f,handles.P,handles.S,handles.options);
+        [handles.A,handles.b,handles.ROIvars.C] = update_spatial_components(handles.Yr,handles.ROIvars.C,...
+            handles.f,[handles.A,handles.b],handles.P,handles.options);
 
-    [handles.A,handles.b,handles.ROIvars.C] = update_spatial_components(handles.Y,handles.ROIvars.C,...
-        handles.f,[handles.A,handles.b],handles.P,handles.options);
-
-    [handles.ROIvars.C,handles.f,handles.P,handles.S,handles.Y] = update_temporal_components(...
-        handles.Y,handles.A,handles.b,handles.ROIvars.C,handles.f,handles.P,handles.options);
-    handles.isrefined = true;
-    display('refined')
-    handles = replot(handles,eventdata);
-    set(handles.refine,'ForegroundColor',[1.0,.0,.0]);
-    guidata(hObject,handles);
+        [handles.ROIvars.C,handles.f,handles.P,handles.S,~] = update_temporal_components(...
+            handles.Yr,handles.A,handles.b,handles.ROIvars.C,handles.f,handles.P,handles.options);
+        handles.isrefined = true;
+        display('refined')
+        handles = replot(handles,eventdata);
+        set(handles.refine,'ForegroundColor',[1.0,.0,.0]);
+        guidata(hObject,handles);
+    end
 end 
 
-function extract_Callback(hObject, eventdata, handles)
 
-
-function deconvolve_Callback(hObject, eventdata, handles)
+function deconvolve_Callback(hObject, eventdata, handles) %totest
 %deconvolve and extract
 if ~ handles.selection && handles.isrefined && ~ handles.isdeconvolved 
     handles.shownum = 0;
-    [handles.ROIvars.C,~] = extract_DF_F(handles.Y,handles.A,handles.ROIvars.C,handles.P,handles.options);
+    [handles.ROIvars.C,~] = extract_DF_F(handles.Yr,handles.A,handles.ROIvars.C,handles.P,handles.options);
     K = size(handles.A,2);
     handles.ROIvars.Cdec = zeros(size(handles.ROIvars.C));
     handles.kernels = cell(K,1);
@@ -762,7 +809,7 @@ if ~ handles.selection && handles.isrefined && ~ handles.isdeconvolved
     guidata(hObject,handles);
 end
 
-function save_Callback(hObject, eventdata, handles)
+function save_Callback(hObject, eventdata, handles) %totest
 if ~ handles.selection
     handles.saving = true;
     handles = replot(handles,eventdata);
@@ -876,12 +923,10 @@ function figure1_ButtonDownFcn(hObject,~,handles)
 
 
 function handles = compute_simple(handles)
-
-                                                           %REVIEW
-set(handles.computing_text,'Visible','on');
+set(handles.computing_text,'Visible','on');%REVIEW
 %normalizing
 val = handles.ROIvars;
-K = size(handles.A);
+K = size(handles.A(2));
 for i = 1:K
     val(i).sizeA = val(i).sizeA/MAXcellsize;
     val(i).fitness = exp(val(i).fitness);
