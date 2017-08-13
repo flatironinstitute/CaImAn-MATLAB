@@ -5,7 +5,7 @@ method available on matlab2017.
 
 2) need to use the json matab package to see if the saving is working well
 
-3) do a second debug using bigger datasets. 
+3) clicks are not performed well on some complex ROI shapes.
 
 4) give more flexibility in the input and output parameters to allow the GUI
 to be called at different stages of the pipeline and to be close at different

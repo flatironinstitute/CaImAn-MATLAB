@@ -62,22 +62,6 @@ P.p = 0;    % set AR temporarily to zero for speed
 %% classify components
 [ROIvars.rval_space,ROIvars.rval_time,ROIvars.max_pr,ROIvars.sizeA,keep] = classify_components(Y,A,C,b,f,YrA,options);
 
-%% run GUI will let you, refine the components manually, change the parameters and see the results,
-% analyse the trace of each components, use a classification algorithm to
-% find the components instead, add and remove components, save the ROIS
-% and finish the pipeline with button clicks. 
-
-%it is still an optional method.
-run_GUI = true;
-if run_GUI
-    ROIvars.C = C;
-    Coor = plot_contours(A,Cn,options,1); close;
-    % here is what the GUI needs to receive in parameters
-    GUIout = ROI_GUI(Y ,A ,P ,options ,Cn ,Coor ,keep ,ROIvars ,b ,f ,S,Yra);   
-    pause;
-    options = GUIout{2};
-    keep = GUIout{3};    
-end
 %% merge found components
 [Am,Cm,K_m,merged_ROIs,Pm,Sm] = merge_components(Yr,A(:,keep),b,C(keep,:),f,P,S,options);
 
