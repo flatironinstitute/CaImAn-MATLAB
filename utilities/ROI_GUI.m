@@ -148,10 +148,9 @@ handles.A = varargin{2};
 handles.P = varargin{3};
 handles.options = varargin{4};
 handles.template = varargin{5};
-handles.CC = varargin{6};
-handles.C = varargin{7};
-handles.b = varargin{8};
-handles.f = varargin{9};
+handles.C = varargin{6};
+handles.b = varargin{7};
+handles.f = varargin{8};
 
 Yr = reshape(handles.Y,handles.options.d1*handles.options.d2,size(handles.C,2));
 
@@ -214,7 +213,7 @@ handles.accp = zeros(size(handles.keep));
 %first plottings
 axes(handles.template_fig);
 colormap gray
-[~,~,im] = plot_contours(handles.A_keep,handles.template,handles.options,0,[],handles.CC,[],find(handles.keep));
+[handles.CC,~,im] = plot_contours(handles.A_keep,handles.template,handles.options,0,[],[],[],find(handles.keep));
 set(im,'ButtonDownFcn',@(hObject,eventdata)ROI_GUI('template_fig_ButtonDownFcn',hObject,eventdata,guidata(hObject)));
 %the image funtion will not fire until hit test is turned on
 set(im,'HitTest','on');
@@ -426,7 +425,7 @@ if ~ handles.hasnew && ~ handles.isdeconvolved % scope of when it should be clic
         set(handles.text25,'Visible','off');
         set(handles.text26,'Visible','off');
         set(handles.text36,'Visible','off');
-        set(handles.test35,'Visible','off');
+        set(handles.text35,'Visible','off');
         set(handles.text37,'Visible','off');
         set(handles.text38,'Visible','off');
         set(handles.text39,'Visible','off');
@@ -474,7 +473,7 @@ if ~ handles.hasnew && ~ handles.isdeconvolved % scope of when it should be clic
             set(handles.Switchmode,'Visible','on');
             set(handles.find,'Visible','on');
             set(handles.remove_accept,'Visible','on');
-            handles.i = 1
+            handles.i = 1;
         else
             if ~ handles.iscomputed % we are in selection mode for the training dataset
                 handles.selection=true;
@@ -484,7 +483,7 @@ if ~ handles.hasnew && ~ handles.isdeconvolved % scope of when it should be clic
                 set(handles.find,'Visible','off');
                 set(handles.remove_accept,'Visible','off');
                 handles.ranset = randperm(handles.cellnum,handles.sizetrain);
-                handles.i =1
+                handles.i =1;
             else  
                 if handles.isimple %% we go back to regular mode
                         handles.isimple =false;
@@ -500,7 +499,7 @@ if ~ handles.hasnew && ~ handles.isdeconvolved % scope of when it should be clic
                         set(handles.text25,'Visible','on');
                         set(handles.text26,'Visible','on');
                         set(handles.text36,'Visible','on');
-                        set(handles.test35,'Visible','on');
+                        set(handles.text35,'Visible','on');
                         set(handles.text37,'Visible','on');
                         set(handles.text38,'Visible','on');
                         set(handles.text39,'Visible','on');
@@ -662,7 +661,6 @@ K = size(handles.A,2);
 if ~ handles.selection
     for i = 1:K
         if (handles.keep(i)==1 && not(handles.isdiscarded)) || (handles.keep(i)==0 && handles.isdiscarded)
-            disp('test')
             x = handles.ROIvars.cm(i,2);
             y = handles.ROIvars.cm(i,1);
             distx = abs(x - coorx);
@@ -792,12 +790,12 @@ if ~ handles.selection
        handles.A_keep = handles.A(:,not(handles.keep));
        axes(handles.template_fig);
        [~,json_file,im] = plot_contours(handles.A_keep,handles.template,...
-     handles.options,handles.shownum,[],handles.CC,[],find(not(handles.keep)),handles.ROIvars.cm(not(handles.keep),:)); 
+     handles.options,handles.shownum,[],[],[],find(not(handles.keep)),handles.ROIvars.cm(not(handles.keep),:)); 
     else 
        handles.A_keep = handles.A(:,handles.keep);
        axes(handles.template_fig);
        [~,json_file,im] = plot_contours(handles.A_keep,handles.template,...
-            handles.options,handles.shownum,[],handles.CC,[],find(handles.keep),handles.ROIvars.cm(handles.keep,:)); 
+            handles.options,handles.shownum,[],[],[],find(handles.keep),handles.ROIvars.cm(handles.keep,:)); 
     end
     if handles.saving %% we will have a box to ask the user where to save the datas
         [filename, pathname] = uiputfile({'*.json'},'Save as');
@@ -816,7 +814,7 @@ if ~ handles.selection
 else % the procedure of defining a training dataset for the simple mode
     handles.A_keep = handles.A(:,handles.ranset(handles.i)); 
     axes(handles.template_fig);
-    plot_contours(handles.A_keep,handles.template,handles.options,0,[],handles.CC,[],handles.ranset(handles.i),handles.ROIvars.cm(handles.ranset(handles.i),:)); 
+    plot_contours(handles.A_keep,handles.template,handles.options,0,[],[],[],handles.ranset(handles.i),handles.ROIvars.cm(handles.ranset(handles.i),:)); 
     handles.cellnum = 1;
     set(handles.timecorr,'String',num2str(handles.ROIvars.rval_space(handles.ranset(handles.i))));
     set(handles.cellsize,'String',num2str(handles.ROIvars.sizeA(handles.ranset(handles.i))));
@@ -1088,13 +1086,12 @@ set(handles.text24,'Visible','off');
 set(handles.text25,'Visible','off');
 set(handles.text26,'Visible','off');
 set(handles.text36,'Visible','off');
-set(handles.test35,'Visible','off');
+set(handles.text35,'Visible','off');
 set(handles.text37,'Visible','off');
 set(handles.text38,'Visible','off');
 set(handles.text39,'Visible','off');
 set(handles.text40,'Visible','off');
 set(handles.text15,'Visible','off');
-set(handles.text14,'Visible','off');
 set(handles.text16,'Visible','off');
 set(handles.text17,'Visible','off');
 set(handles.text19,'Visible','off');
@@ -1107,12 +1104,12 @@ set(handles.min_fit_delta,'Visible','off');
 set(handles.rval_t,'Visible','off');
 set(handles.rval_sp,'Visible','off');
 
-set(handles.Slider_min,'Visible','off');
-set(handles.Slider_max,'Visible','off');
-set(handles.Slider_min_fit,'Visible','off');
-set(handles.Slider_min_fit_delta,'Visible','off');
-set(handles.Slider_rval_t,'Visible','off');
-set(handles.Slider_rval_sp,'Visible','off');
+set(handles.slider_min,'Visible','off');
+set(handles.slider_max,'Visible','off');
+set(handles.slider_min_fit,'Visible','off');
+set(handles.slider_min_fit_delta,'Visible','off');
+set(handles.slider_rval_t,'Visible','off');
+set(handles.slider_rval_sp,'Visible','off');
 
 set(handles.ismin,'Visible','off');
 set(handles.ismax,'Visible','off');

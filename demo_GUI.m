@@ -1,7 +1,7 @@
 clear;
 %% load file
 addpath(genpath('../ca_source_extraction'));  
-nam = 'demoMovie.tif';         
+nam = 'demoSue2x.tif';         
 Y = bigread2(nam);
 Y = Y - min(Y(:)); 
 if ~isa(Y,'double');    Y = double(Y);  end         % convert to single
@@ -9,7 +9,9 @@ if ~isa(Y,'double');    Y = double(Y);  end         % convert to single
 d = d1*d2;                                          % total number of pixels
 
 %% Set parameters
-K = 40;                                           % number of components to be found
+% All the parameters can be changed here look at the CNMFsetparams.m file 
+% for more information about each parameters.
+K = 130;                                           % number of components to be found
 tau = 4;                                          % std of gaussian kernel (size of neuron) 
 p = 2;                                            % order of autoregressive system (p = 0 no dynamics, p=1 just decay, p = 2, both rise and decay)
 merge_thr = 0.8;                                  % merging threshold
@@ -44,8 +46,7 @@ Cn =  correlation_image(Y);
 %                   save is only compatible with the JSON matlabpackage
 
 % here is what the GUI needs to receive in parameters
-Coor = plot_contours(A,Cn,options,1); close;
-GUIout = ROI_GUI(Y,A,P,options,Cn,Coor,C,b,f);   
+GUIout = ROI_GUI(Y,A,P,options,Cn,C,b,f);   
 pause;
 %% -----------
 A =GUIout{1}; 
