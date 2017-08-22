@@ -46,7 +46,7 @@ figure;imagesc(Cn);
     drawnow;
 
 %% manually refine components (optional)
-refine_components = true;  % flag for manual refinement
+refine_components = false;  % flag for manual refinement
 if refine_components
     [Ain,Cin,center] = manually_refine_components(Y,Ain,Cin,center,Cn,tau,options);
 end

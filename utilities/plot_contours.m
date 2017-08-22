@@ -38,6 +38,7 @@ if nargin < 5 || isempty(max_number)
 else
     max_number = min(max_number,size(Aor,2));
 end
+ind_show(ind_show>max_number) = [];
 if nargin < 4 || isempty(display_numbers)
     display_numbers = 0;
 end
@@ -127,7 +128,9 @@ fontname = 'helvetica';
     end
     if display_numbers
         lbl = strtrim(cellstr(num2str((1:size(Aor,2))')));
-        text(round(cm(1:max_number,2)),round(cm(1:max_number,1)),strtrim(cellstr(num2str(ind_show))),'color',[1,.5 ,0],'fontsize',16,'fontname',fontname,'fontweight','bold');
+        for i = ind_show
+            text(round(cm(i,2)),round(cm(i,1)),strtrim(cellstr(num2str(i))),'color',[1,.5 ,0],'fontsize',16,'fontname',fontname,'fontweight','bold');
+        end
     end
     axis off;
     if ~(nargin < 6 || isempty(Coor))
