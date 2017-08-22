@@ -1,3 +1,14 @@
 ##TODO : 
 
- 1° Implement an "evaluate components" function. 
+1) need to test the simple mode on bigger dataset and with the 
+method available on matlab2017. 
+
+2) need to use the json matab package to see if the saving is working well
+
+3) clicks are not performed well on some complex ROI shapes.
+
+4) give more flexibility in the input and output parameters to allow the GUI
+to be called at different stages of the pipeline and to be close at different
+stages as well
+
+Thanks from JKOBJECT

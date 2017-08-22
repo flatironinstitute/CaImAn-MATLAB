@@ -33,7 +33,6 @@ options = CNMFSetParms(...
 %% Data pre-processing
 
 [P,Y] = preprocess_data(Y,p);
-
 %% fast initialization of spatial components using greedyROI and HALS
 
 [Ain,Cin,bin,fin,center] = initialize_components(Y,K,tau,options,P);  % initialize
@@ -47,7 +46,7 @@ figure;imagesc(Cn);
     drawnow;
 
 %% manually refine components (optional)
-refine_components = false;  % flag for manual refinement
+refine_components = true;  % flag for manual refinement
 if refine_components
     [Ain,Cin,center] = manually_refine_components(Y,Ain,Cin,center,Cn,tau,options);
 end
@@ -63,14 +62,6 @@ P.p = 0;    % set AR temporarily to zero for speed
 %% classify components
 [ROIvars.rval_space,ROIvars.rval_time,ROIvars.max_pr,ROIvars.sizeA,keep] = classify_components(Y,A,C,b,f,YrA,options);
 
-%% run GUI for modifying component selection (optional, close twice to save values)
-run_GUI = false;
-if run_GUI
-    Coor = plot_contours(A,Cn,options,1); close;
-    GUIout = ROI_GUI(A,options,Cn,Coor,keep,ROIvars);   
-    options = GUIout{2};
-    keep = GUIout{3};    
-end
 %% merge found components
 [Am,Cm,K_m,merged_ROIs,Pm,Sm] = merge_components(Yr,A(:,keep),b,C(keep,:),f,P,S,options);
 

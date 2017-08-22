@@ -129,7 +129,7 @@ options = CNMFSetParms(...
 Cn = correlation_image_max(single(data.Y),8);
 
 %% classify components
-[ROIvars.rval_space,ROIvars.rval_time,ROIvars.max_pr,ROIvars.sizeA,keep] = classify_components(data,A,C,b,f,YrA,options);
+[ROIvars.rval_space,ROIvars.rval_time,ROIvars.max_pr,ROIvars.sizeA,keep] = classify_components(data.Y,A,C,b,f,YrA,options);
 
 %% run GUI for modifying component selection (optional, close twice to save values)
 run_GUI = true;

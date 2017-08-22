@@ -28,6 +28,7 @@ if ~isfield(options,'min_size_thr') || isempty(options.min_size_thr); options.mi
 if ~isfield(options,'size_thr') || isempty(options.size_thr); options.size_thr = defoptions.size_thr; end
 
 AA = A'*A;
+
 AY = mm_fun(A,Y);
 if nargin < 6 || isempty(YrA)
     YrA = bsxfun(@times, 1./sum(A.^2)',AY - AA*C);
