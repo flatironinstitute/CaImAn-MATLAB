@@ -72,7 +72,7 @@ classdef Sources2D < handle
             obj.Y = obj.Y - min(obj.Y(:));        % make data non-negative
             [obj.options.d1,obj.options.d2,obj.T] = size(obj.Y);  % dimensions of dataset
             obj.d = obj.options.d1*obj.options.d2;
-            obj.Yr = obj.reshape(obj.Y,obj.d,obj.T);
+            obj.Yr = reshape(obj.Y,obj.d,obj.T);
         end
         
 

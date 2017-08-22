@@ -9,7 +9,7 @@ Source = Sources2D;
 Source.file = 'demoMovie.tif';  % insert path to tiff stack here  
 
 Source.updateParams(...                                    % dimensions of datasets
-    'search_method','ellipse','dist',3,...      % search locations when updating spatial components
+    'search_method','dilate',...      % search locations when updating spatial components
     'deconv_method','constrained_foopsi',...    % activity deconvolution method
     'temporal_iter',2,...                       % number of block-coordinate descent steps 
     'fudge_factor',0.98,...                      % bias correction for AR coefficients
@@ -28,7 +28,7 @@ p = 2;    % order of autoregressive system (p = 0 no dynamics, p=1 just decay, p
 Source.preprocess(p);
 
 %% fast initialization of spatial components using greedyROI and HALS
-K = 30; tau = 4;  % number of components to be found     % std of gaussian kernel (size of neuron) 
+K = 40; tau = 4;  % number of components to be found     % std of gaussian kernel (size of neuron) 
 Source.initComponents(K, tau);
 
 % display centers of found components
@@ -64,7 +64,6 @@ if refine_components
     Source.refineComponents();
 end
     
-Source.Y = []; %% you might want to free up memory if it is a large file and you do this update spatial.
 %% update spatial components
 Source.updateSpatial();
 %% update temporal components
@@ -96,7 +95,7 @@ if display_merging
         subplot(1,ln+2,ln+1); imagesc(reshape(Source.A(:,Source.K-length(Source.ROI)+i),Source.options.d1,Source.options.d2));
                 title('Merged Component','fontsize',16,'fontweight','bold');axis equal; axis tight; 
         subplot(1,ln+2,ln+2);
-            plot(1:T,(diag(max(Cpr(Source.ROI{i},:),[],2))\Cpr(Source.ROI{i},:))'); 
+            plot(1:Source.T,(diag(max(Cpr(Source.ROI{i},:),[],2))\Cpr(Source.ROI{i},:))'); 
             hold all; plot(1:Source.T,Source.C(Source.K-length(Source.ROI)+i,:)/max(Source.C(Source.K-length(Source.ROI)+i,:)),'--k')
             title('Temporal Components','fontsize',16,'fontweight','bold')
         drawnow;
@@ -110,7 +109,7 @@ Source.orderROIs();     % order components
 Source.extractDF_F(); % extract DF/F values.
 
 %%%%%%%%%%%%%% deconvolve
-Cdec = Source.deconvTemporal();
+%Cdec = Source.deconvTemporal();
 
 contour_threshold = 0.95;   % amount of energy used for each component to construct contour plot
 figure;
