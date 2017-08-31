@@ -15,6 +15,8 @@ function [Ain, Cin, b_in, f_in, center, res] = greedyROI(Y, K, params, ROI_list)
 %            params.windowSiz: size of spatial window when computing the median (default 32 x 32)
 %            params.chunkSiz: number of timesteps to be processed simultaneously if on save_memory mode (default: 100)
 %            params.med_app: number of timesteps to be interleaved for fast (approximate) median calculation (default: 1, no approximation)
+%            params.rolling_sum: flag for using rolling sum to detect new components (default: True)
+%            params.rolling_length: length of rolling window (default: 100)
 % ROI_list   Kn x 2 (or 3) matrix with user specified centroids. If this are present, then the algorithm only finds components around these centroids
 
 %Output:
@@ -27,6 +29,7 @@ function [Ain, Cin, b_in, f_in, center, res] = greedyROI(Y, K, params, ROI_list)
 %
 % Author: Yuanjun Gao with modifications from Eftychios A. Pnevmatikakis and Weijian Yang
 
+use_sum = false;
 if nargin < 4 || isempty(ROI_list)
     user_ROIs = 0;
 else
@@ -137,8 +140,16 @@ for r = 1:length(K)
 
     %scan the whole image (only need to do this at the first iteration)
     rho = imblur(Y, gSig, gSiz, dimY, save_memory, chunkSiz); %covariance of data and basis
-    v = sum(rho.^2, dimY+1); %variance explained
-
+    
+    if ~params.rolling_sum
+        v = sum(rho.^2, dimY+1); %variance explained
+    else
+        % running maximum
+        avg_fil = ones(1,params.rolling_length)/params.rolling_length;
+        rho_s = filter(avg_fil,1,rho.^2,[],dimY+1);
+        v = max(rho_s,[],dimY+1);
+    end
+    
     for k = 1:K(r),    
         if user_ROIs
             iHat = ROI_list(k,:);
@@ -202,13 +213,21 @@ for r = 1:length(K)
             if dimY == 2
                 rhoTemp = rho(iMod(1,1):iMod(1,2), iMod(2,1):iMod(2,2), :)  - rhoTemp;
                 rho(iMod(1,1):iMod(1,2), iMod(2,1):iMod(2,2), :)  = rhoTemp;
-                %rhoTemp = rho(iMod(1):iMod(2), jMod(1):jMod(2), :) - rhoTemp;
-                %rho(iMod(1):iMod(2), jMod(1):jMod(2), :) = rhoTemp;
-                v(iMod(1,1):iMod(1,2), iMod(2,1):iMod(2,2)) = sum(rhoTemp.^2, 3);
+                if ~params.rolling_sum
+                    v(iMod(1,1):iMod(1,2), iMod(2,1):iMod(2,2)) = sum(rhoTemp.^2, 3);
+                else
+                    rho_filt = filter(avg_fil,1,rhoTemp.^2,[],3);
+                    v(iMod(1,1):iMod(1,2), iMod(2,1):iMod(2,2)) = max(rho_filt,[],3);
+                end
             else
                 rhoTemp = rho(iMod(1,1):iMod(1,2), iMod(2,1):iMod(2,2), iMod(3,1):iMod(3,2), :)  - rhoTemp;
                 rho(iMod(1,1):iMod(1,2), iMod(2,1):iMod(2,2), iMod(3,1):iMod(3,2), :)  = rhoTemp;
-                v(iMod(1,1):iMod(1,2), iMod(2,1):iMod(2,2), iMod(3,1):iMod(3,2)) = sum(rhoTemp.^2, 4);
+                if ~params.rolling_sum
+                    v(iMod(1,1):iMod(1,2), iMod(2,1):iMod(2,2), iMod(3,1):iMod(3,2)) = sum(rhoTemp.^2, 4);
+                else
+                    rho_filt = filter(avg_fil,1,rhoTemp.^2,[],4);
+                    v(iMod(1,1):iMod(1,2), iMod(2,1):iMod(2,2), iMod(3,1):iMod(3,2)) = max(rho_filt,[],4);
+                end
             end
         end
     end

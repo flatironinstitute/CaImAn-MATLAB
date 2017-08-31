@@ -29,6 +29,8 @@ Names = [
     'save_memory        ' % process data sequentially to save memory (default: 0)
     'chunkSiz           ' % filter this number of timesteps each time (default: 100)
     'windowSiz          ' % size of window over which is computed sequentially (default: 32 x 32)
+    'rolling_sum        ' % flag for using rolling sum to detect new components (default: True)
+    'rolling_length     ' % length of rolling window (default: 100)
     % sparse_NMF parameters (sparse_NMF_initialization.m)
     'snmf_max_iter      ' % max # of sparse NMF iterations
     'err_thr            ' % relative change threshold for stopping sparse_NMF
@@ -248,6 +250,8 @@ Values = [
     {0}
     {100}
     {[32,32]}
+    {true}
+    {100}
     % sparse_NMF parameters (sparse_NMF_initialization.m)
     {100}
     {1e-4}
