@@ -61,9 +61,10 @@ P.p = 0;    % set AR temporarily to zero for speed
 
 %% classify components
 [ROIvars.rval_space,ROIvars.rval_time,ROIvars.max_pr,ROIvars.sizeA,keep] = classify_components(Y,A,C,b,f,YrA,options);
-
+A_keep = A(:,keep);
+C_keep = C(keep,:);
 %% merge found components
-[Am,Cm,K_m,merged_ROIs,Pm,Sm] = merge_components(Yr,A(:,keep),b,C(keep,:),f,P,S,options);
+[Am,Cm,K_m,merged_ROIs,Pm,Sm] = merge_components(Yr,A_keep,b,C_keep,f,P,S,options);
 
 %%
 display_merging = 1; % flag for displaying merging example
@@ -73,13 +74,13 @@ if and(display_merging, ~isempty(merged_ROIs))
     figure;
         set(gcf,'Position',[300,300,(ln+2)*300,300]);
         for j = 1:ln
-            subplot(1,ln+2,j); imagesc(reshape(A(:,merged_ROIs{i}(j)),d1,d2)); 
+            subplot(1,ln+2,j); imagesc(reshape(A_keep(:,merged_ROIs{i}(j)),d1,d2)); 
                 title(sprintf('Component %i',j),'fontsize',16,'fontweight','bold'); axis equal; axis tight;
         end
         subplot(1,ln+2,ln+1); imagesc(reshape(Am(:,K_m-length(merged_ROIs)+i),d1,d2));
                 title('Merged Component','fontsize',16,'fontweight','bold');axis equal; axis tight; 
         subplot(1,ln+2,ln+2);
-            plot(1:T,(diag(max(C(merged_ROIs{i},:),[],2))\C(merged_ROIs{i},:))'); 
+            plot(1:T,(diag(max(C_keep(merged_ROIs{i},:),[],2))\C_keep(merged_ROIs{i},:))'); 
             hold all; plot(1:T,Cm(K_m-length(merged_ROIs)+i,:)/max(Cm(K_m-length(merged_ROIs)+i,:)),'--k')
             title('Temporal Components','fontsize',16,'fontweight','bold')
         drawnow;
