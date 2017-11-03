@@ -1,6 +1,6 @@
 clear;
 %% load file
-
+gcp;                            % start cluster
 addpath(genpath('utilities'));
              
 nam = 'demoMovie.tif';          % insert path to tiff stack here

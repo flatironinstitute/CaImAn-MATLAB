@@ -167,6 +167,7 @@ options.p = P.p;
 C = double(C);
 
 C = HALS_temporal(AY, A, C, 100, [], options.bas_nonneg, true);
+use_OASIS = true;
 if p > 0
     YrA = bsxfun(@times, 1./sum(A.^2)',AY - AA*C);
     if options.temporal_parallel
@@ -177,8 +178,7 @@ if p > 0
         c1 = cell(K,1);
         gn = cell(K,1);
         neuron_sn = cell(K,1);
-        %disp([K,nb,length(C)])
-        use_OASIS = false;
+        
         parfor ii = 1:K+nb
             Ytemp = C{ii} + YrA{ii};
             if ii <= K
@@ -199,17 +199,19 @@ if p > 0
                         neuron_sn{ii} = neuron_sn_temp;
                         gn{ii} = gn_temp;
                         if use_OASIS
-                            [cc,spk,kernel] = deconvCa(Ytemp,[],[],true,false,[],5);                        
+                            if p == 1; model_ar = 'ar1'; elseif p == 2; model_ar = 'ar2'; else error('non supported AR order'); end
+                            spkmin = 0.5*GetSn(Ytemp(ii,:));
+                            [cc, spk, opts_oasis] = deconvolveCa(Ytemp,model_ar,'optimize_b',true,'method','thresholded',...
+                                    'optimize_pars',true,'maxIter',100,'smin',spkmin);    
+                            cb = opts_oasis.b;
+                            C{ii} = full(cc(:)' + cb);
                             S{ii} = spk(:)';
-                            b_temp = median(Ytemp-cc(:)')
-                            C{ii} = cc(:)' + b_temp;
-                            b{ii} = b_temp;
-                            c1{ii} = Ytemp(1)-cc(1);
-                            neuron_sn{ii} = std(Ytemp-cc(:)');
-                            gn{ii} = kernel.pars;                        
+                            b{ii} = cb;
+                            c1{ii} = 0;
+                            neuron_sn{ii} = opts_oasis.sn;
+                            gn{ii} = opts_oasis.pars(:)';                            
                         else
                             [cc,b_temp,c1_temp,gn_temp,neuron_sn_temp,spk] = constrained_foopsi(Ytemp,[],[],[],[],options);
-                            %P.gn{ii} = gn;
                             gd = max(roots([1,-gn_temp']));  % decay time constant for initial concentration
                             gd_vec = gd.^((0:T-1));
                             C{ii} = full(cc(:)' + b_temp + c1_temp*gd_vec);
@@ -249,33 +251,40 @@ if p > 0
             if ii <= K
                 switch method
                      case 'constrained_foopsi'
-                        try 
-                             if restimate_g
-                                [cc,cb,c1,gn,sn,spk] = constrained_foopsi(Ytemp,[],[],[],[],options);
-                                P.gn{ii} = gn;
-                            else
-                                [cc,cb,c1,gn,sn,spk] = constrained_foopsi(Ytemp,[],[],P.g,[],options);
-                             end
-                        catch
-                            options2 = options;
-                            options2.p = 0;
-                            [cc,cb,c1,gn,sn,spk] = constrained_foopsi(Ytemp,[],[],0,[],options2);
-                             P.gn{ii} = gn;
+                        if use_OASIS
+                            if p == 1; model_ar = 'ar1'; elseif p == 2; model_ar = 'ar2'; else error('non supported AR order'); end
+                            spkmin = 0.5*GetSn(Ytemp);
+                            [cc, spk, opts_oasis] = deconvolveCa(Ytemp,model_ar,'optimize_b',true,'method','thresholded',...
+                                    'optimize_pars',true,'maxIter',100,'smin',spkmin);    
+                            cb = opts_oasis.b;
+                            C(ii,:) = full(cc(:)' + cb);
+                            S(ii,:) = spk(:)';
+                            P.b{ii} = cb;
+                            P.c1{ii} = 0;
+                            P.neuron_sn{ii} = opts_oasis.sn;
+                            P.gn{ii} = opts_oasis.pars(:)';
+                        else
+                            try 
+                                 if restimate_g
+                                    [cc,cb,c1,gn,sn,spk] = constrained_foopsi(Ytemp,[],[],[],[],options);
+                                    P.gn{ii} = gn;
+                                else
+                                    [cc,cb,c1,gn,sn,spk] = constrained_foopsi(Ytemp,[],[],P.g,[],options);
+                                 end
+                            catch
+                                options2 = options;
+                                options2.p = 0;
+                                [cc,cb,c1,gn,sn,spk] = constrained_foopsi(Ytemp,[],[],0,[],options2);
+                                 P.gn{ii} = gn;
+                            end
+                            gd = max(roots([1,-gn']));  % decay time constant for initial concentration
+                            gd_vec = gd.^((0:T-1));
+                            C(ii,:) = full(cc(:)' + cb + c1*gd_vec);
+                            S(ii,:) = spk(:)';
+                            P.b{ii} = cb;
+                            P.c1{ii} = c1;           
+                            P.neuron_sn{ii} = sn;
                         end
-                        gd = max(roots([1,-gn']));  % decay time constant for initial concentration
-                        gd_vec = gd.^((0:T-1));
-                        C(ii,:) = full(cc(:)' + cb + c1*gd_vec);
-                        S(ii,:) = spk(:)';
-                        P.b{ii} = cb;
-                        P.c1{ii} = c1;           
-                        P.neuron_sn{ii} = sn;
-%                         [cc,spk,kernel] = deconvCa(Ytemp,[],[],true,false,[],5);                        
-%                         S(ii,:) = spk(:)';
-%                         P.b{ii} = median(Ytemp-cc(:)');
-%                         C(ii,:) = cc(:)'+P.b{ii};
-%                         P.c1{ii} = Ytemp(1)-cc(1);
-%                         P.neuron_sn{ii} = std(Ytemp-cc(:)');
-%                         P.gn{ii} = kernel.pars;                            
                     case 'MCMC'
                         SAMPLES = cont_ca_sampler(Ytemp,params);
                         ctemp = make_mean_sample(SAMPLES,Ytemp);

@@ -1,7 +1,7 @@
 % complete pipeline for calcium imaging data pre-processing
 clear;
 addpath(genpath('../NoRMCorre'));               % add the NoRMCorre motion correction package to MATLAB path
-gcp;        % start a parallel engine
+gcp;                                            % start a parallel engine
 foldername = '';   
         % folder where all the files are located. Currently supported .tif,
         % .hdf5, .raw, .avi, and .mat files
