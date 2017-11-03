@@ -1,10 +1,22 @@
 clear;
 %% load file
 addpath(genpath('../ca_source_extraction'));  
-nam = 'demoSue2x.tif';         
-Y = bigread2(nam);
+
+clear;
+gcp;    % start a local cluster
+
+filename = 'demoSue2x.tif';
+if ~exist(filename,'file');
+    url = 'https://www.dropbox.com/s/36xdfd28eone0hj/demoSue2x.tif?dl=1';
+    fprintf('downloading the file...');
+    outfilename = websave(filename,url);
+    fprintf('done. \n');
+end
+
+
+Y = read_file(filename);
 Y = Y - min(Y(:)); 
-if ~isa(Y,'double');    Y = double(Y);  end         % convert to single
+if ~isa(Y,'single');  Y = single(Y);  end           % convert to single
 [d1,d2,T] = size(Y);                                % dimensions of dataset
 d = d1*d2;                                          % total number of pixels
 
