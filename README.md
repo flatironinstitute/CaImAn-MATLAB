@@ -31,6 +31,7 @@ This repository contains a MATLAB implementation of the spatio-temporal demixing
 # Matlab 
 - [Constrained deconvolution and source extraction with CNMF (this package)](https://github.com/epnev/ca_source_extraction)
 - [MCMC spike inference](https://github.com/epnev/continuous_time_ca_sampler)
+- [Fast online deconvolution of calcium imaging data (OASIS)](https://github.com/zhoupc/OASIS_matlab)
 - [Group LASSO initialization and spatial CNMF](https://github.com/danielso/ROI_detect)
 
 # Python
@@ -50,16 +51,14 @@ The following matlab toolboxes are needed for the default parameter settings:
 
 Depending on the settings the following toolboxes may also be required
 
+- Neural networks toolbox (required for component classifier)
 - Signal processing toolbox (recommended but not required)
 - Parallel computing toolbox (recommended for large datasets but not required)
 - Optimization toolbox (not required)
 
-The default options for the algorithm require the following packages:
-
-- The CVX library which can be downloaded from http://cvxr.com/cvx/download/ (after unpacking CVX open Matlab and run cvx_setup from inside the CVX directory to properly install and add CVX to the Matlab path)
-
 Depending on the settings the following packages may also be required
 
+- The CVX library which can be downloaded from http://cvxr.com/cvx/download/ (after unpacking CVX open Matlab and run cvx_setup from inside the CVX directory to properly install and add CVX to the Matlab path). **CVX is no longer required**.
 - SPGL1 package from https://github.com/mpf/spgl1 (for solving constrained_foopsi using SPGL1)
 - Bayesian spike inference package from https://github.com/epnev/continuous_time_ca_sampler (for using the 'MCMC" deconvolution method).
 
