@@ -17,6 +17,7 @@ if ~exist('padding','var'); padding = true; end
 nd = length(dims);
 if nd == 2; dims(3) = 1; patch_size(3) = 1; end
 K = size(A,2);
+A = A/spdiags(sqrt(sum(A.^2,1))'+eps,0,K,K);      % normalize to sum 1 for each compoennt
 cm = com(A,dims(1),dims(2),dims(3));
 xx = -ceil(patch_size(1)/2-1):floor(patch_size(1)/2);
 yy = -ceil(patch_size(2)/2-1):floor(patch_size(2)/2);
