@@ -12,7 +12,8 @@ function [ind,value] = cnn_classifier(A,dims,classifier,thr)
 %   INPUTS:
 %   A:              2d matrix
 %   dims:           vector with dimensions of the FOV
-%   classifier:     path to pretrained classifier model
+%   classifier:     path to pretrained classifier model (downloaded if it
+%                       doesn't exist)
 %   thr:            threshold for accepting component (default: 0.2)
 %
 %   note: The function requires Matlab version 2017b (9.3) or later, Neural
@@ -24,7 +25,7 @@ function [ind,value] = cnn_classifier(A,dims,classifier,thr)
 
 if verLessThan('matlab','9.3') || verLessThan('nnet','11.0') || isempty(which('importKerasNetwork'))
     error(strcat('The function requires Matlab version 2017b (9.3) or later, Neural\n', ...
-        'Networks toolbox version 2017b (11.0) or lvalater, the Neural Networks ', ...
+        'Networks toolbox version 2017b (11.0) or later, the Neural Networks ', ...
         'Toolbox(TM) Importer for TensorFlow-Keras Models.'))
 end
 
@@ -33,6 +34,12 @@ if ~exist('thr','var'); thr = 0.2; end
 K = size(A,2);                          % number of components
 A = A/spdiags(sqrt(sum(A.^2,1))'+eps,0,K,K);      % normalize to sum 1 for each compoennt
 A_com = extract_patch(A,dims,[50,50]);  % extract 50 x 50 patches
+
+if ~exist(classifier,'file')
+    url = 'https://www.dropbox.com/s/1csymylbne7yyt0/cnn_model.h5?dl=1';
+    classifier = 'cnn_model.h5';
+    outfilename = websave(classifier,url);
+end
 
 net_classifier = importKerasNetwork(classifier);
 out = predict(net_classifier,double(A_com));
