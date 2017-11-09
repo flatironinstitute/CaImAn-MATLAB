@@ -8,11 +8,9 @@ The algorithm is presented in more detail in
 
 Pnevmatikakis, E.A., Soudry, D., Gao, Y., Machado, T., Merel, J., ... & Paninski, L. (2016). Simultaneous denoising, deconvolution, and demixing of calcium imaging data. Neuron 89(2):285-299, http://dx.doi.org/10.1016/j.neuron.2015.11.037
 
-Pnevmatikakis, E.A., Gao, Y., Soudry, D., Pfau, D., Lacefield, C., ... & Paninski, L. (2014). A structured matrix factorization framework for large scale calcium imaging data analysis. arXiv preprint arXiv:1409.2903. http://arxiv.org/abs/1409.2903
-
-New: Motion Correction
+Motion Correction
 ======
-We have just released [NoRMCorre](https://github.com/simonsfoundation/NoRMCorre) a new toolbox for NOn-Rigid Motion CORREction. You can find it in [Matlab](https://github.com/simonsfoundation/NoRMCorre) as a standalone package to be integrated with this package, or Python as part of [CaImAn](https://github.com/simonsfoundation/CaImAn).
+We released [NoRMCorre](https://github.com/simonsfoundation/NoRMCorre) a new toolbox for NOn-Rigid Motion CORREction. You can find it in [Matlab](https://github.com/simonsfoundation/NoRMCorre) as a standalone package to be integrated with this package, or Python as part of [CaImAn](https://github.com/simonsfoundation/CaImAn).
 
 Code description
 =======
@@ -30,8 +28,8 @@ This repository contains a MATLAB implementation of the spatio-temporal demixing
 
 # Matlab 
 - [Constrained deconvolution and source extraction with CNMF (this package)](https://github.com/epnev/ca_source_extraction)
-- [MCMC spike inference](https://github.com/epnev/continuous_time_ca_sampler)
-- [Fast online deconvolution of calcium imaging data (OASIS)](https://github.com/zhoupc/OASIS_matlab)
+- [MCMC spike inference](https://github.com/epnev/continuous_time_ca_sampler) (included in this package)
+- [Fast online deconvolution of calcium imaging data (OASIS)](https://github.com/zhoupc/OASIS_matlab) (included in this package)
 - [Group LASSO initialization and spatial CNMF](https://github.com/danielso/ROI_detect)
 
 # Python
