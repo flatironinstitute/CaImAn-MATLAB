@@ -2,19 +2,54 @@
 
 [![Join the chat at https://gitter.im/epnev/ca_source_extraction](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/epnev/ca_source_extraction?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-The code implements a method for simultaneous source extraction and spike inference from large scale calcium imaging movies. The code is suitable for the analysis of somatic imaging data. Implementation for the analysis of dendritic/axonal imaging data will be added in the future. 
+The code implements the CNMF algorithm[[1]](#neuron) for simultaneous source extraction and spike inference from large scale calcium imaging movies. The code is suitable for the analysis of somatic imaging data. Improved implementation for the analysis of dendritic/axonal imaging data will be added in the future. 
 
-The algorithm is presented in more detail in
 
-Pnevmatikakis, E.A., Soudry, D., Gao, Y., Machado, T., Merel, J., ... & Paninski, L. (2016). Simultaneous denoising, deconvolution, and demixing of calcium imaging data. Neuron 89(2):285-299, http://dx.doi.org/10.1016/j.neuron.2015.11.037
+## Features and methods included
 
+* **Source extraction** 
+
+    * Separates different sources based on constrained nonnegative matrix Factorization (CNMF) [[1-2]](#neuron)
+    * Deals with heavily overlaping and neuropil contaminated movies     
+    * Selection of inferred sources using a [pre-trained convolutional neural network classifier](https://github.com/flatironinstitute/CaImAn-MATLAB/wiki/Component-classification-with-a-convolutional-neural-network)
+    * [Component registration](https://github.com/flatironinstitute/CaImAn-MATLAB/wiki/Registering-ROIs-across-different-sessions-%5C--days) across different sessions/days
+
+* **Denoising, deconvolution and spike extraction**
+
+    * Constrained foopsi method for inferring neural activity from fluorescence traces [[1]](#neuron)
+    * Near online implementation using the OASIS algorihtm [[3]](#oasis)
+    * MCMC algorithm for Bayesian spike inference [[4]](#mcmc)
+    
+* **Handling of very large datasets**
+
+    * [Memory mapping and parallel processing in patches](https://github.com/flatironinstitute/CaImAn-MATLAB/wiki/Processing-of-large-datasets)
+    
+* **Motion correction**
+
+    * Fast parallelizable non-rigid motion correction using the NoRMCorre algorithm [[5]](#normcorre). Separate standalone package can be found [here](https://github.com/simonsfoundation/NoRMCorre). It will be included in this package in the future.
+    
 New: Renaming to CaImAn-MATLAB
 ======
 We moved the code into the Flatiron Institute github account and renamed the repository to CaImAn-MATLAB to bring it more in touch with the [CaImAn](https://github.com/simonsfoundation/CaImAn) Python package. Everything else is the same. The old link ```https://github.com/epnev/ca_source_extraction``` redirects here.
 
-Motion Correction
-======
-We released [NoRMCorre](https://github.com/simonsfoundation/NoRMCorre) a new toolbox for NOn-Rigid Motion CORREction. You can find it in [Matlab](https://github.com/simonsfoundation/NoRMCorre) as a standalone package to be integrated with this package, or Python as part of [CaImAn](https://github.com/simonsfoundation/CaImAn).
+
+# References
+
+The following references provide the theoretical background and original code for the included methods. 
+
+### Deconvolution and demixing of calcium imaging data
+
+<a name="neuron"></a>[1] Pnevmatikakis, E.A., Soudry, D., Gao, Y., Machado, T., Merel, J., ... & Paninski, L. (2016). Simultaneous denoising, deconvolution, and demixing of calcium imaging data. Neuron 89(2):285-299, [[paper]](http://dx.doi.org/10.1016/j.neuron.2015.11.037). 
+
+<a name="struct"></a>[2] Pnevmatikakis, E.A., Gao, Y., Soudry, D., Pfau, D., Lacefield, C., ... & Paninski, L. (2014). A structured matrix factorization framework for large scale calcium imaging data analysis. arXiv preprint arXiv:1409.2903. [[paper]](http://arxiv.org/abs/1409.2903). 
+
+<a name="oasis"></a>[3] Friedrich J. and Paninski L. Fast active set methods for online spike inference from calcium imaging. NIPS, 29:1984-1992, 2016. [[paper]](https://papers.nips.cc/paper/6505-fast-active-set-methods-for-online-spike-inference-from-calcium-imaging), [[Github repository - Python]](https://github.com/j-friedrich/OASIS), [[Github repository - MATLAB]](https://github.com/zhoupc/OASIS_matlab).
+
+<a name="mcmc"></a>[4] Pnevmatikakis, E. A., Merel, J., Pakman, A., & Paninski, L. Bayesian spike inference from calcium imaging data. In Signals, Systems and Computers, 2013 Asilomar Conference on (pp. 349-353). IEEE, 2013. [[paper]](https://arxiv.org/abs/1311.6864), [[Github repository - MATLAB]](https://github.com/epnev/continuous_time_ca_sampler).
+
+### Motion Correction
+
+<a name="normcorre"></a>[5] Pnevmatikakis, E.A., and Giovannucci A. (2017). NoRMCorre: An online algorithm for piecewise rigid motion correction of calcium imaging data. Journal of Neuroscience Methods, 291:83-92 [[paper]](https://doi.org/10.1016/j.jneumeth.2017.07.031), [[Github repository - MATLAB]](https://github.com/simonsfoundation/normcorre).
 
 Code description
 =======
@@ -25,20 +60,9 @@ The best way to start is by looking at the various demos.
 - [run_pipeline.m](https://github.com/epnev/ca_source_extraction/blob/master/run_pipeline.m): Demo for the complete pipeline of motion correction, source separation and spike extraction for large datasets. More details about the pipeline can be found [here](https://github.com/epnev/ca_source_extraction/wiki/Complete-analysis-pipeline).
 - [3D/demo_3D.m](https://github.com/epnev/ca_source_extraction/blob/master/3D/demo_3D.m): Demo for processing of 3D volumetric imaging data.
 
-Related packages
-=======
-
-This repository contains a MATLAB implementation of the spatio-temporal demixing, i.e., (source extraction) code for large scale calcium imaging data. Related code can be found in the following links:
-
-# Matlab 
-- [Constrained deconvolution and source extraction with CNMF (this package)](https://github.com/epnev/ca_source_extraction)
-- [MCMC spike inference](https://github.com/epnev/continuous_time_ca_sampler) (included in this package)
-- [Fast online deconvolution of calcium imaging data (OASIS)](https://github.com/zhoupc/OASIS_matlab) (included in this package)
-- [Group LASSO initialization and spatial CNMF](https://github.com/danielso/ROI_detect)
-
 # Python
 
-A complete analysis pipeline including motion correction, source extraction and activity deconvolution is performed through the package [CaImAn](https://github.com/simonsfoundation/caiman) 
+A complete analysis Python pipeline including motion correction, source extraction and activity deconvolution is performed through the package [CaImAn](https://github.com/simonsfoundation/caiman). This package also includes method for online processing of calcium imaging data and elements of behavioral analysis in head fixed mice. 
 
 Usage and Documentation
 =======
