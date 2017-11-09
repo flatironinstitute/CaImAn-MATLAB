@@ -8,6 +8,10 @@ The algorithm is presented in more detail in
 
 Pnevmatikakis, E.A., Soudry, D., Gao, Y., Machado, T., Merel, J., ... & Paninski, L. (2016). Simultaneous denoising, deconvolution, and demixing of calcium imaging data. Neuron 89(2):285-299, http://dx.doi.org/10.1016/j.neuron.2015.11.037
 
+New: Renaming to CaImAn-MATLAB
+======
+We moved the code into the Flatiron Institute github account and renamed the repository to CaImAn-MATLAB to bring it more in touch with the [CaImAn](https://github.com/simonsfoundation/CaImAn) Python package. Everything else is the same. The old link ```https://github.com/epnev/ca_source_extraction``` redirects here.
+
 Motion Correction
 ======
 We released [NoRMCorre](https://github.com/simonsfoundation/NoRMCorre) a new toolbox for NOn-Rigid Motion CORREction. You can find it in [Matlab](https://github.com/simonsfoundation/NoRMCorre) as a standalone package to be integrated with this package, or Python as part of [CaImAn](https://github.com/simonsfoundation/CaImAn).
