@@ -72,9 +72,10 @@ Names = [
     'medw               ' % size of median filter (default: [3,3])
     'conn_comp          ' % extract largest connected component (binary, default: true)
     % UPDATING TEMPORAL COMPONENTS (update_temporal_components.m)
-    'deconv_method      '    % method for spike deconvolution (default: 'constrained_foopsi')
-    'restimate_g        '    % flag for updating the time constants for each component (default: 1)
-    'temporal_iter      '    % number of block-coordinate descent iterations (default: 2)
+    'p                  ' % order of AR model dynamics (default: 1)
+    'deconv_method      ' % method for spike deconvolution (default: 'constrained_foopsi')
+    'restimate_g        ' % flag for updating the time constants for each component (default: 1)
+    'temporal_iter      ' % number of block-coordinate descent iterations (default: 2)
     'temporal_parallel  ' % flag for parallel updating of temporal components (default: true if present)
     'full_A             ' % if true turn A into full matrix. If false turn Y into double precision (default: false)
     % CONSTRAINED DECONVOLUTION (constrained_foopsi.m)
@@ -146,6 +147,8 @@ Names = [
     'dist_maxthr        ' % max thresholding for components before turing into binary masks (default: 0.15)
     'dist_overlap_thr   ' % threshold for detecting if one ROI is a subset of another (deafult: 0.8)
     % parameters for computing event exceptionality (compute_event_exceptionality.m)
+    'min_SNR            ' % minimum SNR for accepting exceptional events
+    'robust_std         ' % use robust std for computing noise in traces
     'min_fitness        ' % threshold on time variability
     'min_fitness_delta  ' % threshold on the derivative of time variability
     % parameters for CNN classifier (cnn_classifier.m)
@@ -295,6 +298,7 @@ Values = [
     {[3,3]}
     {true}
     % UPDATING TEMPORAL COMPONENTS (update_temporal_components.m)
+    {1}
     {'constrained_foopsi'}
     {1}
     {2}
@@ -303,7 +307,7 @@ Values = [
     % CONSTRAINED DECONVOLUTION (constrained_foopsi.m)
     {'cvx'}
     {1}
-    {0.99}
+    {0.98}
     {0}
     % MERGING (merge_ROIs.m)
     {0.85}
@@ -369,6 +373,8 @@ Values = [
     {0.15}
     {0.8}
     % parameters for computing event exceptionality (compute_event_exceptionality.m)
+    {2}
+    {false}
     {-15}
     {-5}
     % parameters for CNN classifier (cnn_classifier.m)

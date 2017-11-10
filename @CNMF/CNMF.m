@@ -6,6 +6,7 @@ classdef CNMF < handle
         file = '';              % path to file
         Y;                      % raw data in X x Y ( x Z) x T format
         Yr;                     % raw data in 2d matrix XY(Z) X T format
+        sn;                     % noise level for each pixel
         A;                      % spatial components of neurons
         b;                      % spatial components of background
         C;                      % temporal components of neurons
@@ -20,19 +21,20 @@ classdef CNMF < handle
         T;                      % number of timesteps
         dims;                   % dimensions of FOV
         d;                      % total number of pixels/voxels
-        Cn;                     % correlation image
         cm;                     % center of mass for each component
         Coor;                   % neuron contours
         Df;                     % background for each component to normalize the filtered raw data
         C_df;                   % temporal components of neurons and background normalized
+        F0;                     % baseline fluorescence for each trace (constant or varying)
         options;                % options for model fitting
         gSig = [5,5];           % half size of neuron
         P;                      % some estimated parameters
-        fr = 30;                % frame rate
+        fr = 30;                % frame rate in Hz
+        decay_time = 0.4;       % indicator decay time in seconds
         K;                      % number of components
         nb = 1;                 % number of background components
-        gnb = 2;                % number of global background components
-        p = 0;                  % order of AR system
+        gnb = 2;                % number of global background components (used only for processing in patches)
+        p = 1;                  % order of AR system
         minY;                   % minimum data value
         nd;                     % FOV dimensionality (2d or 3d)
         keep_cnn;               % CNN classifier acceptance
@@ -43,20 +45,19 @@ classdef CNMF < handle
         sizeA;                  % size of component
         keep_eval;              % evaluate components acceptance
         fitness;                % exceptionality measure
-        fitness_delta;          
+        keep_exc;               % event exceptionality acceptance 
+        thr_exc;                % event exceptionality threshold
         A_throw;                % rejected spatial components
         C_throw;                % rejected temporal components
         S_throw;                % neural activity of rejected traces
         R_throw;                % residuals of rejected components
+        A_pre;                  % spatial components before merging
+        C_pre;                  % temporal components before merging
         ind_keep;               % selected components (binary vector)
         ind_throw;              % rejected components (binary vector)
         merged_ROIs;            % indeces of merged components
         CI;                     % correlation image
-        Cdec; 
-        Pdec; 
-        Sdec;
-        srt;
-        Ybg;        
+        contours;               % contour coordinates for each spatial component
         indicator = 'GCaMP6f';  
         kernel;        
         kernels;
@@ -70,13 +71,17 @@ classdef CNMF < handle
             if nargin>0
                 obj.options = CNMFSetParms(obj.options, varargin{:});
             end
-        end
+        end        
         
         %% read file and set dimensionality variables
-        function read_file(obj,sframe,num2read)
-            obj.Y = read_file(obj.file,sframe,num2read);
-            if ~isa(obj.Y,'single')    
-                obj.Y = single(obj.Y);  
+        function readFile(obj,filename,sframe,num2read)
+            if ~exist('sframe','var'); sframe = []; end
+            if ~exist('num2read','var'); num2read = []; end
+            if ischar(filename)
+                obj.Y = single(read_file(filename,sframe,num2read));
+                obj.file = filename;
+            else    % filename is an array already loaded in memory
+                obj.Y = single(filename);
             end
             obj.minY = min(obj.Y(:));
             obj.Y = obj.Y - obj.minY;                             % make data non-negative
@@ -86,25 +91,44 @@ classdef CNMF < handle
             obj.dims = dimsY(1:end-1);
             obj.d = prod(obj.dims);
             obj.Yr = reshape(obj.Y,obj.d,obj.T);
-            obj.options.d1 = obj.dims(1);
-            obj.options.d2 = obj.dims(2);
-            if obj.nd > 2; obj.options.d3 = obj.dims(3); end
+            obj.options.d1 = dimsY(1);
+            obj.options.d2 = dimsY(2);
+            if obj.nd > 2; obj.options.d3 = dimsY(3); end
+        end
+        
+        %% create object with pre-loaded array
+        function loadArray(obj,Y)
+            obj.Y = single(Y);
+            obj.minY = min(obj.Y(:));
+            obj.Y = obj.Y - obj.minY;                             % make data non-negative
+            obj.nd = ndims(obj.Y)-1;                              
+            dimsY = size(obj.Y);
+            obj.T = dimsY(end);
+            obj.dims = dimsY(1:end-1);
+            obj.d = prod(obj.dims);
+            obj.Yr = reshape(obj.Y,obj.d,obj.T);
+            obj.options.d1 = dimsY(1);
+            obj.options.d2 = dimsY(2);
+            if obj.nd > 2; obj.options.d3 = dimsY(3); end
         end
         
         %% update options
         function optionsSet(obj, varargin)
             obj.options = CNMFSetParms(obj.options, varargin{:});
+            obj.p = obj.options.p;
         end
+        
         
         %% data preprocessing
         function preprocess(obj)
             [obj.P,obj.Y] = preprocess_data(obj.Y,obj.p,obj.options);
+            obj.sn = obj.P.sn;
         end        
         
         %% fast initialization
-        function initComponents(obj, K, tau)
-            [obj.A, obj.C, obj.b, obj.f, obj.cm] = initialize_components(obj.Y, K, tau, obj.options);
-            obj.gSig = tau;
+        function initComponents(obj, K, gSig)
+            if exist('gSig','var'); obj.gSig = gSig; end
+            [obj.A, obj.C, obj.b, obj.f, obj.cm] = initialize_components(obj.Y, K, obj.gSig, obj.options);
             obj.K = K;
         end
         
@@ -120,7 +144,8 @@ classdef CNMF < handle
         
         %% update temporal components
         function updateTemporal(obj,p)
-            if ~isempty(p); obj.P.p = p; else obj.P.p = CNM.p; end
+            if ~exist('p','var'); p = obj.p; end
+            obj.P.p = p;
             [obj.C, obj.f, obj.P, obj.S,obj.R] = update_temporal_components(...
                 obj.Yr, obj.A, obj.b, obj.C, obj.f, obj.P, obj.options);
             obj.bl = cell2mat(obj.P.b);
@@ -131,13 +156,16 @@ classdef CNMF < handle
         
         %% merge components
         function merge(obj)
+            obj.A_pre = obj.A;
+            obj.C_pre = obj.C;
             [obj.A, obj.C, obj.K, obj.merged_ROIs, obj.P, obj.S] = merge_components(...
                 obj.Yr,obj.A, [], obj.C, [], obj.P,obj.S, obj.options);
         end 
         
         %% extract DF_F
         function extractDFF(obj)
-            [obj.C_df,~] = extract_DF_F(obj.Yr,obj.A,obj.C,obj.P,obj.options);
+            %[obj.C_df,~] = extract_DF_F(obj.Yr,obj.A,obj.C,obj.P,obj.options);
+            [obj.C_df,obj.F0] = detrend_df_f(obj.A,obj.b,obj.C,obj.f,obj.R,obj.options);
         end
 
         %% CNN classifier
@@ -154,7 +182,7 @@ classdef CNMF < handle
         %% keep components
         function keepComponents(obj,ind_keep)
             if ~exist('ind_keep','var')
-                obj.ind_keep = obj.keep_eval & obj.keep_cnn;
+                obj.ind_keep = (obj.keep_eval & obj.keep_cnn) | obj.keep_exc;
             else
                 obj.ind_keep = ind_keep;
             end
@@ -197,21 +225,106 @@ classdef CNMF < handle
             obj.R = bsxfun(@times, AY - AA*obj.C - (obj.A'*obj.b)*obj.f,1./nA2);
         end
         
-        
-        %% correlation image
-        function correlationImage(obj)
-            obj.CI = correlation_image_max(obj.Y);
+        %% compute event exceptionality
+        function eventExceptionality(obj)
+            if isempty(obj.R)
+                compute_residuals(obj);
+            end
+            N_samples = ceil(obj.fr*obj.decay_time);
+            obj.fitness = compute_event_exceptionality(obj.C + obj.R,N_samples,obj.options.robust_std);
+            obj.thr_exc = log(normcdf(-obj.options.min_SNR))*N_samples;
+            obj.keep_exc = (obj.fitness < obj.thr_exc);
         end
         
-
+        %% correlation image
+        function correlationImage(obj,sz,batch_size,min_batch_size)
+            if ~exist('sz','var'); sz = []; end
+            if ~exist('batch_size','var'); batch_size = []; end
+            if ~exist('min_batch_size','var'); min_batch_size = []; end
+            obj.CI = correlation_image_max(obj.Y,sz,obj.dims,batch_size,min_batch_size);
+        end
+        
+        %% center of mass
+        function COM(obj)
+            if obj.nd == 2
+                obj.cm = com(obj.A,obj.dims(1),obj.dims(2));
+            elseif obj.nd == 3
+                obj.cm = com(obj.A,obj.dims(1),obj.dims(2),obj.dims(3));
+            end                
+        end
+        
+        %% plot contours
+        function plotContours(obj,display_numbers,max_number,ln_wd,ind_show)
+            if ~exist('display_numbers','var'); display_numbers = []; end
+            if ~exist('max_number','var'); max_number = []; end
+            if ~exist('ln_wd','var'); ln_wd = []; end
+            if ~exist('ind_show','var'); ind_show = []; end
+            if isempty(obj.CI); Cn = reshape(obj.sn,obj.dims); else; Cn = obj.CI; end
+            [obj.contours,~,~] = plot_contours(obj.A,Cn,obj.options,display_numbers,max_number,obj.contours, ln_wd, ind_show,obj.cm);
+        end
+        
         %% plot components GUI
         function plotComponentsGUI(obj)
             if or(isempty(obj.CI), ~exist('CI', 'var') )
-                %obj.CI = correlation_image_max(obj.Y);
                 correlationImage(obj);
             end
             plot_components_GUI(obj.Yr,obj.A,obj.C,obj.b,obj.f,obj.CI,obj.options)
         end
-                
+        
+        %% plot centers
+        function plotCenters(obj)
+            if isempty(obj.CI); Cn = reshape(obj.sn,obj.dims); else; Cn = obj.CI; end
+            COM(obj);
+            figure;imagesc(Cn); axis equal; axis tight; hold all;
+                scatter(obj.cm(:,2),obj.cm(:,1),'mo');
+                title('Center of ROIs found from initialization algorithm');
+                drawnow; hold off;
+        end
+        
+        %% display merging
+        function displayMerging(obj)
+            display_merging = true; % flag for displaying merging example
+            try
+                i = 1; randi(length(obj.merged_ROIs));
+            catch
+                disp('no merged ROIS');
+                display_merging = false;
+            end
+            if display_merging
+                ln = length(obj.merged_ROIs{i});
+                figure;
+                    set(gcf,'Position',[300,300,(ln+2)*300,300]);
+                    for j = 1:ln
+                        subplot(1,ln+2,j); imagesc(reshape(obj.A_pre(:,obj.merged_ROIs{i}(j)),obj.options.d1,obj.options.d2)); 
+                            title(sprintf('Component %i',j),'fontsize',16,'fontweight','bold'); axis equal; axis tight;
+                    end
+                    subplot(1,ln+2,ln+1); imagesc(reshape(obj.A(:,obj.K-length(obj.merged_ROIs)+i),obj.dims));
+                            title('Merged Component','fontsize',16,'fontweight','bold');axis equal; axis tight; 
+                    subplot(1,ln+2,ln+2);
+                        plot(1:obj.T,(diag(max(obj.C_pre(obj.merged_ROIs{i},:),[],2))\obj.C_pre(obj.merged_ROIs{i},:))'); 
+                        hold all; plot(1:obj.T,obj.C(obj.K-length(obj.merged_ROIs)+i,:)/max(obj.C(obj.K-length(obj.merged_ROIs)+i,:)),'--k')
+                        title('Temporal Components','fontsize',16,'fontweight','bold')
+                    drawnow;
+            end
+        end
+        
+        %% fit transform
+        function fit(obj,Y,options,K,gSig)
+            if exist('gSig','var'); obj.gSig = gSig; end
+            obj.readFile(Y);
+            obj.optionsSet(options);       % set up options parameters
+            obj.preprocess();
+            obj.initComponents(K);
+            obj.updateSpatial();
+            obj.updateTemporal(0);
+            obj.evaluateComponents();
+            obj.CNNClassifier('');
+            obj.eventExceptionality();
+            obj.keepComponents();
+            obj.merge()
+            obj.updateSpatial();
+            obj.updateTemporal(obj.p);
+        end
+        
     end
 end
