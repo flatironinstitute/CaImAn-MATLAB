@@ -2,7 +2,7 @@ classdef Sources2D < handle
     
     % This class is a wrapper of Constrained NMF for standard 2D data.
     % Author: Pengcheng Zhou, zhoupc1988@gmail.com with modifications from
-    % Eftobj.ychios Pnevmatikakis
+    % Eftychios Pnevmatikakis
     
     %% properties
     properties

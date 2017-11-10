@@ -2,7 +2,8 @@ clear;
 %% load file
 gcp;                            % start cluster
 addpath(genpath('utilities'));
-             
+addpath(genpath('deconvolution'));
+  
 nam = 'demoMovie.tif';          % insert path to tiff stack here
 sframe=1;						% user input: first frame to read (optional, default 1)
 num2read=2000;					% user input: how many frames to read   (optional, default until the end)

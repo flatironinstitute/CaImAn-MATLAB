@@ -1,14 +1,14 @@
 clear;
-% same demo as demo_script.m but using the class @Sources2D
-% (possibly outdated at the moment)
+gcp;
+% same demo as demo_script.m but using the class @CNMF
 %% load file
 
 addpath(genpath('utilities'));
 addpath(genpath('deconvolution'));
-Source = Sources2D;
-Source.file = 'demoMovie.tif';  % insert path to tiff stack here  
+CNM = CNMF;
+CNM.file = 'demoMovie.tif';  % insert path to tiff stack here  
 
-Source.updateParams(...                                    % dimensions of datasets
+CNM.optionsSet(...                                    % dimensions of datasets
     'search_method','dilate',...      % search locations when updating spatial components
     'deconv_method','constrained_foopsi',...    % activity deconvolution method
     'temporal_iter',2,...                       % number of block-coordinate descent steps 
@@ -18,64 +18,41 @@ Source.updateParams(...                                    % dimensions of datas
 
 sframe=1;						% user input: first frame to read (optional, default 1)
 num2read=2000;					% user input: how many frames to read   (optional, default until the end)
-Source.read(sframe,num2read)
 
-%%%% MOTION CORRECTION
+CNM.read_file(sframe,num2read)
+
 %todo integrate motion correction
                                      
 %% Data pre-processing
-p = 2;    % order of autoregressive system (p = 0 no dynamics, p=1 just decay, p = 2, both rise and deca 
-Source.preprocess(p);
+CNM.p = 2;
+CNM.preprocess;
 
 %% fast initialization of spatial components using greedyROI and HALS
 K = 40; tau = 4;  % number of components to be found     % std of gaussian kernel (size of neuron) 
-Source.initComponents(K, tau);
+CNM.initComponents(K, tau);
 
 % display centers of found components
-figure;imagesc(Source.Cn);
-    axis equal; axis tight; hold all;
-    scatter(Source.cm(:,2),Source.cm(:,1),'mo');
-    title('Center of ROIs found from initialization algorithm');
-    drawnow;
-
-%%%%%%%%%%%%%%%introduction to GUI mode ;
-%% run GUI will let you, refine the components manually, change the parameters and see the results,
-% analyse the trace of each components, use a classification algorithm to
-% find the components instead, add and remove components, save the ROIS
-% and finish the pipeline with button clicks. 
-
-%it is still an optional method.
-run_GUI = false;
-if run_GUI
-    %todo to implement 
-    ROIvars.C = obj.C;
-    Coor = plot_contours(obj.A,obj.Cn,obj.options,1); close;
-    % here is what the GUI needs to receive in parameters
-    GUIout = ROI_GUI(obj.Y ,obj.A ,obj.P ,obj.options ,obj.Cn ,Coor ,...
-        obj.keep ,ROIvars ,obj.b ,obj.f ,obj.S,obj.Yra);   
-    options = GUIout{2};
-    keep = GUIout{3};    
-end
-
-%%OR
-%% manually refine components (optional)
-refine_components = false;  % flag for manual refinement
-if refine_components
-    Source.refineComponents();
-end
+% figure;imagesc(Source.Cn);
+%     axis equal; axis tight; hold all;
+%     scatter(Source.cm(:,2),Source.cm(:,1),'mo');
+%     title('Center of ROIs found from initialization algorithm');
+%     drawnow;
     
 %% update spatial components
-Source.updateSpatial();
+CNM.updateSpatial();
 %% update temporal components
-Source.updateTemporal();
+CNM.updateTemporal(0);
 
-%%%%%%%%%%%%%%%% classify +traces
-Source.classifyComponents();
-Source.compute_event_exceptionality();
+%% classify +traces
+CNM.evaluateComponents();
+CNM.CNNClassifier('')
+%%
+CNM.keepComponents()
+
 %% merge found components
-Apr = Source.A;    % store non-merged components
-Cpr = Source.C;
-Source.merge();
+Apr = CNM.A;    % store non-merged components
+Cpr = CNM.C;
+CNM.merge();
 
 display_merging = true; % flag for displaying merging example
 try
@@ -89,38 +66,31 @@ if display_merging
     figure;
         set(gcf,'Position',[300,300,(ln+2)*300,300]);
         for j = 1:ln
-            subplot(1,ln+2,j); imagesc(reshape(Apr(:,Source.ROI{i}(j)),Source.options.d1,Source.options.d2)); 
+            subplot(1,ln+2,j); imagesc(reshape(Apr(:,CNM.merged_ROIs{i}(j)),CNM.options.d1,CNM.options.d2)); 
                 title(sprintf('Component %i',j),'fontsize',16,'fontweight','bold'); axis equal; axis tight;
         end
-        subplot(1,ln+2,ln+1); imagesc(reshape(Source.A(:,Source.K-length(Source.ROI)+i),Source.options.d1,Source.options.d2));
+        subplot(1,ln+2,ln+1); imagesc(reshape(CNM.A(:,CNM.K-length(CNM.merged_ROIs)+i),CNM.dims));
                 title('Merged Component','fontsize',16,'fontweight','bold');axis equal; axis tight; 
         subplot(1,ln+2,ln+2);
-            plot(1:Source.T,(diag(max(Cpr(Source.ROI{i},:),[],2))\Cpr(Source.ROI{i},:))'); 
-            hold all; plot(1:Source.T,Source.C(Source.K-length(Source.ROI)+i,:)/max(Source.C(Source.K-length(Source.ROI)+i,:)),'--k')
+            plot(1:CNM.T,(diag(max(Cpr(CNM.merged_ROIs{i},:),[],2))\Cpr(CNM.merged_ROIs{i},:))'); 
+            hold all; plot(1:CNM.T,CNM.C(CNM.K-length(CNM.ROI)+i,:)/max(CNM.C(CNM.K-length(CNM.merged_ROIs)+i,:)),'--k')
             title('Temporal Components','fontsize',16,'fontweight','bold')
         drawnow;
 end
 
 %% repeat
-Source.updateSpatial();
-Source.updateTemporal();
+CNM.updateSpatial();
+CNM.updateTemporal(2);
+%% extract DF/F
+CNM.extractDFF(); % extract DF/F values.
+
 %% do some plotting
-Source.orderROIs();     % order components
-Source.extractDF_F(); % extract DF/F values.
+%contour_threshold = 0.95;   % amount of energy used for each component to construct contour plot
+%figure;
+%CNM.viewContours(contour_threshold, 1);
 
-%%%%%%%%%%%%%% deconvolve
-%Cdec = Source.deconvTemporal();
-
-contour_threshold = 0.95;   % amount of energy used for each component to construct contour plot
-figure;
-Source.viewContours(contour_threshold, 1);
-
-%%%%%%% save
-save = false;
-if save
-    savejson('jmesh',Source.json_file,'filename');        % optional save json file with component coordinates (requires matlab json library)
-end
-Source.plotComponentsGUI();     % display all components
-pause;
+%%
+CNM.plotComponentsGUI();     % display all components
+%pause;
 %% make movie
-Source.makePatchVideo() 
+%Source.makePatchVideo() 

@@ -148,6 +148,8 @@ Names = [
     % parameters for computing event exceptionality (compute_event_exceptionality.m)
     'min_fitness        ' % threshold on time variability
     'min_fitness_delta  ' % threshold on the derivative of time variability
+    % parameters for CNN classifier (cnn_classifier.m)
+    'cnn_thr            ' % threshold for CNN classifier (default: 0.2)
     ];
 
 [m,~] = size(Names);
@@ -369,6 +371,8 @@ Values = [
     % parameters for computing event exceptionality (compute_event_exceptionality.m)
     {-15}
     {-5}
+    % parameters for CNN classifier (cnn_classifier.m)
+    {0.2}
     ];
 
 for j = 1:m
