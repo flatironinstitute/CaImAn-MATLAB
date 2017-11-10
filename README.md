@@ -1,8 +1,11 @@
-# Motion correction, deconvolution and demixing of calcium imaging data
-
 [![Join the chat at https://gitter.im/epnev/ca_source_extraction](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/epnev/ca_source_extraction?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-The code implements the CNMF algorithm[[1]](#neuron) for simultaneous source extraction and spike inference from large scale calcium imaging movies. The code is suitable for the analysis of somatic imaging data. Improved implementation for the analysis of dendritic/axonal imaging data will be added in the future. 
+CaImAn-MATLAB
+======
+<img src="https://github.com/simonsfoundation/CaImAn/blob/master/docs/LOGOS/Caiman_logo_FI.png" width="500" align="right">
+
+A Computational toolbox for large scale **Ca**lcium **Im**aging data **An**alysis.
+The code implements the CNMF algorithm [[1]](#neuron) for simultaneous source extraction and spike inference from large scale calcium imaging movies. Many more features are included (see below). The code is suitable for the analysis of somatic imaging data. Improved implementation for the analysis of dendritic/axonal imaging data will be added in the future. 
 
 
 ## Features and methods included
@@ -12,7 +15,7 @@ The code implements the CNMF algorithm[[1]](#neuron) for simultaneous source ext
     * Separates different sources based on constrained nonnegative matrix Factorization (CNMF) [[1-2]](#neuron)
     * Deals with heavily overlaping and neuropil contaminated movies     
     * Selection of inferred sources using a [pre-trained convolutional neural network classifier](https://github.com/flatironinstitute/CaImAn-MATLAB/wiki/Component-classification-with-a-convolutional-neural-network)
-    * [Component registration](https://github.com/flatironinstitute/CaImAn-MATLAB/wiki/Registering-ROIs-across-different-sessions-%5C--days) across different sessions/days
+    * [Component registration across different sessions/days](https://github.com/flatironinstitute/CaImAn-MATLAB/wiki/Registering-ROIs-across-different-sessions-%5C--days) 
 
 * **Denoising, deconvolution and spike extraction**
 
@@ -86,11 +89,19 @@ Depending on the settings the following packages may also be required
 
 - The CVX library which can be downloaded from http://cvxr.com/cvx/download/ (after unpacking CVX open Matlab and run cvx_setup from inside the CVX directory to properly install and add CVX to the Matlab path). **CVX is no longer required**.
 - SPGL1 package from https://github.com/mpf/spgl1 (for solving constrained_foopsi using SPGL1)
-- Bayesian spike inference package from https://github.com/epnev/continuous_time_ca_sampler (for using the 'MCMC" deconvolution method).
 
-Wiki
-=======
-Some issues are covered in the [wiki](https://github.com/epnev/ca_source_extraction/wiki). More pages will be added and suggestions are welcome.
+# Acknowledgements
+
+Special thanks to the following people for letting us use their datasets for our various demo files:
+
+* Weijian Yang, Darcy Peterka, Rafael Yuste, Columbia University
+* Sue Ann Koay, David Tank, Princeton University
+
+# Citation
+
+If you use this code please cite the corresponding papers where original methods appeared (see References above), as well as the following abstract:
+
+Giovannucci, A., Friedrich, J., Deverett, B., Staneva, V., Chklovskii, D., & Pnevmatikakis, E. (2017). CaImAn: An open source toolbox for large scale calcium imaging data analysis on standalone machines. Cosyne Abstracts.
 
 Questions, comments, issues
 =======
