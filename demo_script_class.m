@@ -22,7 +22,7 @@ options = CNMFSetParms(...                      % dimensions of datasets
 
 %%
 % Below is the standard processing pipeline. This processing can be
-% executed in one shot using the CNM.fit command:
+% executed in one shot using the CNM.fit function:
 % CNM.fit(filename,options,K)
 
 

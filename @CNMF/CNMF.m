@@ -318,7 +318,7 @@ classdef CNMF < handle
             obj.updateSpatial();
             obj.updateTemporal(0);
             obj.evaluateComponents();
-            obj.CNNClassifier('');
+            obj.CNNClassifier('cnn_model.h5');
             obj.eventExceptionality();
             obj.keepComponents();
             obj.merge()

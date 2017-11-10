@@ -100,18 +100,22 @@ end
 RESULTS(n_patches) = struct('A', [], 'b', [], 'C', [], 'f', [], 'S', [], 'P', []);
 
 if memmaped
+    RESULTS = CNMF();
+    RESULTS(n_patches) = CNMF();
     parfor i = 1:n_patches
         patch_idx = patch_to_indices(patches{i});
         Yp = data.Y(patch_idx{:},:);
-        RESULTS(i) = process_patch(Yp,F_dark, K, p, tau, options);
+        RESULTS(i) = process_patch_object(Yp,F_dark, K, p, tau, options);
         fprintf(['Finished processing patch # ',num2str(i),' out of ',num2str(n_patches), '.\n']);
+        RESULTS(i).Y = [];
+        RESULTS(i).Yr = [];
     end
 
 else  % avoid copying the entire dataset to each worker, for in-memory data
     for i = n_patches:-1:1
         patch_idx = patch_to_indices(patches{i});
         Yp = Y(patch_idx{:},:);
-        future_results(i) = parfeval(@process_patch, 1, Yp, F_dark, K, p, tau, options);
+        future_results(i) = parfeval(@process_patch_object, 1, Yp, F_dark, K, p, tau, options);
     end
     for i = 1:n_patches
         [idx, value] = fetchNext(future_results);
@@ -305,7 +309,7 @@ function result = process_patch(Y, F_dark, K, p, tau, options)
     end
     options.nb = 1;
     options.temporal_parallel = 0;  % turn off parallel updating for temporal components
-    options.spatial_parallel = 0;  % turn off parallel updating for spatial components
+    options.spatial_parallel = 0;   % turn off parallel updating for spatial components
     options.space_thresh = options.patch_space_thresh;    % put a low acceptance threshold initially
     options.time_thresh = options.patch_time_thresh;
 
@@ -344,4 +348,21 @@ function result = process_patch(Y, F_dark, K, p, tau, options)
     result.f = f;
     result.S = S;
     result.P = P;
+end
+
+function CNM = process_patch_object(Y,F_dark,K,p,tau,options)
+    CNM = CNMF();
+    if ndims(Y) > 3; d3 = size(Y,3); else; d3 = 1; end 
+    options = CNMFSetParms(options,...
+                'd1',size(Y,1),...
+                'd2',size(Y,2),...
+                'd3',d3,...
+                'p',p,...
+                'gSig',tau,...
+                'temporal_parallel',false,...
+                'spatial_parallel',false,...
+                'space_thresh',options.patch_space_thresh);
+    Y = single(Y)-single(F_dark);
+    Y(isnan(Y)) = single(F_dark);
+    CNM.fit(Y,options,K);                
 end

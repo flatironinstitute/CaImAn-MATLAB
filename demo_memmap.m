@@ -8,7 +8,7 @@ clear;
 path_to_package = '../ca_source_extraction';   % path to the folder that contains the package
 addpath(genpath(path_to_package));
              
-filename = '/Users/epnevmatikakis/Documents/Ca_datasets/N5TailPuff_0_0___0,000_0,000_1_1_m_r_nb.tif';      % path to stack tiff file
+filename = '/Users/epnevmatikakis/Documents/Ca_datasets/Neurofinder/neurofinder.02.00/images/neurofinder0200_rig.tif';      % path to stack tiff file
 %foldername = '';    % path to folder that contains a sequence of tiff files
 %%
 if exist([filename(1:end-3),'mat'],'file')
@@ -22,15 +22,15 @@ else
 end
 
 %% Set parameters
-sizY = size(Y);                  % size of data matrix
-patch_size = [445,582];                   % size of each patch along each dimension (optional, default: [32,32])
-overlap = [32,32];                        % amount of overlap in each dimension (optional, default: [4,4])
+sizY = size(data,'Y');                    % size of data matrix
+patch_size = [64,64];                   % size of each patch along each dimension (optional, default: [32,32])
+overlap = [20,20];                        % amount of overlap in each dimension (optional, default: [4,4])
 
 patches = construct_patches(sizY(1:end-1),patch_size,overlap);
-K = 100;                                            % number of components to be found
+K = 20;                                            % number of components to be found
 tau = 16;                                          % std of gaussian kernel (size of neuron) 
-p = 0;                                            % order of autoregressive system (p = 0 no dynamics, p=1 just decay, p = 2, both rise and decay)
-merge_thr = 0.8;                                  % merging threshold
+p = 0;                                             % order of autoregressive system (p = 0 no dynamics, p=1 just decay, p = 2, both rise and decay)
+merge_thr = 0.8;                                   % merging threshold
 
 options = CNMFSetParms(...
     'd1',sizY(1),'d2',sizY(2),...
@@ -44,12 +44,12 @@ options = CNMFSetParms(...
     'fudge_factor',0.98,...                     % bias correction for AR coefficients
     'merge_thr',merge_thr,...                   % merging threshold
     'gSig',tau,... 
-    'spatial_method','regularized'...
-    );
+    'spatial_method','regularized',...
+    'min_SNR',2);
 
 %% Run on patches
 
-[A,b,C,f,S,P,RESULTS,YrA] = run_CNMF_patches(Y,K,patches,tau,p,options);
+[A2,b2,C2,f2,S2,P2,RESULTS2,YrA2] = run_CNMF_patches(data,K,patches,tau,p,options);
 
 %% classify components
 [ROIvars.rval_space,ROIvars.rval_time,ROIvars.max_pr,ROIvars.sizeA,keep] = classify_components(Y,A,C,b,f,YrA,options);
