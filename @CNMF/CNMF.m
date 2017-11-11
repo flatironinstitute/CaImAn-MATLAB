@@ -26,6 +26,7 @@ classdef CNMF < handle
         Df;                     % background for each component to normalize the filtered raw data
         C_df;                   % temporal components of neurons and background normalized
         F0;                     % baseline fluorescence for each trace (constant or varying)
+        F;                      % raw fluorescence traces (C + R)
         options;                % options for model fitting
         gSig = [5,5];           % half size of neuron
         P;                      % some estimated parameters
@@ -152,6 +153,29 @@ classdef CNMF < handle
             obj.c1 = cell2mat(obj.P.c1);
             obj.g = obj.P.gn;
             obj.neuron_sn = cell2mat(obj.P.neuron_sn);
+        end
+        
+        %% deconvolve
+        function deconvolve(obj) % TODO: parallel implementation
+            if isempty(obj.F)
+                if isempty(obj.R)
+                     compute_residuals(obj);
+                end
+                obj.F = obj.C + obj.R;
+            end
+            if obj.p == 1; model_ar = 'ar1'; elseif obj.p == 2; model_ar = 'ar2'; else; error('non supported AR order'); end
+            for i = 1:size(obj.F,1)
+                spkmin = GetSn(obj.F(i,:));
+                [cc, spk, opts_oasis] = deconvolveCa(obj.F(i,:),model_ar,'optimize_b',true,'method','thresholded',...
+                    'optimize_pars',true,'maxIter',20,'smin',spkmin,'window',200); 
+                obj.bl = opts_oasis.b;
+                obj.C(i,:) = full(cc(:)' + cb);
+                obj.S(i,:) = spk(:)';
+                obj.R(i,:) = obj.F(i,:) - obj.C(i,:);
+                obj.c1(i) = 0;
+                obj.neuron_sn(i) = opts_oasis.sn;
+                obj.g{i} = opts_oasis.pars(:)';
+            end
         end
         
         %% merge components
