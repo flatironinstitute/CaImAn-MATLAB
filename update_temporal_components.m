@@ -335,8 +335,8 @@ else
                         case 'constrained_foopsi'
                             %[cc,cb,c1,gn,sn,spk] = constrained_foopsi(Ytemp(jj,:),[],[],[],[],options);
                             if p == 1; model_ar = 'ar1'; elseif p == 2; model_ar = 'ar2'; else error('non supported AR order'); end
-                            spkmin = 0.5*GetSn(Ytemp(ii,:));
-                            [cc, spk, opts_oasis] = deconvolveCa(Ytemp(ii,:),model_ar,'optimize_b',true,'method','thresholded',...
+                            spkmin = 0.5*GetSn(Ytemp);
+                            [cc, spk, opts_oasis] = deconvolveCa(Ytemp,model_ar,'optimize_b',true,'method','thresholded',...
                                     'optimize_pars',true,'maxIter',100,'smin',spkmin);    
                             %gd = max(roots([1,-gn']));  % decay time constant for initial concentration
                             %gd_vec = gd.^((0:T-1));
@@ -348,22 +348,6 @@ else
                             P.neuron_sn{ii} = opts_oasis.sn;
                             P.gn{ii} = opts_oasis.pars(:)';
                             
-                            %YrA(:,ii) = YrA(:,ii) + Cin(ii,:)';
-%                             %Ytemp = YrA(:,ii) + Cin(ii,:)';
-%                             if restimate_g
-%                                 [cc,cb,c1,gn,sn,spk] = constrained_foopsi(Ytemp,[],[],[],[],options);
-%                                 P.gn{ii} = gn;
-%                             else
-%                                 [cc,cb,c1,gn,sn,spk] = constrained_foopsi(Ytemp,[],[],P.g,[],options);
-%                             end
-%                             gd = max(roots([1,-gn']));  % decay time constant for initial concentration
-%                             gd_vec = gd.^((0:T-1));
-%                             %YrA(:,ff) = YrA(:,ff) - (cc(:) + cb + c1*gd_vec' - C(ii,:)')*AA(ii,ff);
-%                             C(ii,:) = full(cc(:)' + cb + c1*gd_vec);
-%                             S(ii,:) = spk(:)';
-%                             P.b{ii} = cb;
-%                             P.c1{ii} = c1;           
-%                             P.neuron_sn{ii} = sn;
                         case 'MCEM_foopsi'
                             options.p = length(P.g);
                             %Ytemp = YrA(:,ii) + Cin(ii,:)';

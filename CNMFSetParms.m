@@ -63,7 +63,7 @@ Names = [
     'min_size           ' % minimum size of ellipse axis (default: 3)
     'max_size           ' % maximum size of ellipse axis (default: 8)
     'dist               ' % expansion factor of ellipse (default: 3)
-    'se                 ' % morphological element for dilation (default: strel('disk',4,0))
+    'se                 ' % morphological element for dilation (default: strel('disk',1,0))
     % threshold_components.m
     'thr_method         ' % method to threshold ('max' or 'nrg', default 'max')
     'maxthr             ' % threshold of max value below which values are discarded (default: 0.1)
@@ -148,6 +148,7 @@ Names = [
     'dist_overlap_thr   ' % threshold for detecting if one ROI is a subset of another (deafult: 0.8)
     % parameters for computing event exceptionality (compute_event_exceptionality.m)
     'min_SNR            ' % minimum SNR for accepting exceptional events
+    'decay_time         ' % decay time constant of the indicator
     'robust_std         ' % use robust std for computing noise in traces
     'min_fitness        ' % threshold on time variability
     'min_fitness_delta  ' % threshold on the derivative of time variability
@@ -289,7 +290,7 @@ Values = [
     {3}
     {8}
     {3}
-    {strel('disk',4,0)}
+    {strel('disk',1,0)}
     % threshold_components.m
     {'max'}
     {0.1}
@@ -374,6 +375,7 @@ Values = [
     {0.8}
     % parameters for computing event exceptionality (compute_event_exceptionality.m)
     {2}
+    {0.4}
     {false}
     {-15}
     {-5}

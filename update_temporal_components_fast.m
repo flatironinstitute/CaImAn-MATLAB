@@ -188,19 +188,9 @@ if p > 0
                 end                 
                 switch method
                     case 'constrained_foopsi'
-                        [cc,b_temp,c1_temp,gn_temp,neuron_sn_temp,spk] = constrained_foopsi(Ytemp,[],[],[],[],options);
-                            %P.gn{ii} = gn;
-                        gd = max(roots([1,-gn_temp']));  % decay time constant for initial concentration
-                        gd_vec = gd.^((0:T-1));
-                        C{ii} = full(cc(:)' + b_temp + c1_temp*gd_vec);
-                        S{ii} = spk(:)';
-                        b{ii} = b_temp;
-                        c1{ii} = c1_temp;
-                        neuron_sn{ii} = neuron_sn_temp;
-                        gn{ii} = gn_temp;
                         if use_OASIS
                             if p == 1; model_ar = 'ar1'; elseif p == 2; model_ar = 'ar2'; else error('non supported AR order'); end
-                            spkmin = 0.5*GetSn(Ytemp(ii,:));
+                            spkmin = 0.5*GetSn(Ytemp);
                             [cc, spk, opts_oasis] = deconvolveCa(Ytemp,model_ar,'optimize_b',true,'method','thresholded',...
                                     'optimize_pars',true,'maxIter',100,'smin',spkmin);    
                             cb = opts_oasis.b;

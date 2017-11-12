@@ -96,7 +96,7 @@ classdef CNMF < handle
                     end
                 else
                     obj.file = filename;
-                    obj.Y = read_file(filename,sframe,num2read);
+                    obj.Y = single(read_file(filename,sframe,num2read));
                 end                
             else        % filename is an array already loaded in memory
                 obj.memmaped = false;

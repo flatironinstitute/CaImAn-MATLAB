@@ -41,7 +41,7 @@ if ~exist(classifier,'file')
     outfilename = websave(classifier,url);
 end
 
-net_classifier = importKerasNetwork(classifier);
+net_classifier = importKerasNetwork(classifier,'ClassNames',["rejected","accepted"]);
 out = predict(net_classifier,double(A_com));
 value = out(:,2);
 ind = (value >= thr);

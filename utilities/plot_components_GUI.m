@@ -45,24 +45,7 @@ nb = size(f,1);     % number of background components
 %nA = full(sum(A.^2))';  % energy of each row
 %Y_r = spdiags(nA,0,nr,nr)\(A'*Y- (A'*A)*C - (A'*full(b))*f) + C; 
 
-step = 5e3;
-if memmaped
-    AY = zeros(K,T);  
-    d = size(A,1);
-    for i = 1:step:d
-        AY = AY + A(i:min(i+step-1,d),:)'*double(Y.Yr(i:min(i+step-1,d),:));
-    end
-else
-    if issparse(A) && isa(Y,'single')  
-        if full_A
-            AY = full(A)'*Y;
-        else
-            AY = A'*double(Y);
-        end
-    else
-        AY = A'*Y;
-    end
-end
+AY = mm_fun(A,Y);
 Y_r = (AY- (A'*A)*C - full(A'*double(b))*f) + C;
 
 if plot_df
@@ -184,26 +167,6 @@ plot_component(1)
             set(leg,'FontSize',14,'FontWeight','bold');
             drawnow;
             hold off;
-            if make_gif
-%                 frame = getframe(fig); %getframe(1);
-%                 im = frame2im(frame);
-%                 [imind,clm] = rgb2ind(im,256);
-%                 if i == 1;
-%                     imwrite(imind,clm,[name,'.gif'],'gif', 'Loopcount',inf);
-%                 else
-%                     imwrite(imind,clm,[name,'.gif'],'gif','WriteMode','append');
-%                 end
-            else
-%                 if i < nr+nb && ~save_avi
-%                     fprintf('component %i. Press any key to continue.. \n', i);
-%                     if pause_time == Inf;
-%                         pause;
-%                     else
-%                         pause(pause_time);
-%                     end
-
-%                 end
-            end
         else
             plot(1:T,f(i-nr,:)); title('Background activity','fontsize',16,'fontweight','bold');
             drawnow;
@@ -211,19 +174,12 @@ plot_component(1)
                 frame = getframe(fig); %getframe(1);
                 im = frame2im(frame);
                 [imind,clm] = rgb2ind(im,256);
-                if i == 1;
+                if i == 1
                     imwrite(imind,clm,[name,'.gif'],'gif', 'Loopcount',inf);
                 else
                     imwrite(imind,clm,[name,'.gif'],'gif','WriteMode','append');
                 end
-            else
-%                 if i < nr+nb && ~save_avi
-%                     fprintf('background component %i. Press any key to continue.. \n', i-nr);
-% %                     if pause_time == Inf;
-% %                         pause;
-% %                     else
-% %                         pause(pause_time);%                     end
-%                 end
+
             end
         end 
     end

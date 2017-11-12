@@ -97,11 +97,11 @@ if nargin < 2 || isempty(K)
 end
 
 %% running CNMF on each patch, in parallel
-RESULTS(n_patches) = struct('A', [], 'b', [], 'C', [], 'f', [], 'S', [], 'P', []);
+%RESULTS(n_patches) = struct('A', [], 'b', [], 'C', [], 'f', [], 'S', [], 'P', []);
+RESULTS = CNMF();
+RESULTS(n_patches) = CNMF();
 
-if memmaped
-    RESULTS = CNMF();
-    RESULTS(n_patches) = CNMF();
+if memmaped    
     parfor i = 1:n_patches
         patch_idx = patch_to_indices(patches{i});
         Yp = data.Y(patch_idx{:},:);
@@ -120,6 +120,8 @@ else  % avoid copying the entire dataset to each worker, for in-memory data
     for i = 1:n_patches
         [idx, value] = fetchNext(future_results);
         RESULTS(idx) = value;
+        RESULTS(idx).Y = [];
+        RESULTS(idx).Yr = [];
         fprintf(['Finished processing patch # ',num2str(i),' out of ',num2str(n_patches), '.\n']);
     end
 end
