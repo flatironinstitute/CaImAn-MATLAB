@@ -5,6 +5,7 @@ classdef CNMF < handle
     properties
         file = '';              % path to file
         Y;                      % raw data in X x Y ( x Z) x T format
+        data;                   % pointer to memory mapped file        
         Yr;                     % raw data in 2d matrix XY(Z) X T format
         sn;                     % noise level for each pixel
         A;                      % spatial components of neurons
@@ -59,6 +60,11 @@ classdef CNMF < handle
         merged_ROIs;            % indeces of merged components
         CI;                     % correlation image
         contours;               % contour coordinates for each spatial component
+        patches;                % coordinates of each patch
+        patch_size = [64,64];   % size of each patch
+        overlap = [10,10];      % overlap between patches
+        memmaped = true;        % 
+        RESULTS                 % object array with results on each patch
         indicator = 'GCaMP6f';  
         kernel;        
         kernels;
@@ -67,7 +73,7 @@ classdef CNMF < handle
     methods
         
         %% construct object and set options
-        function obj = CNM(varargin)
+        function obj = CNMF(varargin)
             obj.options = CNMFSetParms();
             if nargin>0
                 obj.options = CNMFSetParms(obj.options, varargin{:});
@@ -348,6 +354,48 @@ classdef CNMF < handle
             obj.merge()
             obj.updateSpatial();
             obj.updateTemporal(obj.p);
+        end
+        
+        %% create memory mapped file for patch processing
+        
+        function CNMF_patches(obj,filename,memmaped)
+            if exist('memmaped','var'); obj.memmaped = memmaped; end
+            if obj.memmaped
+                [filepath,name,ext] = fileparts(filename);
+                obj.file = fullfile(filepath,[name,'.mat']);
+                if exist(obj.file,'file')                    
+                    obj.data = matfile(obj.file,'Writable',true);
+                else
+                    obj.data = memmap_file(filename,1,[],5000);
+                end
+            else
+                obj.file = 'filename';
+                obj.data = read_file(filename);
+            end
+            obj.options = CNMFSetParms();
+            sizY = size(obj.data,'Y');
+            obj.dims = sizY(1:end-1);
+            obj.nd = length(obj.dims);
+            obj.minY = obj.data.nY;
+            obj.T = sizY(end);
+        end
+        
+        %% construct patches
+        function createPatches(obj,patch_size,overlap)
+            if exist('patch_size','var'); obj.patch_size = patch_size; end
+            if exist('overlap','var');  obj.overlap = overlap; end
+            obj.patches = construct_patches(obj.dims,obj.patch_size,obj.overlap);
+        end
+        
+        %% fit patches
+        function fitPatches(obj)
+            obj.options.refine_flag = false;
+            [obj.A,obj.b,obj.C,obj.f,obj.S,Pr,obj.RESULTS,obj.R] = ... 
+                run_CNMF_patches(obj.data,obj.K,obj.patches,obj.gSig,obj.p,obj.options);
+            obj.bl = cell2mat(Pr.b);
+            obj.c1 = cell2mat(Pr.c1);
+            obj.neuron_sn = cell2mat(Pr.neuron_sn);
+            obj.g = cell2mat(Pr.gn);
         end
         
     end

@@ -123,7 +123,7 @@ toc
 traces2 = prctfilt(C2+YrA2,8,1000,100);
 
 fitness2 = compute_event_exceptionality(traces2,0);
-fitness_delta2, = compute_event_exceptionality(diff(traces2,[],2),0);
+fitness_delta2 = compute_event_exceptionality(diff(traces2,[],2),0);
 
 %%
 keep2 = (fitness_delta2 < - 30 | fitness2 < - 35 | ROIvars2.rval_space> 0.8) & ROIvars2.sizeA > 20 & ROIvars2.sizeA < 200 & ROIvars2.rval_time> 0.75 ; 
