@@ -63,7 +63,7 @@ classdef CNMF < handle
         patches;                % coordinates of each patch
         patch_size = [64,64];   % size of each patch
         overlap = [10,10];      % overlap between patches
-        memmaped = true;        % 
+        memmaped = false;       % 
         RESULTS                 % object array with results on each patch
         indicator = 'GCaMP6f';  
         kernel;        
@@ -80,27 +80,74 @@ classdef CNMF < handle
             end
         end        
         
-        %% read file and set dimensionality variables
-        function readFile(obj,filename,sframe,num2read)
+        %% read file possibly memory map it and set dimensionality variables
+        function readFile(obj,filename,memmaped,sframe,num2read)
+            if exist('memmaped','var'); obj.memmaped = memmaped; end
             if ~exist('sframe','var'); sframe = []; end
             if ~exist('num2read','var'); num2read = []; end
             if ischar(filename)
-                obj.Y = single(read_file(filename,sframe,num2read));
-                obj.file = filename;
-            else    % filename is an array already loaded in memory
-                obj.Y = single(filename);
+                if obj.memmaped
+                    [filepath,name,ext] = fileparts(filename);
+                    obj.file = fullfile(filepath,[name,'.mat']);
+                    if exist(obj.file,'file')                    
+                        obj.Y = matfile(obj.file,'Writable',true);
+                    else
+                        obj.Y = memmap_file(filename,sframe,num2read,5000);
+                    end
+                else
+                    obj.file = filename;
+                    obj.Y = read_file(filename,sframe,num2read);
+                end                
+            else        % filename is an array already loaded in memory
+                obj.memmaped = false;
+                %obj.Y = single(read_file(filename,sframe,num2read));
+                obj.Y = single(filename);            
             end
-            obj.minY = min(obj.Y(:));
-            obj.Y = obj.Y - obj.minY;                             % make data non-negative
-            obj.nd = ndims(obj.Y)-1;                              
-            dimsY = size(obj.Y);
+            
+            if obj.memmaped
+                obj.minY = obj.Y.nY;
+                dimsY = size(obj.Y,'Y');
+            else
+                obj.minY = min(obj.Y(:));
+                obj.Y = obj.Y - obj.minY;
+                dimsY = size(obj.Y);
+            end                        
+            obj.nd = ndims(dimsY)-1;                              
             obj.T = dimsY(end);
             obj.dims = dimsY(1:end-1);
             obj.d = prod(obj.dims);
-            obj.Yr = reshape(obj.Y,obj.d,obj.T);
             obj.options.d1 = dimsY(1);
             obj.options.d2 = dimsY(2);
             if obj.nd > 2; obj.options.d3 = dimsY(3); end
+            if obj.memmaped
+                obj.Yr = obj.Y;
+            else
+                obj.Yr = reshape(obj.Y,obj.d,obj.T);
+            end
+        end
+        
+        %% create memory mapped file for patch processing
+        
+        function CNMF_patches(obj,filename,memmaped)
+            if exist('memmaped','var'); obj.memmaped = memmaped; end
+            if obj.memmaped
+                [filepath,name,ext] = fileparts(filename);
+                obj.file = fullfile(filepath,[name,'.mat']);
+                if exist(obj.file,'file')                    
+                    obj.data = matfile(obj.file,'Writable',true);
+                else
+                    obj.data = memmap_file(filename,1,[],5000);
+                end
+            else
+                obj.file = 'filename';
+                obj.data = read_file(filename);
+            end
+            obj.options = CNMFSetParms();
+            sizY = size(obj.data,'Y');
+            obj.dims = sizY(1:end-1);
+            obj.nd = length(obj.dims);
+            obj.minY = obj.data.nY;
+            obj.T = sizY(end);
         end
         
         %% create object with pre-loaded array
@@ -356,29 +403,6 @@ classdef CNMF < handle
             obj.updateTemporal(obj.p);
         end
         
-        %% create memory mapped file for patch processing
-        
-        function CNMF_patches(obj,filename,memmaped)
-            if exist('memmaped','var'); obj.memmaped = memmaped; end
-            if obj.memmaped
-                [filepath,name,ext] = fileparts(filename);
-                obj.file = fullfile(filepath,[name,'.mat']);
-                if exist(obj.file,'file')                    
-                    obj.data = matfile(obj.file,'Writable',true);
-                else
-                    obj.data = memmap_file(filename,1,[],5000);
-                end
-            else
-                obj.file = 'filename';
-                obj.data = read_file(filename);
-            end
-            obj.options = CNMFSetParms();
-            sizY = size(obj.data,'Y');
-            obj.dims = sizY(1:end-1);
-            obj.nd = length(obj.dims);
-            obj.minY = obj.data.nY;
-            obj.T = sizY(end);
-        end
         
         %% construct patches
         function createPatches(obj,patch_size,overlap)
@@ -391,11 +415,13 @@ classdef CNMF < handle
         function fitPatches(obj)
             obj.options.refine_flag = false;
             [obj.A,obj.b,obj.C,obj.f,obj.S,Pr,obj.RESULTS,obj.R] = ... 
-                run_CNMF_patches(obj.data,obj.K,obj.patches,obj.gSig,obj.p,obj.options);
+                run_CNMF_patches(obj.Y,obj.K,obj.patches,obj.gSig,obj.p,obj.options);
             obj.bl = cell2mat(Pr.b);
             obj.c1 = cell2mat(Pr.c1);
             obj.neuron_sn = cell2mat(Pr.neuron_sn);
             obj.g = cell2mat(Pr.gn);
+            obj.sn = Pr.sn;
+            obj.P.sn = Pr.sn;
         end
         
     end
