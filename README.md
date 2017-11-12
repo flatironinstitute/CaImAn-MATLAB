@@ -60,7 +60,8 @@ Code description
 The best way to start is by looking at the various demos.
 - [demo_script.m](https://github.com/epnev/ca_source_extraction/blob/master/demo_script.m): A simple demo with a small dataset included in the repo to display the notation and basic operations
 - [demo_script_class.m](https://github.com/flatironinstitute/CaImAn-MATLAB/blob/master/demo_script_class.m): Replicates the [demo_script.m](https://github.com/epnev/ca_source_extraction/blob/master/demo_script.m) file in a cleaner way using a CNMF object.
-- [demo_memmap.m](https://github.com/epnev/ca_source_extraction/blob/master/demo_memmap.m): A larger demo displaying the process of memory mapping and spliting the field of view in patches to be processed in parallel and then combined.
+- [demo_patches.m](https://github.com/epnev/ca_source_extraction/blob/master/demo_patches.m): A larger demo displaying the process of memory mapping and spliting the field of view in patches to be processed in parallel and then combined.
+- [demo_patches_class.m](https://github.com/epnev/ca_source_extraction/blob/master/demo_patches_class.m): Similar to [demo_patches.m](https://github.com/epnev/ca_source_extraction/blob/master/demo_patches.m) but using the CNMF object.
 - [run_pipeline.m](https://github.com/epnev/ca_source_extraction/blob/master/run_pipeline.m): Demo for the complete pipeline of motion correction, source separation and spike extraction for large datasets. More details about the pipeline can be found [here](https://github.com/epnev/ca_source_extraction/wiki/Complete-analysis-pipeline).
 - [3D/demo_3D.m](https://github.com/epnev/ca_source_extraction/blob/master/3D/demo_3D.m): Demo for processing of 3D volumetric imaging data.
 
