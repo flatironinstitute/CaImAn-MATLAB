@@ -13,11 +13,15 @@ memmaped = isobject(Y);
 if ~exist('min_batch_size', 'var') || isempty(min_batch_size); min_batch_size = 1000; end
 if ~exist('batch_size', 'var') || isempty(batch_size); batch_size = 2000; end
 min_batch_size = min(min_batch_size,batch_size);
-if ~exist('sizY','var') || isempty(sizY); 
+if ~exist('sizY','var') || isempty(sizY) 
     if memmaped; sizY = Y.sizY; else sizY = size(Y); end 
      T = sizY(end); sizY = sizY(1:end-1);
 else
-    if memmaped; T = Y.sizY(end); else T = size(Y,ndims(Y)); end
+    if memmaped        
+        T = Y.sizY(1,length(sizY)+1); 
+    else
+        T = size(Y,ndims(Y)); 
+    end
 end
 nd = length(sizY);
 

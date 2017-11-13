@@ -4,14 +4,14 @@
 
 clear;
 %% setup path to file and package
-
+gcp;                                           % start local cluster
 path_to_package = '../ca_source_extraction';   % path to the folder that contains the package
 addpath(genpath(path_to_package));
              
 filename = '/Users/epnevmatikakis/Documents/Ca_datasets/Neurofinder/neurofinder.02.00/images/neurofinder0200_rig.tif';      
         % path to file (assumed motion corrected)
         
-is_memmaped = false;        % choose whether you want to load the file in memory or not
+is_memmaped = true;        % choose whether you want to load the file in memory or not
 
 %% load file
 
@@ -44,8 +44,6 @@ merge_thr = 0.8;         % merging threshold
 
 options = CNMFSetParms(...
     'd1',sizY(1),'d2',sizY(2),...
-    'search_method','dilate',...                % search locations when updating spatial components
-    'deconv_method','constrained_foopsi',...    % activity deconvolution method
     'nb',1,...                                  % number of background components per patch
     'gnb',3,...                                 % number of global background components
     'ssub',2,...
@@ -54,6 +52,8 @@ options = CNMFSetParms(...
     'merge_thr',merge_thr,...                   % merging threshold
     'gSig',tau,... 
     'spatial_method','regularized',...
+    'cnn_thr',0.2,...
+    'patch_space_thresh',0.25,...
     'min_SNR',2);
 
 %% Run on patches
@@ -62,8 +62,8 @@ options = CNMFSetParms(...
 
 %% classify components 
 
-[ROIvars.rval_space,ROIvars.rval_time,ROIvars.max_pr,ROIvars.sizeA] = classify_components(data,A,C,b,f,YrA,options);
-ind_corr = ROIvars.rval_space > options.space_thresh;  % space correlation
+rval_space = classify_comp_corr(data,A,C,b,f,options);
+ind_corr = rval_space > options.space_thresh;           % components that pass the space correlation test
 
 try  % matlab 2017b or later is needed for the CNN classifier
     [ind_cnn,value] = cnn_classifier(A,[options.d1,options.d2],'cnn_model',options.cnn_thr);
@@ -71,14 +71,13 @@ catch
     ind_cnn = true(size(A,2),1);
 end
 
-N_samples_exc = ceil(options.fr*options.decay_time);  % event exceptionality
-fitness = compute_event_exceptionality(C+YrA,N_samples_exc,options.robust_std);
-ind_exc = (fitness < log(normcdf(-options.min_SNR))*N_samples_exc);
+fitness = compute_event_exceptionality(C+YrA,options.N_samples_exc,options.robust_std); % event exceptionality
+ind_exc = (fitness < options.min_fitness);
 
-keep = (ind_corr & ind_cnn) | ind_exc;
+keep = (ind_corr | ind_cnn) & ind_exc;
 
 %% run GUI for modifying component selection (optional, close twice to save values)
-Cn = reshape(P.sn,sizY(1),sizY(2));  % background image for plotting
+Cn = correlation_image_max(data);  % background image for plotting
 run_GUI = false;
 if run_GUI
     Coor = plot_contours(A,Cn,options,1); close;
@@ -94,8 +93,10 @@ A_keep = A(:,keep);
 C_keep = C(keep,:);
 options.p = 2;      % perform deconvolution
 P.p = 2;
-[C2,f2,P2,S2,YrA2] = update_temporal_components_fast(data,A_keep,b,C_keep,f,P,options);
+[A2,b2,C2] = update_spatial_components(data,C_keep,f,[A_keep,b],P,options);
+[C2,f2,P2,S2,YrA2] = update_temporal_components_fast(data,A2,b2,C2,f,P,options);
 
 %% plot results
-options.sx = 64;
-plot_components_GUI(double(data),A,C,b,f,Cn,options);
+figure;
+plot_contours(A2,Cn,options,1);
+plot_components_GUI(data,A2,C2,b,f2,Cn,options);

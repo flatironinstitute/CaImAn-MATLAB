@@ -1,4 +1,4 @@
-function [C_df,Df] = extract_DF_F(Y,A,C,P,options)
+function [C_df,Df] = extract_DF_F(Y,A,C,P,options,AY)
 
 % extract DF/F signals after performing NMF
 % inputs:  Y raw data (d X T matrix, d # number of pixels, T # of timesteps)
@@ -10,6 +10,7 @@ function [C_df,Df] = extract_DF_F(Y,A,C,P,options)
 %           default method is the median of the trace. By changing
 %           options.df_prctile an arbitray percentile can be used (between 0 and 100).
 %           a moving window can also be established by specifying options.df_window
+%          AY pass is the product A'*Y otherwise compute it
 
 % outputs:  C_df temporal components in the DF/F domain
 %           Df   background for each component to normalize the filtered raw data    
@@ -32,26 +33,9 @@ if ~isfield(options,'full_A') || isempty(options.full_A); full_A = defoptions.fu
 
 [K,T] = size(C);
 
-% step = 5e3;
-% if memmaped
-%     AY = zeros(K,T);
-%     d = size(A,1);
-%     for i = 1:step:d
-%         AY = AY + A(i:min(i+step-1,d),:)'*double(Y.Yr(i:min(i+step-1,d),:));
-%     end
-% else
-%     if issparse(A) && isa(Y,'single')  
-%         if full_A
-%             AY = full(A)'*Y;
-%         else
-%             AY = A'*double(Y);
-%         end
-%     else
-%         AY = A'*Y;
-%     end
-% end
-
-AY = mm_fun(A,Y);
+if ~exist('AY','var')
+    AY = mm_fun(A,Y);
+end
 
 Bas = zeros(K,T);
 

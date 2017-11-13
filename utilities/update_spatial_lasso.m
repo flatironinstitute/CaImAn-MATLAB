@@ -55,9 +55,10 @@ if memmaped
         YC(t:min(t+step_size-1,d),:) = (double(Y.Yr(t:min(t+step_size-1,d),:))*C').*IND(t:min(t+step_size-1,d),:);        
     end
 else    
-    for k = 1:K
-        YC(IND(:, k),k) = double(Y(IND(:, k),:)*C(k,:)');
-    end
+    YC = double(mm_fun(C,Y));
+%     for k = 1:K
+%         YC(IND(:, k),k) = double(Y(IND(:, k),:)*C(k,:)');
+%     end
 end
 
 %% initialization 

@@ -307,10 +307,8 @@ classdef CNMF < handle
             if isempty(obj.R)
                 compute_residuals(obj);
             end
-            N_samples = ceil(obj.fr*obj.decay_time);
-            obj.fitness = compute_event_exceptionality(obj.C + obj.R,N_samples,obj.options.robust_std);
-            obj.thr_exc = log(normcdf(-obj.options.min_SNR))*N_samples;
-            obj.keep_exc = (obj.fitness < obj.thr_exc);
+            obj.fitness = compute_event_exceptionality(obj.C + obj.R,obj.options.N_samples_exc,obj.options.robust_std);
+            obj.keep_exc = (obj.fitness < obj.options.min_fitness);
         end
         
         %% correlation image
@@ -398,7 +396,7 @@ classdef CNMF < handle
             obj.CNNClassifier('cnn_model.h5');
             obj.eventExceptionality();
             obj.keepComponents();
-            obj.merge()
+            obj.merge();
             obj.updateSpatial();
             obj.updateTemporal(obj.p);
         end

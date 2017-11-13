@@ -16,20 +16,18 @@ if ~isfield(options,'save_avi') || isempty(options.save_avi); options.save_avi =
 save_avi = options.save_avi;
 if ~isfield(options,'sx') || isempty(options.sx); options.sx = defoptions.sx; end
 sx = min([options.sx,floor(d1/2),floor(d2/2)]);
-%if ~isfield(options,'pause_time') || isempty(options.pause_time); options.pause_time = defoptions.pause_time; end
-%pause_time = options.pause_time;
-if isfield(options,'name') && ~isempty(options.name);
+if isfield(options,'name') && ~isempty(options.name)
     name = [options.name,'_components'];
 else
     name = [defoptions.name,'_components'];
 end
 if ~isfield(options,'full_A') || isempty(options.full_A); full_A = defoptions.full_A; else full_A = options.full_A; end
-
+if ~memmaped; Y = double(Y); end
 T = size(C,2);
 if ndims(Y) == 3
     Y = reshape(Y,d1*d2,T);
 end
-if nargin < 6 || isempty(Cn);
+if nargin < 6 || isempty(Cn)
     Cn = reshape(mean(Y,2),d1,d2);
 end
 b = double(b);
@@ -49,7 +47,7 @@ AY = mm_fun(A,Y);
 Y_r = (AY- (A'*A)*C - full(A'*double(b))*f) + C;
 
 if plot_df
-    [~,Df] = extract_DF_F(Y,A,C,[],options);
+    [~,Df] = extract_DF_F(Y,A,C,[],options,AY);
 else
     Df = ones(size(A,2)+1,1);
 end

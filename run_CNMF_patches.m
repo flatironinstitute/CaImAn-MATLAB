@@ -324,17 +324,29 @@ function result = process_patch(Y, F_dark, K, p, tau, options)
     [Ain,Cin,bin,fin] = initialize_components(Y,K,tau,options,P);
     [A,b,Cin,P] = update_spatial_components(Yr,Cin,fin,[Ain,bin],P,options);
     P.p = 0;
+    options.p = 0;
     [C,f,P,S,YrA] = update_temporal_components(Yr,A,b,Cin,fin,P,options);
 
     if ~isempty(A) && ~isempty(C)
         [Am,Cm,~,~,P] = merge_components(Yr,A,b,C,f,P,S,options);
         [A,b,Cm,P] = update_spatial_components(Yr,Cm,f,[Am,b],P,options);
-        P.p = p;
         [C,f,P,S,YrA] = update_temporal_components(Yr,A,b,Cm,f,P,options);
-        [rval_space,rval_time,ind_space,ind_time] = classify_comp_corr(Y,A,C,b,f,options);ind = ind_space & ind_time;        
-        fitness = compute_event_exceptionality(C+YrA,0);
-        fitness_delta = compute_event_exceptionality(diff(C+YrA,[],2),0);
-        ind = (ind_space & ind_time) | (fitness < options.patch_max_fit) | (fitness_delta < options.patch_max_fit_delta);
+        [rval_space,rval_time,ind_space,ind_time] = classify_comp_corr(Y,A,C,b,f,options); 
+        %ind = ind_space & ind_time;        
+        ind_corr = ind_space;
+        
+        try  % matlab 2017b or later is needed
+            [ind_cnn,value] = cnn_classifier(A,[options.d1,options.d2],'cnn_model',options.cnn_thr);
+        catch
+            ind_cnn = true(size(A,2),1);                        % components that pass the CNN classifier
+        end     
+
+        fitness = compute_event_exceptionality(C+YrA,options.N_samples_exc,options.robust_std);
+        ind_exc = (fitness < options.min_fitness);
+        ind = (ind_corr | ind_cnn) & ind_exc;
+        %fitness_delta = compute_event_exceptionality(diff(C+YrA,[],2),0);
+        %ind = (ind_space & ind_time) | (fitness < options.patch_max_fit) | (fitness_delta < options.patch_max_fit_delta);
+        
         P.rval_space = rval_space;
         P.rval_time = rval_time;
         P.ind_space = ind_space;
@@ -364,7 +376,7 @@ function CNM = process_patch_object(Y,F_dark,K,p,tau,options)
                 'temporal_parallel',false,...
                 'spatial_parallel',false,...
                 'space_thresh',options.patch_space_thresh);
-    Y = single(Y)-single(F_dark);
+    Y = single(Y) - single(F_dark);
     Y(isnan(Y)) = single(F_dark);
     CNM.fit(Y,options,K);                
 end
