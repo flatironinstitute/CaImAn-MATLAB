@@ -98,6 +98,8 @@ Special thanks to the following people for letting us use their datasets for our
 
 * Weijian Yang, Darcy Peterka, Rafael Yuste, Columbia University
 * Sue Ann Koay, David Tank, Princeton University
+* Diego Pacheco Pinedo, Mala Murthy, Princeton University
+* Clay Lacefied, Randy Bruno, Columbia University
 
 # Citation
 
