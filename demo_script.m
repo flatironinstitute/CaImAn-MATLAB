@@ -19,7 +19,6 @@ d = d1*d2;                                          % total number of pixels
 
 K = 40;                                           % number of components to be found
 tau = 5;                                          % std of gaussian kernel (size of neuron) 
-p = 2;                                            % order of autoregressive system (p = 0 no dynamics, p=1 just decay, p = 2, both rise and decay)
 
 options = CNMFSetParms(...   
     'd1',d1,'d2',d2,...                         % dimensionality of the FOV

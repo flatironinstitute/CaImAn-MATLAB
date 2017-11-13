@@ -83,6 +83,9 @@ Names = [
     'bas_nonneg         ' % flag for setting the baseline lower bound. if 1, then b >= 0 else b >= min(y) (default 1)
     'fudge_factor       ' % scaling constant to reduce bias in the time constant estimation (default 1 - no scaling)
     'resparse           ' % number of times that the solution is resparsened (default: 0)
+    % OASIS penalty parameters (deconvolveCa.m)
+    'lam_pr             ' % false positive probability for determing lambda penalty
+    'spk_SNR            ' % spike SNR for min spike value
     % MERGING (merge_ROIs.m)
     'merge_thr          ' % merging threshold (default: 0.85)
     'fast_merge         ' % flag for using fast merging (default 1)
@@ -311,6 +314,9 @@ Values = [
     {1}
     {0.98}
     {0}
+    % OASIS penalty parameters (deconvolveCa.m)
+    {0.99}
+    {0.5}
     % MERGING (merge_ROIs.m)
     {0.85}
     {1}
