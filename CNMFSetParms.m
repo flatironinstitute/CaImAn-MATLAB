@@ -66,7 +66,7 @@ Names = [
     'se                 ' % morphological element for dilation (default: strel('disk',1,0))
     % threshold_components.m
     'thr_method         ' % method to threshold ('max' or 'nrg', default 'max')
-    'maxthr             ' % threshold of max value below which values are discarded (default: 0.1)
+    'maxthr             ' % threshold of max value below which values are discarded (default: 0.25)
     'nrgthr             ' % energy threshold (default: 0.995)
     'clos_op            ' % morphological element for closing (default: strel('square',3))
     'medw               ' % size of median filter (default: [3,3])
@@ -111,8 +111,8 @@ Names = [
     'space_thresh       ' % threshold for r-value in space (default: 0.4)
     'time_thresh        ' % threshold for r-value in time (default: 0.4)
     'A_thresh           ' % threshold for determining overlap (default: 0.1)
-    'Npeaks             ' % # of peaks to be considered (default: 20)
-    'peak_int           ' % interval around the peak (default: -2:6)
+    'Npeaks             ' % # of peaks to be considered (default: 5)
+    'peak_int           ' % interval around the peak (default: -2:5)
     'MinPeakDist        ' % minimum peak distance for finding points of high activity  (default: 10)
     % ORDER COMPONENTS (order_components.m)
     'nsd                ' % number of standard deviations (default: 3)
@@ -148,9 +148,10 @@ Names = [
     'dist_overlap_thr   ' % threshold for detecting if one ROI is a subset of another (deafult: 0.8)
     % parameters for computing event exceptionality (compute_event_exceptionality.m)
     'min_SNR            ' % minimum SNR for accepting exceptional events
-    'decay_time         ' % decay time constant of the indicator
-    'robust_std         ' % use robust std for computing noise in traces
-    'min_fitness        ' % threshold on time variability
+    'decay_time         ' % length of a typical transient in seconds
+    'robust_std         ' % use robust std for computing noise in traces (false)
+    'N_samples_exc      ' % number of samples over which to compute (default: ceil(decay_time*fr))
+    'min_fitness        ' % threshold on time variability  (default: log(normcdf(-min_SNR))*N_samples_exc)    
     'min_fitness_delta  ' % threshold on the derivative of time variability
     % parameters for CNN classifier (cnn_classifier.m)
     'cnn_thr            ' % threshold for CNN classifier (default: 0.2)
@@ -293,7 +294,7 @@ Values = [
     {strel('disk',1,0)}
     % threshold_components.m
     {'max'}
-    {0.1}
+    {0.25}
     {0.995}
     {strel('square',3)}
     {[3,3]}
@@ -335,11 +336,11 @@ Values = [
     % CLASSIFY COMPONENTS PIXELS (classify_components_pixels.m)
     {0.8}
     % CLASSIFY COMPONENTS with CORRELATION (classify_comp_corr.m)
-    {0.35}
-    {0.35}
+    {0.4}
+    {0.4}
     {0.1}
-    {10}
-    {-2:7}
+    {5}
+    {-2:6}
     {10}
     % ORDER COMPONENTS (order_components.m)
     {3}
@@ -377,7 +378,8 @@ Values = [
     {2}
     {0.4}
     {false}
-    {-15}
+    {[]}
+    {[]}
     {-5}
     % parameters for CNN classifier (cnn_classifier.m)
     {0.2}
@@ -388,3 +390,6 @@ for j = 1:m
         eval(['options.' Names(j,:) '= Values{j};']);
     end
 end
+
+if isempty(options.N_samples_exc); options.N_samples_exc = ceil(options.fr*options.decay_time); end
+if isempty(options.min_fitness); options.min_fitness = log(normcdf(-options.min_SNR))*options.N_samples_exc; end

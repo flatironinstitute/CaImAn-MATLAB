@@ -259,7 +259,7 @@ classdef CNMF < handle
         %% keep components
         function keepComponents(obj,ind_keep)
             if ~exist('ind_keep','var')
-                obj.ind_keep = (obj.keep_eval & obj.keep_cnn) | obj.keep_exc;
+                obj.ind_keep = (obj.keep_eval | obj.keep_cnn) & obj.keep_exc;
             else
                 obj.ind_keep = ind_keep;
             end

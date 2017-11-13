@@ -54,7 +54,7 @@ if nargin < 3 || isempty(options) || isnumeric(options)
     end
 end
 if ~exist('ln_wd', 'var') || isempty(ln_wd)
-    ln_wd = 1; % linewidth;
+    ln_wd = 2; % linewidth;
 end
 units = 'centimeters';
 fontname = 'helvetica';
@@ -79,7 +79,8 @@ fontname = 'helvetica';
             i = ind_show(j);            
             if size(Coor{i},2) > 1
                 cont = medfilt1(Coor{i}')';
-                plot(cont(1,2:end),cont(2,2:end),'Color',cmap(j,:), 'linewidth', ln_wd); hold on;
+                cont = [cont,cont(:,2)];
+                plot(cont(1,2:end),cont(2,2:end),'Color','m', 'linewidth', ln_wd); hold on;
             end            
         end
     else
@@ -95,7 +96,7 @@ fontname = 'helvetica';
                 temp =  cumsum(temp);
                 ff = find(temp > (1-thr)*temp(end),1,'first');
                 if ~isempty(ff)
-                    CC{i} = contour(reshape(A_temp,d1,d2),[0,0]+A_temp(ind(ff)),'LineColor',cmap(i,:), 'linewidth', ln_wd);
+                    CC{i} = contour(reshape(A_temp,d1,d2),[0,0]+A_temp(ind(ff)),'LineColor','m', 'linewidth', ln_wd);
                     fp = find(A_temp >= A_temp(ind(ff)));
                     [ii,jj] = ind2sub([d1,d2],fp);
                     CR{i,1} = [ii,jj]';
@@ -114,7 +115,7 @@ fontname = 'helvetica';
                 if ~isempty(BW2)
                     for ii = 1:length(BW2)
                         BW2{ii} = fliplr(BW2{ii});
-                        plot(BW2{ii}(:,1),BW2{ii}(:,2),'Color',cmap(i,:), 'linewidth', ln_wd);
+                        plot(BW2{ii}(:,1),BW2{ii}(:,2),'Color','m', 'linewidth', ln_wd);
                     end
                     CC{i} = BW2{1}';
                     fp = find(BW);

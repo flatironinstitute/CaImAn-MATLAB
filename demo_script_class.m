@@ -10,15 +10,15 @@ CNM = CNMF;                                     % contruct CNMF object
 filename = 'demoMovie.tif';                     % filename to be processed
 K = 40;                                         % number of components to be found
 
-options = CNMFSetParms(...                      % dimensions of datasets
-    'p',2,...                                   % order of AR dynamics
-    'min_SNR',2.0,...                           % minimum SNR for accepting a component
-    'space_thresh',0.50,...                     % correlation threshold in space
-    'nb',2,...                                  % # of background/neuropil components
+options = CNMFSetParms(...   
+    'p',2,...                                   % order of AR dynamics    
     'gSig',5,...                                % half size of neuron
-    'fr',10,...                                 % imaging rate
-    'merge_thr',0.8...                          % merging threshold
-    ); 
+    'merge_thr',0.80,...                        % merging threshold  
+    'nb',2,...                                  % number of background components    
+    'min_SNR',3,...                             % minimum SNR threshold
+    'space_thresh',0.5,...                      % space correlation threshold
+    'cnn_thr',0.2...                            % threshold for CNN classifier    
+    );
 
 %%
 % Below is the standard processing pipeline. This processing can be

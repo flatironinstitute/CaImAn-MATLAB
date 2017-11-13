@@ -32,6 +32,7 @@ function [fitness,erfc,sd_r,md] = compute_event_exceptionality(traces,N,robust_s
 T=size(traces,2);
 
 md = mode_robust(traces, 2);
+
 if ~exist('N','var'); N=5; end
 if ~exist('robust_std','var')
     robust_std = false;
