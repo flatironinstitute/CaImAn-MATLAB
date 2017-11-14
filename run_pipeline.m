@@ -2,7 +2,7 @@
 clear;
 addpath(genpath('../NoRMCorre'));               % add the NoRMCorre motion correction package to MATLAB path
 gcp;                                            % start a parallel engine
-foldername = '/mnt/ceph/users/epnevmatikakis/Ca_datasets/Gauthier/mov_stable2';
+foldername = '';
         % folder where all the files are located. Currently supported .tif,
         % .hdf5, .raw, .avi, and .mat files
 files = subdir(fullfile(foldername,'*.tif'));   % list of filenames (will search all subdirectories)
