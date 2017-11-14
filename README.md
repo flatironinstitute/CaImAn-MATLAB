@@ -94,7 +94,7 @@ Depending on the settings the following packages may also be required
 
 # Developers
 
-This packaged is mainly developed and maintained by [Eftychios A. Pnevmatikakis](https://github.com/epnev) with help from a lot of [contributors](https://github.com/flatironinstitute/CaImAn-MATLAB/graphs/contributors).
+This package is mainly developed and maintained by [Eftychios A. Pnevmatikakis](https://github.com/epnev) (Flatiron Institute, Simons Foundation) with help from a lot of [contributors](https://github.com/flatironinstitute/CaImAn-MATLAB/graphs/contributors).
 
 # Acknowledgements
 
