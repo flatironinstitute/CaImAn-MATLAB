@@ -92,6 +92,10 @@ Depending on the settings the following packages may also be required
 - The CVX library which can be downloaded from http://cvxr.com/cvx/download/ (after unpacking CVX open Matlab and run cvx_setup from inside the CVX directory to properly install and add CVX to the Matlab path). **CVX is no longer required**.
 - SPGL1 package from https://github.com/mpf/spgl1 (for solving constrained_foopsi using SPGL1)
 
+# Developers
+
+This package is mainly developed and maintained by [Eftychios A. Pnevmatikakis](https://github.com/epnev) (Flatiron Institute, Simons Foundation) with help from a lot of [contributors](https://github.com/flatironinstitute/CaImAn-MATLAB/graphs/contributors).
+
 # Acknowledgements
 
 Special thanks to the following people for letting us use their datasets for our various demo files:
