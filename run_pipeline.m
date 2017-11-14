@@ -13,26 +13,21 @@ numFiles = length(files);
 % register files one by one. use template obtained from file n to
 % initialize template of file n + 1; 
 
-motion_correct = true;      % perform motion correction
-non_rigid = true;           % flag for non-rigid motion correction
+motion_correct = true;                                          % perform motion correction
+non_rigid = true;                                               % flag for non-rigid motion correction
+if non_rigid; append = '_nr'; else; append = '_rig'; end        % use this to save motion corrected files
+options_mc = NoRMCorreSetParms('d1',FOV(1),'d2',FOV(2),'grid_size',[128,128],'init_batch',200,...
+                'overlap_pre',64,'mot_uf',4,'bin_width',200,'max_shift',24,'max_dev',8,'us_fac',50,...
+                'output_type','h5','h5_filename',fullfile(folder_name,[file_name,append,'.h5']));
 
 template = [];
+col_shift = [];
 for i = 1:numFiles
     fullname = files(i).name;
     [folder_name,file_name,ext] = fileparts(fullname);    
     if motion_correct    
-        if non_rigid
-            options_nonrigid = NoRMCorreSetParms('d1',512,'d2',512,'grid_size',[128,128],...
-                'overlap_pre',64,'mot_uf',4,'bin_width',200,'max_shift',24,'max_dev',8,'us_fac',50,...
-                'output_type','h5','h5_filename',fullfile(folder_name,[file_name,'_nr.h5']));
-            [M,shifts,template] = normcorre_batch(fullname,options_nonrigid,template); 
-            save(fullfile(folder_name,[file_name,'_shifts_nr.mat']),'shifts','-v7.3');           % save shifts of each file at the respective subfolder
-        else    % perform rigid motion correction (faster, could be less accurate)
-            options_rigid = NoRMCorreSetParms('d1',FOV(1),'d2',FOV(2),'bin_width',100,'max_shift',32,...
-                'output_type','h5','h5_filename',fullfile(folder_name,[file_name,'_rig.h5']));
-            [M,shifts,template] = normcorre_batch(fullname,options_rigid,template); 
-            save(fullfile(folder_name,[file_name,'_shifts_rig.mat']),'shifts','-v7.3');           % save shifts of each file at the respective subfolder
-        end
+        [M,shifts,template,options_mc,col_shift] = normcorre_batch(fullname,options_nonrigid,template);
+        save(fullfile(folder_name,[file_name,'_shifts',append,'.mat']),'shifts','-v7.3');           % save shifts of each file at the respective folder        
     else    % if files are already motion corrected convert them to h5
         convert_file(fullname,'h5',fullfile(folder_name,[file_name,'_mc.h5']));
     end
@@ -41,11 +36,7 @@ end
 %% downsample h5 files and save into a single memory mapped matlab file
 
 if motion_correct
-    if non_rigid
-        h5_files = subdir(fullfile(foldername,'*_nr.h5'));  % list of h5 files (modify 
-    else
-        h5_files = subdir(fullfile(foldername,'*_rig.h5'));
-    end
+    h5_files = subdir(fullfile(foldername,['*',append,'.h5']));  % list of h5 files (modify 
 else
     h5_files = subdir(fullfile(foldername,'*_mc.h5'));
 end
