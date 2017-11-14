@@ -19,10 +19,11 @@ d = d1*d2;                                          % total number of pixels
 
 K = 40;                                           % number of components to be found
 tau = 5;                                          % std of gaussian kernel (size of neuron) 
+p = 2;
 
 options = CNMFSetParms(...   
     'd1',d1,'d2',d2,...                         % dimensionality of the FOV
-    'p',2,...                                   % order of AR dynamics    
+    'p',p,...                                   % order of AR dynamics    
     'gSig',tau,...                              % half size of neuron
     'merge_thr',0.80,...                        % merging threshold  
     'nb',2,...                                  % number of background components    
