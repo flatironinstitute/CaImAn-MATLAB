@@ -1,4 +1,4 @@
-function [matched_ROIs,nonmatched_1,nonmatched_2,A2] = register_ROIs(A1,A2,options,template1,template2,options_mc)
+function [matched_ROIs,nonmatched_1,nonmatched_2,A2,R,A_union] = register_ROIs(A1,A2,options,template1,template2,options_mc)
 % REGISTER_ROIs - register ROIs from two different recording sessions
 %
 %   [MATCHED_ROIS, NONMATCHED_1, NONMATCHED_2, A2] = REGISTER_ROIS( ...
@@ -9,29 +9,29 @@ function [matched_ROIs,nonmatched_1,nonmatched_2,A2] = register_ROIs(A1,A2,optio
 % and the ROIs from session 2 are aligned to the FOV of session 1.
 %
 % INPUTS:
-% A1:               matrix of spatial components from session 1 (sparse, d x K1)
-% A2:               matrix of spatial components from session 2 (sparse, d x K2)
-% options           parameter structure with inputs:
-%       d1:         number of rows in FOV
-%       d2:         number of columns in FOV
-%       d3:         number of planes in FOV (default: 1)
-% dist_maxthr:      threshold for turning spatial components into binary masks (default: 0.1)
-% dist_exp:         power n for distance between masked components: dist = 1 - (and(m1,m2)/or(m1,m2))^n (default: 1)
-% dist_thr:         threshold for setting a distance to infinity. (default: 0.5)
-% dist_overlap_thr: overlap threshold for detecting if one ROI is a subset of another (default: 0.8)
-% template1:        template from motion correction of the first session
-% template2:        template from motion correction of the second session
-% options_mc:       motion correction options
+% A1:                     matrix of spatial components from session 1 (sparse, d x K1)
+% A2:                     matrix of spatial components from session 2 (sparse, d x K2)
+% options                 parameter structure with inputs:
+%       d1:               number of rows in FOV
+%       d2:               number of columns in FOV
+%       d3:               number of planes in FOV (default: 1)
+%       dist_maxthr:      threshold for turning spatial components into binary masks (default: 0.1)
+%       dist_exp:         power n for distance between masked components: dist = 1 - (and(m1,m2)/or(m1,m2))^n (default: 1)
+%       dist_thr:         threshold for setting a distance to infinity. (default: 0.5)
+%       dist_overlap_thr: overlap threshold for detecting if one ROI is a subset of another (default: 0.8)
+%       template1:        template from motion correction of the first session
+%       template2:        template from motion correction of the second session
+%       options_mc:       motion correction options
+%       plot_reg:         create a contour plot of registered ROIs
 
 % OUTPUTS:
-% matched_ROIs:     pairs of matched ROIs
-% nonmatched_1:     components from first session that are not matched
-% nonmatched_2:     components from second session that are not matched
-% A2:               aligned ROIs
-%
-%
-
-
+% matched_ROIs:           pairs of matched ROIs
+% nonmatched_1:           components from first session that are not matched
+% nonmatched_2:           components from second session that are not matched
+% A2:                     aligned ROIs from session 2 to template of session 1
+% R:                      alignment matrix
+% A_union:                union of ROIs aligned to session 1 (for matched
+%                               pairs the ROIs from session # 1 are kept)
 
 
 defoptions = CNMFSetParms;
@@ -55,7 +55,7 @@ if ~isfield(options,'dist_overlap_thr') || isempty(options.dist_overlap_thr); op
 siz = [options.d1,options.d2,options.d3];
 [~,K1] = size(A1);
 [~,K2] = size(A2);
-
+options_mc.correct_bidir = false;
 if align_flag
     options_mc.upd_template = false;
     options_mc.boundary = 'zero';
@@ -119,3 +119,22 @@ R = Hungarian(D);
 matched_ROIs = [match_1,match_2];
 nonmatched_1 = setdiff(1:K1,match_1);
 nonmatched_2 = setdiff(1:K2,match_2);
+
+A_union = [A1,A2(:,nonmatched_2)];
+R = sparse(matched_ROIs(:,1),matched_ROIs(:,2),1,K1,K2);
+
+if options.plot_reg
+    fprintf('Creating contour plot... \n')
+    figure; imagesc(template1);
+    options.plot_bck_image = false;
+    plot_contours(A1(:,matched_ROIs(:,1)),template1,options,0,[],[],'w'); hold on;
+    plot_contours(A2(:,matched_ROIs(:,2)),template1,options,0,[],[],'m'); hold on;
+    plot_contours(A1(:,nonmatched_1),template1,options,0,[],[],'g'); hold on;
+    plot_contours(A2(:,nonmatched_2),template1,options,0,[],[],'k'); hold on;
+    h = zeros(4, 1);
+    h(1) = plot(NaN,NaN,'w');
+    h(2) = plot(NaN,NaN,'m');
+    h(3) = plot(NaN,NaN,'g');
+    h(4) = plot(NaN,NaN,'k');
+    legend(h,'Matched #1','Matched #2','Mismatched #1','Mismatched # 2'); hold off;
+end

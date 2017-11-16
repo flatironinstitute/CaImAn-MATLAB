@@ -1,4 +1,4 @@
-function [CC,jsf,im] = plot_contours(Aor,Cn,options,display_numbers,max_number,Coor, ln_wd, ind_show,cm)
+function [CC,jsf,im] = plot_contours(Aor,Cn,options,display_numbers,max_number,Coor, ln_cl, ind_show,cm)
 
 % save and plot the contour traces of the found spatial components against
 % a specified background image. The contour can be determined in two ways:
@@ -14,6 +14,7 @@ function [CC,jsf,im] = plot_contours(Aor,Cn,options,display_numbers,max_number,C
 % display_number:   flag for displaying the numbers of the components (optional, default: 0)
 % max_number:       specify the maximum number of components to be displayed (optional, default: display all)
 % Coor:             Pass contour plots to be displayed (optional)
+% ln_cl:            Color of contour (default: magenta)
 
 % OUTPUTS:
 % CC:               contour plots coordinates
@@ -53,8 +54,8 @@ if nargin < 3 || isempty(options) || isnumeric(options)
         options = defoptions;
     end
 end
-if ~exist('ln_wd', 'var') || isempty(ln_wd)
-    ln_wd = 2; % linewidth;
+if ~exist('ln_cl', 'var') || isempty(ln_cl)
+    ln_cl = 'm'; % linewidth;
 end
 units = 'centimeters';
 fontname = 'helvetica';
@@ -65,8 +66,10 @@ if ~isfield(options,'nrgthr') || isempty(options.nrgthr); options.nrgthr = defop
 if ~isfield(options,'maxthr') || isempty(options.maxthr); options.maxthr = defoptions.maxthr; end
 
 fontname = 'helvetica';
-
-    im =imagesc(Cn,[min(Cn(:)),max(Cn(:))]);
+    
+    if options.plot_bck_image
+        im =imagesc(Cn,[min(Cn(:)),max(Cn(:))]);
+    end
     axis tight; axis equal; 
     posA = get(gca,'position');
     set(gca,'position',posA);
@@ -80,7 +83,7 @@ fontname = 'helvetica';
             if size(Coor{i},2) > 1
                 cont = medfilt1(Coor{i}')';
                 cont = [cont,cont(:,2)];
-                plot(cont(1,2:end),cont(2,2:end),'Color','m', 'linewidth', ln_wd); hold on;
+                plot(cont(1,2:end),cont(2,2:end),'Color',ln_cl, 'linewidth', 2); hold on;
             end            
         end
     else
@@ -96,7 +99,7 @@ fontname = 'helvetica';
                 temp =  cumsum(temp);
                 ff = find(temp > (1-thr)*temp(end),1,'first');
                 if ~isempty(ff)
-                    CC{i} = contour(reshape(A_temp,d1,d2),[0,0]+A_temp(ind(ff)),'LineColor','m', 'linewidth', ln_wd);
+                    CC{i} = contour(reshape(A_temp,d1,d2),[0,0]+A_temp(ind(ff)),'LineColor',ln_cl, 'linewidth', 2);
                     fp = find(A_temp >= A_temp(ind(ff)));
                     [ii,jj] = ind2sub([d1,d2],fp);
                     CR{i,1} = [ii,jj]';
@@ -104,7 +107,7 @@ fontname = 'helvetica';
                 end
                 hold on;
             end       
-        elseif strcmpi(options.thr_method,'max');  
+        elseif strcmpi(options.thr_method,'max')  
             thr = options.maxthr;
             for i = 1:size(Aor,2)
                 A_temp = full(reshape(Aor(:,i),d1,d2));
@@ -115,7 +118,7 @@ fontname = 'helvetica';
                 if ~isempty(BW2)
                     for ii = 1:length(BW2)
                         BW2{ii} = fliplr(BW2{ii});
-                        plot(BW2{ii}(:,1),BW2{ii}(:,2),'Color','m', 'linewidth', ln_wd);
+                        plot(BW2{ii}(:,1),BW2{ii}(:,2),'Color',ln_cl, 'linewidth', 2);
                     end
                     CC{i} = BW2{1}';
                     fp = find(BW);

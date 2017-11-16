@@ -93,7 +93,8 @@ Names = [
     'df_prctile         ' % percentile to be defined as baseline (default 20)
     'df_window          ' % length of running window (default [], no window)
     % CONTOUR PLOTS (plot_contours.m)
-    'cont_threshold     '
+    'plot_bck_image     ' % plot background image or overlay on existing one (deafult: true)
+    'cont_threshold     ' 
     % VIDEO (make_patch_video.m)
     'ind                ' % indeces of components to be shown (deafult: 1:4)
     'skip_frame         ' % skip frames when showing the video (default: 1 (no skipping))
@@ -149,6 +150,7 @@ Names = [
     'dist_thr           ' % distance threshold above which dist = Inf (default: 0.5)
     'dist_maxthr        ' % max thresholding for components before turing into binary masks (default: 0.15)
     'dist_overlap_thr   ' % threshold for detecting if one ROI is a subset of another (deafult: 0.8)
+    'plot_reg           ' % plot registered ROIs (default: true)
     % parameters for computing event exceptionality (compute_event_exceptionality.m)
     'min_SNR            ' % minimum SNR for accepting exceptional events
     'decay_time         ' % length of a typical transient in seconds
@@ -324,6 +326,7 @@ Values = [
     {20}
     {[]}
     % CONTOUR PLOTS (plot_contours.m)
+    {true}
     {0.9}
     % VIDEO (make_patch_video.m)
     {1:4}
@@ -380,6 +383,7 @@ Values = [
     {0.5}
     {0.15}
     {0.8}
+    {true}
     % parameters for computing event exceptionality (compute_event_exceptionality.m)
     {2}
     {0.4}
