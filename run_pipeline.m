@@ -159,8 +159,8 @@ throw = ~keep;
 Coor_k = [];
 Coor_t = [];
 figure;
-    ax1 = subplot(121); plot_contours(A(:,keep),Cn,options,0,[],Coor_k,1,find(keep)); title('Selected components','fontweight','bold','fontsize',14);
-    ax2 = subplot(122); plot_contours(A(:,throw),Cn,options,0,[],Coor_t,1,find(throw));title('Rejected components','fontweight','bold','fontsize',14);
+    ax1 = subplot(121); plot_contours(A(:,keep),Cn,options,0,[],Coor_k,[],1,find(keep)); title('Selected components','fontweight','bold','fontsize',14);
+    ax2 = subplot(122); plot_contours(A(:,throw),Cn,options,0,[],Coor_t,[],1,find(throw));title('Rejected components','fontweight','bold','fontsize',14);
     linkaxes([ax1,ax2],'xy')
     
     %% keep only the active components    
@@ -174,7 +174,7 @@ C_keep = C(keep,:);
 % toc
 % 
 % plot_components_GUI(data,A_keep,C_keep,b,f,Cn,options)
-if exist('YrAk','var'); R_keep = YrAk; else; R_keep = YrA(keep,:); end
+if exist('YrA','var'); R_keep = YrA; else; R_keep = YrA(keep,:); end
     
 %% extract fluorescence on native temporal resolution
 
