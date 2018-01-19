@@ -199,7 +199,7 @@ end
 
 %% extract DF/F and deconvolve DF/F traces
 
-[F_dff,F0] = detrend_df_f(A_keep,b,C_full,f_full,R_full,options);
+[F_dff,F0] = detrend_df_f(A_keep,[b,ones(prod(FOV),1)],C_full,[f_full;-double(F_dark)*ones(1,T)],R_full,options);
 
 C_dec = zeros(N,T);         % deconvolved DF/F traces
 S_dec = zeros(N,T);         % deconvolved neural activity
