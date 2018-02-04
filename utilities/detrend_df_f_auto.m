@@ -45,8 +45,8 @@ for i = 1:N
     else
         [~,cdf] = estimate_percentile_level(F(i,:),options.df_window,round(options.df_window/2));
         cdf_level = median(cdf);
-        Fd = prctfilt(F(i,:),cdf_level,options.df_window);                             % detrended fluorescence
-        F0(i,:) = prctfilt(B(i,:),cdf_level,options.df_window,[],0) + (F-Fd);       % background + baseline for each component
+        Fd = prctfilt(F(i,:),cdf_level,options.df_window);                               % detrended fluorescence
+        F0(i,:) = prctfilt(B(i,:),cdf_level,options.df_window,[],0) + (F(i,:)-Fd);       % background + baseline for each component
         F_dff(i,:) = Fd./F0(i,:);
     end
 end
