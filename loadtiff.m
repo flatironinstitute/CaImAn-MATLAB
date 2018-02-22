@@ -2,7 +2,7 @@ function oimg = loadtiff(path, sFrame, num2read)
 
 % Copyright (c) 2012, YoonOh Tak
 % All rights reserved.
-% Modified by Eftychios Pnevmatikakis, 01/2017.
+% Modified by Eftychios Pnevmatikakis, 01/2017, 02/2018.
 
 % 
 % Redistribution and use in source and binary forms, with or without 
@@ -75,28 +75,30 @@ tcl = 1; % Total cell length
 while true
     tfl = tfl + 1; % Increase frame count
     
-    iinfo(tfl).w       = tiff.getTag('ImageWidth');
-    iinfo(tfl).h       = tiff.getTag('ImageLength');
-    iinfo(tfl).spp     = tiff.getTag('SamplesPerPixel');
-    iinfo(tfl).color   = iinfo(tfl).spp > 2; % Grayscale: 1(real number) or 2(complex number), Color: 3(rgb), 4(rgba), 6(rgb, complex number), or 8(rgba, complex number)
-    iinfo(tfl).complex = any(iinfo(tfl).spp == [2 6 8]);
+    if tfl >= sFrame && tfl <= sFrame + num2read
+        iinfo(tfl).w       = tiff.getTag('ImageWidth');
+        iinfo(tfl).h       = tiff.getTag('ImageLength');
+        iinfo(tfl).spp     = tiff.getTag('SamplesPerPixel');
+        iinfo(tfl).color   = iinfo(tfl).spp > 2; % Grayscale: 1(real number) or 2(complex number), Color: 3(rgb), 4(rgba), 6(rgb, complex number), or 8(rgba, complex number)
+        iinfo(tfl).complex = any(iinfo(tfl).spp == [2 6 8]);
 
-    if tfl > 1
-        % If tag information is changed, make a new cell
-        if iinfo(tfl-1).w ~= iinfo(tfl).w || ...
-            iinfo(tfl-1).h ~= iinfo(tfl).h || ...
-            iinfo(tfl-1).spp ~= iinfo(tfl).spp || ...
-            iinfo(tfl-1).color ~= iinfo(tfl).color || ...
-            iinfo(tfl-1).complex ~= iinfo(tfl).complex
-            tcl = tcl + 1; % Increase cell count
-            iinfo(tfl).fid = 1; % First frame of this cell
+        if tfl > sFrame
+            % If tag information is changed, make a new cell
+            if iinfo(tfl-1).w ~= iinfo(tfl).w || ...
+                iinfo(tfl-1).h ~= iinfo(tfl).h || ...
+                iinfo(tfl-1).spp ~= iinfo(tfl).spp || ...
+                iinfo(tfl-1).color ~= iinfo(tfl).color || ...
+                iinfo(tfl-1).complex ~= iinfo(tfl).complex
+                tcl = tcl + 1; % Increase cell count
+                iinfo(tfl).fid = 1; % First frame of this cell
+            else
+                iinfo(tfl).fid = iinfo(tfl-1).fid + 1;
+            end
         else
-            iinfo(tfl).fid = iinfo(tfl-1).fid + 1;
+            iinfo(tfl).fid = 1; % Very first frame of this file
         end
-    else
-        iinfo(tfl).fid = 1; % Very first frame of this file
+        iinfo(tfl).cid = tcl; % Cell number of this frame
     end
-    iinfo(tfl).cid = tcl; % Cell number of this frame
     
     if tiff.lastDirectory(), break; end;
     tiff.nextDirectory();
@@ -105,42 +107,44 @@ end
 %% Load image data
 T = tfl;
 num2read = min(num2read,T-sFrame+1);
+if num2read < 1
+    oimg = [];
+else
+    if tcl == 1 % simple image (no cell)
 
-if tcl == 1 % simple image (no cell)
-    
-    for tfl = sFrame:sFrame+num2read-1
-        tiff.setDirectory(tfl);
-        temp = tiff.read();
-        if tfl == sFrame
-            oimg = zeros([size(temp),num2read],'like',temp);
+        for tfl = sFrame:sFrame+num2read-1
+            tiff.setDirectory(tfl);
+            temp = tiff.read();
+            if tfl == sFrame
+                oimg = zeros([size(temp),num2read],'like',temp);
+            end
+
+            if iinfo(tfl).complex
+                temp = temp(:,:,1:2:end-1,:) + temp(:,:,2:2:end,:)*1i;
+            end
+
+            if ~iinfo(tfl).color
+                oimg(:,:,tfl - sFrame + 1) = temp; % Grayscale image
+            else
+                oimg(:,:,:,tfl - sFrame + 1) = temp; % Color image
+            end
         end
-        
-        if iinfo(tfl).complex
-            temp = temp(:,:,1:2:end-1,:) + temp(:,:,2:2:end,:)*1i;
-        end
-       
-        if ~iinfo(tfl).color
-            oimg(:,:,iinfo(tfl).fid - sFrame + 1) = temp; % Grayscale image
-        else
-            oimg(:,:,:,iinfo(tfl).fid - sFrame + 1) = temp; % Color image
-        end
-    end
-else % multiple image (multiple cell)
-    oimg = cell(tcl, 1);
-    for tfl = 1:tfl
-        tiff.setDirectory(tfl);
-        temp = tiff.read();
-        if iinfo(tfl).complex
-            temp = temp(:,:,1:2:end-1,:) + temp(:,:,2:2:end,:)*1i;
-        end
-        if ~iinfo(tfl).color
-            oimg{iinfo(tfl).cid}(:,:,iinfo(tfl).fid) = temp; % Grayscale image
-        else
-            oimg{iinfo(tfl).cid}(:,:,:,iinfo(tfl).fid) = temp; % Color image
+    else % multiple image (multiple cell)
+        oimg = cell(tcl, 1);
+        for tfl = 1:tfl
+            tiff.setDirectory(tfl);
+            temp = tiff.read();
+            if iinfo(tfl).complex
+                temp = temp(:,:,1:2:end-1,:) + temp(:,:,2:2:end,:)*1i;
+            end
+            if ~iinfo(tfl).color
+                oimg{iinfo(tfl).cid}(:,:,iinfo(tfl).fid) = temp; % Grayscale image
+            else
+                oimg{iinfo(tfl).cid}(:,:,:,iinfo(tfl).fid) = temp; % Color image
+            end
         end
     end
 end
-
 %% Close file
 tiff.close();
 cd(path_parent);
