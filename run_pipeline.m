@@ -121,7 +121,7 @@ options = CNMFSetParms(...
 [A,b,C,f,S,P,RESULTS,YrA] = run_CNMF_patches(data,K,patches,tau,0,options);  % do not perform deconvolution here since
                                                                              % we are operating on downsampled data
 %% compute correlation image on a small sample of the data (optional - for visualization purposes) 
-Cn = correlation_image_max(data.Y,8);
+Cn = correlation_image_max(data,8);
 
 %% classify components
 
@@ -163,18 +163,18 @@ figure;
     ax2 = subplot(122); plot_contours(A(:,throw),Cn,options,0,[],Coor_t,[],1,find(throw));title('Rejected components','fontweight','bold','fontsize',14);
     linkaxes([ax1,ax2],'xy')
     
-    %% keep only the active components    
+%% keep only the active components    
+
 A_keep = A(:,keep);
 C_keep = C(keep,:);
 
-%% deconvolve (downsampled) temporal components plot GUI with components (optional)
+%% extract residual signals for each trace
 
-% tic;
-% [C_keep,f_keep,Pk,Sk,YrAk] = update_temporal_components_fast(data,A_keep,b,C_keep,f,P,options);
-% toc
-% 
-% plot_components_GUI(data,A_keep,C_keep,b,f,Cn,options)
-if exist('YrA','var'); R_keep = YrA; else; R_keep = YrA(keep,:); end
+if exist('YrA','var') 
+    R_keep = YrA(keep,:); 
+else
+    R_keep = compute_residuals(data,A_keep,b,C_keep,f);
+end
     
 %% extract fluorescence on native temporal resolution
 
