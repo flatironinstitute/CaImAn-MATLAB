@@ -18,7 +18,7 @@ d = d1*d2;                                          % total number of pixels
 %% Set parameters
 
 K = 40;                                           % number of components to be found
-tau = 5;                                          % std of gaussian kernel (size of neuron) 
+tau = 5;                                          % std of gaussian kernel (half size of neuron) 
 p = 2;
 
 options = CNMFSetParms(...   
