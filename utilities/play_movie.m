@@ -5,6 +5,18 @@ function play_movie(movs,labels,min_mov,max_mov)
     % labels: cell of titles for movies
     % min_mov,max_mov: min and max of movie for setting clims on movies
     
+    if ~iscell(movs)
+        movs = {movs};
+    end
+    if ~exist('labels','var')
+        labels = cell(size(movs));
+    end
+    if ~exist('min_mov','var') || ~exist('max_mov','var')
+        nml = min(1e7,numel(movs{1}));
+        min_mov = quantile(movs{1}(1:nml),0.001);
+        max_mov = quantile(movs{1}(1:nml),1-0.001);
+    end
+    
     dialogBox = uicontrol('Style', 'PushButton', 'String', 'stop','Callback', 'delete(gcbf)');
 
     num_movs = numel(movs);
