@@ -19,8 +19,9 @@ if nargin<3 || isempty(num2read); num2read = Inf; end
 
 [~,~,ext] = fileparts(path_to_file);
 
-if strcmpi(ext,'.tiff') || strcmpi(ext,'.tif');    
+if strcmpi(ext,'.tiff') || strcmpi(ext,'.tif') || strcmpi(ext,'.btf');    
     imData = loadtiff(path_to_file,sframe,num2read);    
+    %imData = bigread2(path_to_file,sframe,num2read);    
 elseif strcmpi(ext,'.hdf5') || strcmpi(ext,'.h5');
 %     info = hdf5info(path_to_file);
 %     dims = info.GroupHierarchy.Datasets.Dims;
@@ -36,20 +37,28 @@ elseif strcmpi(ext,'.hdf5') || strcmpi(ext,'.h5');
     imData = h5read(path_to_file,['/',name],[ones(1,length(dims)-1),sframe],[dims(1:end-1),num2read]);
 elseif strcmpi(ext,'.avi')
     v = VideoReader(path_to_file);
-    if nargin < 3
-        num2read = v.Duration*v.FrameRate-sframe+1;
-    end
-    Y1 = readFrame(v);
-    imData = zeros(v.Height,v.Width,num2read,'like',Y1);
-    i = 0;
-    while hasFrame(v)
-        video = readFrame(v);
-        i = i + 1;
-        if i >= sframe
-            imData(:,:,i-sframe+1) = video;
+    if v.Duration*v.FrameRate < sframe
+        imData = [];
+    else
+        if nargin < 3
+            num2read = v.Duration*v.FrameRate-sframe+1;
         end
-        if i - sframe + 1 >= num2read
-            break;
+        num2read = min(num2read,v.Duration*v.FrameRate-sframe+1);
+        Y1 = readFrame(v);
+        imData = zeros(v.Height,v.Width,num2read,'like',Y1);
+        i = 1;
+        if sframe == 1
+            imData(:,:,i-sframe+1) = Y1;
+        end
+        while hasFrame(v)  && (i - sframe + 1 < num2read)
+            video = readFrame(v);
+            i = i + 1;
+            if i >= sframe
+                imData(:,:,i-sframe+1) = video;
+            end
+            if i - sframe + 1 >= num2read
+                break;
+            end
         end
     end
 elseif strcmpi(ext,'.raw')

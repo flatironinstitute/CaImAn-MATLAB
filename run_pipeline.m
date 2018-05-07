@@ -13,20 +13,20 @@ numFiles = length(files);
 % register files one by one. use template obtained from file n to
 % initialize template of file n + 1; 
 
-motion_correct = true;                                         % perform motion correction
+motion_correct = true;                                          % perform motion correction
 non_rigid = true;                                               % flag for non-rigid motion correction
 if non_rigid; append = '_nr'; else; append = '_rig'; end        % use this to save motion corrected files
 options_mc = NoRMCorreSetParms('d1',FOV(1),'d2',FOV(2),'grid_size',[128,128],'init_batch',200,...
-                'overlap_pre',64,'mot_uf',4,'bin_width',200,'max_shift',24,'max_dev',8,'us_fac',50,...
+                'overlap_pre',32,'mot_uf',4,'bin_width',200,'max_shift',24,'max_dev',8,'us_fac',50,...
                 'output_type','h5');
 
 template = [];
 col_shift = [];
 for i = 1:numFiles
     fullname = files(i).name;
-    [folder_name,file_name,ext] = fileparts(fullname);    
+    [folder_name,file_name,ext] = fileparts(fullname);
     options_mc.h5_filename = fullfile(folder_name,[file_name,append,'.h5']);
-    if motion_correct    
+    if motion_correct
         [M,shifts,template,options_mc,col_shift] = normcorre_batch(fullname,options_mc,template);
         save(fullfile(folder_name,[file_name,'_shifts',append,'.mat']),'shifts','-v7.3');           % save shifts of each file at the respective folder        
     else    % if files are already motion corrected convert them to h5
@@ -101,15 +101,15 @@ options = CNMFSetParms(...
     'deconv_method','constrained_foopsi',...    % neural activity deconvolution method
     'p',p,...                                   % order of calcium dynamics
     'ssub',2,...                                % spatial downsampling when processing
-    'tsub',4,...                                % further temporal downsampling when processing
+    'tsub',2,...                                % further temporal downsampling when processing
     'merge_thr',merge_thr,...                   % merging threshold
     'gSig',tau,... 
     'max_size_thr',300,'min_size_thr',10,...    % max/min acceptable size for each component
     'spatial_method','regularized',...          % method for updating spatial components
     'df_prctile',50,...                         % take the median of background fluorescence to compute baseline fluorescence 
     'fr',fr/tsub,...                            % downsamples
-    'space_thresh',0.5,...                      % space correlation acceptance threshold
-    'min_SNR',3.0,...                           % trace SNR acceptance threshold
+    'space_thresh',0.35,...                     % space correlation acceptance threshold
+    'min_SNR',2.0,...                           % trace SNR acceptance threshold
     'cnn_thr',0.2,...                           % cnn classifier acceptance threshold
     'nb',1,...                                  % number of background components per patch
     'gnb',3,...                                 % number of global background components
@@ -118,8 +118,8 @@ options = CNMFSetParms(...
 
 %% Run on patches (the main work is done here)
 
-[A,b,C,f,S,P,RESULTS,YrA] = run_CNMF_patches(data,K,patches,tau,0,options);  % do not perform deconvolution here since
-                                                                             % we are operating on downsampled data
+[A,b,C,f,S,P,RESULTS,YrA] = run_CNMF_patches(data.Y,K,patches,tau,0,options);  % do not perform deconvolution here since
+                                                                               % we are operating on downsampled data
 %% compute correlation image on a small sample of the data (optional - for visualization purposes) 
 Cn = correlation_image_max(data,8);
 
@@ -127,7 +127,7 @@ Cn = correlation_image_max(data,8);
 
 rval_space = classify_comp_corr(data,A,C,b,f,options);
 ind_corr = rval_space > options.space_thresh;           % components that pass the correlation test
-                                        % this test will keep processes
+                                                        % this test will keep processes
                                         
 %% further classification with cnn_classifier
 try  % matlab 2017b or later is needed
