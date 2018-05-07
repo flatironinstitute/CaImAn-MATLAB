@@ -291,7 +291,7 @@ if options.temporal_parallel
     end
 else
     for iter = 1:ITER
-    perm = randperm(K+size(b,2));
+    perm = 1:K+size(b,2); randperm(K+size(b,2));
         for jj = 1:K
             ii = perm(jj);
             Ytemp = C(ii,:) + AY(ii,:) - AA(ii,:)*C;

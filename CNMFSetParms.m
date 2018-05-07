@@ -308,7 +308,7 @@ Values = [
     {1}
     {'constrained_foopsi'}
     {1}
-    {2}
+    {4}
     {~isempty(which('parpool'))}
     {false}
     % CONSTRAINED DECONVOLUTION (constrained_foopsi.m)

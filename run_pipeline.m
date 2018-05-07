@@ -99,7 +99,7 @@ sizY = data.sizY;
 options = CNMFSetParms(...
     'd1',sizY(1),'d2',sizY(2),...
     'deconv_method','constrained_foopsi',...    % neural activity deconvolution method
-    'temporal_iter',2,...                       % number of block-coordinate descent steps 
+    'p',p,...                                   % order of calcium dynamics
     'ssub',2,...                                % spatial downsampling when processing
     'tsub',4,...                                % further temporal downsampling when processing
     'merge_thr',merge_thr,...                   % merging threshold
@@ -113,7 +113,7 @@ options = CNMFSetParms(...
     'cnn_thr',0.2,...                           % cnn classifier acceptance threshold
     'nb',1,...                                  % number of background components per patch
     'gnb',3,...                                 % number of global background components
-    'decay_time',0.5...                        % length of typical transient for the indicator used
+    'decay_time',0.5...                         % length of typical transient for the indicator used
     );
 
 %% Run on patches (the main work is done here)

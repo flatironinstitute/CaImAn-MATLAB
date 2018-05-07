@@ -223,12 +223,14 @@ fprintf(' done. \n');
 
 %% compute spatial and temporal background using a rank-1 fit
 fprintf('Computing background components...')
-fin = [mean(F,1);rand(options.gnb-1,size(F,2))];
-for iter = 1:150
-    fin = diag(sqrt(sum(fin.^2,2)))\fin;
-    bin = full(max(B*(F*fin')/(fin*fin'),0));
-    fin = max((bin'*bin)\(bin'*B)*F,0);
-end
+% fin = [mean(F,1);rand(options.gnb-1,size(F,2))];
+% for iter = 1:150
+%     fin = diag(sqrt(sum(fin.^2,2)))\fin;
+%     bin = full(max(B*(F*fin')/(fin*fin'),0));
+%     fin = max((bin'*bin)\(bin'*B)*F,0);
+% end
+[bin,fin] = fast_nmf(B,F,options.gnb,100);
+
 fprintf(' done. \n');
 
 %% classify components
