@@ -31,6 +31,9 @@ function play_movie(movs,labels,min_mov,max_mov)
             axis off; 
             colormap('gray');
             title([labels{idx_mov}, ', frame ',num2str(t)]);
+        end        
+        if t == 1
+            set(gcf,'Position',[100,100,1.2*length(movs)*size(movs{1},2),1.2*size(movs{1},1)]);
         end
         pause(0.001);
     end
