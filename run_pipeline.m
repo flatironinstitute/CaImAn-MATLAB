@@ -3,31 +3,37 @@ clear;
 addpath(genpath('../NoRMCorre'));               % add the NoRMCorre motion correction package to MATLAB path
 gcp;                                            % start a parallel engine
 foldername = '';
-        % folder where all the files are located. Currently supported .tif,
-        % .hdf5, .raw, .avi, and .mat files
-files = subdir(fullfile(foldername,'*.tif'));   % list of filenames (will search all subdirectories)
+         % folder where all the files are located.
+filetype = 'tif'; % type of files to be processed
+        % Types currently supported .tif/.tiff, .h5/.hdf5, .raw, .avi, and .mat files
+files = subdir(fullfile(foldername,['*.',filetype]));   % list of filenames (will search all subdirectories)
 FOV = size(read_file(files(1).name,1,1));
 numFiles = length(files);
+
 
 %% motion correct (and save registered h5 files as 2d matrices (to be used in the end)..)
 % register files one by one. use template obtained from file n to
 % initialize template of file n + 1; 
 
-motion_correct = true;                                          % perform motion correction
-non_rigid = true;                                               % flag for non-rigid motion correction
+motion_correct = true;                            % perform motion correction
+non_rigid = true;                                 % flag for non-rigid motion correction
+output_type = 'h5';                               % format to save registered files
+
 if non_rigid; append = '_nr'; else; append = '_rig'; end        % use this to save motion corrected files
+
 options_mc = NoRMCorreSetParms('d1',FOV(1),'d2',FOV(2),'grid_size',[128,128],'init_batch',200,...
                 'overlap_pre',32,'mot_uf',4,'bin_width',200,'max_shift',24,'max_dev',8,'us_fac',50,...
-                'output_type','h5');
+                'output_type',output_type);
 
 template = [];
 col_shift = [];
 for i = 1:numFiles
     fullname = files(i).name;
     [folder_name,file_name,ext] = fileparts(fullname);
-    options_mc.h5_filename = fullfile(folder_name,[file_name,append,'.h5']);
+    output_filename = fullfile(folder_name,[file_name,append,'.',output_type]);
+    options_mc = NoRMCorreSetParms(options_mc,'output_filename',output_filename,'h5_filename','','tiff_filename',''); % update output file name
     if motion_correct
-        [M,shifts,template,options_mc,col_shift] = normcorre_batch(fullname,options_mc,template);
+        [M,shifts,template,options_mc,col_shift] = normcorre_batch_even(fullname,options_mc,template);
         save(fullfile(folder_name,[file_name,'_shifts',append,'.mat']),'shifts','-v7.3');           % save shifts of each file at the respective folder        
     else    % if files are already motion corrected convert them to h5
         convert_file(fullname,'h5',fullfile(folder_name,[file_name,'_mc.h5']));
@@ -37,15 +43,15 @@ end
 %% downsample h5 files and save into a single memory mapped matlab file
 
 if motion_correct
-    h5_files = subdir(fullfile(foldername,['*',append,'.h5']));  % list of h5 files (modify this to list all the motion corrected files you need to process)
+    registered_files = subdir(fullfile(foldername,['*',append,'.',output_type]));  % list of registered files (modify this to list all the motion corrected files you need to process)
 else
-    h5_files = subdir(fullfile(foldername,'*_mc.h5'));
+    registered_files = subdir(fullfile(foldername,'*_mc.h5'));
 end
     
 fr = 30;                                         % frame rate
 tsub = 5;                                        % degree of downsampling (for 30Hz imaging rate you can try also larger, e.g. 8-10)
 ds_filename = [foldername,'/ds_data.mat'];
-data_type = class(read_file(h5_files(1).name,1,1));
+data_type = class(read_file(registered_files(1).name,1,1));
 data = matfile(ds_filename,'Writable',true);
 data.Y  = zeros([FOV,0],data_type);
 data.Yr = zeros([prod(FOV),0],data_type);
@@ -57,7 +63,7 @@ Ts = zeros(numFiles,1);                          % store length of each file
 cnt = 0;                                         % number of frames processed so far
 tt1 = tic;
 for i = 1:numFiles
-    name = h5_files(i).name;
+    name = registered_files(i).name;
     info = h5info(name);
     dims = info.Datasets.Dataspace.Size;
     ndimsY = length(dims);                       % number of dimensions (data array might be already reshaped)
@@ -67,7 +73,7 @@ for i = 1:numFiles
     data.Yr(prod(FOV),sum(floor(Ts/tsub))) = zeros(1,data_type);
     cnt_sub = 0;
     for t = 1:batch_size:Ts(i)
-        Y = bigread2(name,t,min(batch_size,Ts(i)-t+1));    
+        Y = read_file(name,t,min(batch_size,Ts(i)-t+1));    
         F_dark = min(nanmin(Y(:)),F_dark);
         ln = size(Y,ndimsY);
         Y = reshape(Y,[FOV,ln]);
@@ -193,7 +199,7 @@ ind_T = [0;cumsum(Ts(:))];
 options.nb = options.gnb;
 for i = 1:numFiles
     inds = ind_T(i)+1:ind_T(i+1);   % indeces of file i to be updated
-    [C_full(:,inds),f_full(:,inds),~,~,R_full(:,inds)] = update_temporal_components_fast(h5_files(i).name,A_keep,b,C_full(:,inds),f_full(:,inds),P,options);
+    [C_full(:,inds),f_full(:,inds),~,~,R_full(:,inds)] = update_temporal_components_fast(registered_files(i).name,A_keep,b,C_full(:,inds),f_full(:,inds),P,options);
     disp(['Extracting raw fluorescence at native frame rate. File ',num2str(i),' out of ',num2str(numFiles),' finished processing.'])
 end
 
