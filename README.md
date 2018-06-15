@@ -35,6 +35,11 @@ New: Renaming to CaImAn-MATLAB
 ======
 We moved the code into the Flatiron Institute github account and renamed the repository to CaImAn-MATLAB to bring it more in touch with the [CaImAn](https://github.com/simonsfoundation/CaImAn) Python package. Everything else is the same. The old link ```https://github.com/epnev/ca_source_extraction``` redirects here.
 
+# Citation
+
+If you use this code please cite the corresponding papers where original methods appeared (see References below), as well as: 
+
+<a name="caiman"></a>[1] Giovannucci A., Friedrich J., Gunn P., Kalfon J., Koay S.A., Taxidis J., Najafi F., Gauthier J.L., Zhou P., Tank D.W., Chklovskii D.B., Pnevmatikakis E.A. (2018). CaImAn: An open source tool for scalable Calcium Imaging data Analysis. bioarXiv preprint. [[paper]](https://doi.org/10.1101/339564)
 
 # References
 
@@ -105,11 +110,6 @@ Special thanks to the following people for letting us use their datasets for our
 * Diego Pacheco Pinedo, Mala Murthy, Princeton University
 * Clay Lacefied, Randy Bruno, Columbia University
 
-# Citation
-
-If you use this code please cite the corresponding papers where original methods appeared (see References above), as well as the following abstract:
-
-Giovannucci, A., Friedrich, J., Deverett, B., Staneva, V., Chklovskii, D., & Pnevmatikakis, E. (2017). CaImAn: An open source toolbox for large scale calcium imaging data analysis on standalone machines. Cosyne Abstracts.
 
 Questions, comments, issues
 =======
