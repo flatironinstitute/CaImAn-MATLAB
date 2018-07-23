@@ -126,10 +126,12 @@ Names = [
     'create_memmap      ' % create a memory mapped file if it is not provided in the input (default: false)    
     'classify_comp      ' % classify components based on correlation values (default: true)
     'refine_flag        ' % refine components within patch processing after merging (default: true)    
-    'patch_space_thresh ' % space correlation threshold within patch (default: 0.3)
-    'patch_time_thresh  ' % time correlation threshold within patch (default: 0.4)
-    'patch_max_fit      ' % maximum fitness threshold within patch (default: -20)
-    'patch_max_fit_delta' % maximum fitness_delta threshold within patch (default: -20)
+    'patch_space_thresh ' % space correlation threshold within patch (default: 0.2)
+    'patch_time_thresh  ' % time correlation threshold within patch (default: 0.25)
+    'patch_min_SNR      ' % minimum SNR for accepting exceptional events within patch (default: 0.5)
+    'patch_min_fitness  ' % maximum fitness threshold within patch (default: log(normcdf(-patch_min_SNR))*N_samples_exc)
+    'patch_min_fit_delta' % maximum fitness_delta threshold within patch (default: -2)
+    'patch_cnn_thr      ' % threshold for CNN classifier within a patch (default: 0.05)
     % parameters for microendoscope 
     'min_pnr            '
     'seed_method        '    
@@ -152,7 +154,7 @@ Names = [
     'dist_overlap_thr   ' % threshold for detecting if one ROI is a subset of another (deafult: 0.8)
     'plot_reg           ' % plot registered ROIs (default: true)
     % parameters for computing event exceptionality (compute_event_exceptionality.m)
-    'min_SNR            ' % minimum SNR for accepting exceptional events
+    'min_SNR            ' % minimum SNR for accepting exceptional events (default: 2)
     'decay_time         ' % length of a typical transient in seconds
     'robust_std         ' % use robust std for computing noise in traces (false)
     'N_samples_exc      ' % number of samples over which to compute (default: ceil(decay_time*fr))
@@ -359,10 +361,12 @@ Values = [
     {false}    
     {true}
     {true}
-    {0.3}
-    {0.4}
-    {-20}
-    {-20}
+    {0.2}
+    {0.25}
+    {0.5}
+    {[]}
+    {-2}
+    {0.05}
     % parameters for microendoscope
     {10}
     {'auto'}
@@ -403,3 +407,4 @@ end
 
 if isempty(options.N_samples_exc); options.N_samples_exc = ceil(options.fr*options.decay_time); end
 if isempty(options.min_fitness); options.min_fitness = log(normcdf(-options.min_SNR))*options.N_samples_exc; end
+if isempty(options.patch_min_fitness); options.patch_min_fitness = log(normcdf(-options.patch_min_SNR))*options.N_samples_exc; end
