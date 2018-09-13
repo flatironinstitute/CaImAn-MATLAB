@@ -27,16 +27,17 @@ if ~isfield(options,'max_size_thr') || isempty(options.max_size_thr); options.ma
 if ~isfield(options,'min_size_thr') || isempty(options.min_size_thr); options.min_size_thr = defoptions.min_size_thr; end
 if ~isfield(options,'size_thr') || isempty(options.size_thr); options.size_thr = defoptions.size_thr; end
 
-AA = A'*A;
-
-AY = mm_fun(A,Y);
-if nargin < 6 || isempty(YrA)
-    YrA = bsxfun(@times, 1./sum(A.^2)',AY - AA*C);
-end
-
 [rval_space,rval_time,ind_space,ind_time] = classify_comp_corr(Y,A,C,b,f,options);
-traces = detrend_df_f(A,b,C,f,YrA,options);
-max_pr = trace_fit_extreme(full(traces),fr,t_int,sn_fac);
+
+%AA = A'*A;
+%AY = mm_fun(A,Y);
+% if nargin < 6 || isempty(YrA)
+%     YrA = bsxfun(@times, 1./sum(A.^2)',AY - AA*C);
+% end
+
+%traces = detrend_df_f(A,b,C,f,YrA,options);
+%max_pr = trace_fit_extreme(full(traces),fr,t_int,sn_fac);
+max_pr = ones(size(rval_space));
 %fitness = compute_event_exceptionality(traces,0);
 %fitness_delta = compute_event_exceptionality(diff(traces,[],2),0);
 
