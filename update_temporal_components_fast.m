@@ -31,10 +31,7 @@ function [C,f,P,S,YrA] = update_temporal_components_fast(Y,A,b,Cin,fin,P,options
 
 defoptions = CNMFSetParms;
 if nargin < 7 || isempty(options); options = defoptions; end
-d1 = options.d1;
-d2 = options.d2;
-d3 = options.d3;
-d = prod([d1,d2,d3]);
+
 
 if isa(Y,'char')
     [~,~,ext] = fileparts(Y);
@@ -79,14 +76,22 @@ else % array loaded in memory
     T = sizY(end);
 end
 
+options.d1 = sizY(1);
+options.d2 = sizY(2);
+if length(sizY) > 3
+    options.d3 = sizY(3);
+end
+d1 = options.d1;
+d2 = options.d2;
+d3 = options.d3;
+d = prod([d1,d2,d3]);
 
-if isempty(P) || nargin < 6
+if nargin < 6 || isempty(P)
     active_pixels = find(sum(A,2));                                 % pixels where the greedy method found activity
     unsaturated_pixels = find_unsaturatedPixels(Y);                 % pixels that do not exhibit saturation
     options.pixels = intersect(active_pixels,unsaturated_pixels);   % base estimates only on unsaturated, active pixels                
 end
 
-if nargin < 7 || isempty(options); options = []; end
 if ~isfield(options,'deconv_method') || isempty(options.deconv_method); method = defoptions.deconv_method; else method = options.deconv_method; end  % choose method
 if ~isfield(options,'bas_nonneg'); options.bas_nonneg = defoptions.bas_nonneg; end
 if ~isfield(options,'fudge_factor'); options.fudge_factor = defoptions.fudge_factor; end
@@ -115,8 +120,8 @@ if ~isempty(ff)
 end
 
 % estimate temporal (and spatial) background if they are not present
-if isempty(fin) || nargin < 5           % temporal background missing
-    if isempty(b) || nargin < 3
+if nargin < 5 || isempty(fin)           % temporal background missing
+    if nargin < 3 || isempty(b)
         fin = mm_fun(ones(d,1),Y);
         fin = fin/norm(fin);
         b = max(mm_fun(fin,Y),0);
@@ -135,7 +140,7 @@ AY = mm_fun([A,double(b)],Y);
 bY = AY(K+1:end,:);
 AY = AY(1:K,:);
 
-if isempty(Cin) || nargin < 4    % estimate temporal components if missing    
+if  nargin < 4 || isempty(Cin)   % estimate temporal components if missing    
     Cin = max((A'*A)\double(AY - (A'*b)*fin),0);  
 end
 
@@ -162,8 +167,8 @@ else
     params = [];
 end
 
-p = P.p;
-options.p = P.p;
+p = options.p;
+%options.p = P.p;
 C = double(C);
 
 C = HALS_temporal(AY, A, C, 100, [], options.bas_nonneg, true);

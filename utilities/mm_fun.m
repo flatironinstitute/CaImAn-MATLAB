@@ -9,6 +9,7 @@ if ~exist('FOV', 'var') || isempty(FOV); FOV = [512,512]; end
 if isa(Y,'char')
     [~,~,ext] = fileparts(Y);
     ext = ext(2:end);
+    disp(ext)
     if strcmpi(ext,'tif') || strcmpi(ext,'tiff');
         tiffInfo = imfinfo(Y);
         filetype = 'tif';
@@ -118,11 +119,11 @@ switch filetype
         else
             error('matrix dimensions do not agree');
         end
-    case 'hdf5'
+    case {'hdf5', 'tif', 'tiff', 'h5'}
         if d1a == d1y            
             AY = zeros(d2a,d2y);
             for t = 1:chunk_size:T
-                Y_temp = bigread2(Y,t,min(T-t+1,chunk_size));
+                Y_temp = read_file(Y,t,min(T-t+1,chunk_size));
                 Y_temp(isnan(Y_temp)) = 0;
                 if ~ismatrix(Y_temp); Y_temp = reshape(Y_temp,d1y,[]); end
                 AY(:,t:min(T,t+chunk_size-1)) = A'*double(Y_temp);
@@ -130,7 +131,7 @@ switch filetype
         elseif d2a == d2y
             AY = zeros(d1y,d1a);            
             for t = 1:chunk_size:T
-                Y_temp = bigread2(Y,t,min(T-t+1,chunk_size));
+                Y_temp = read_file(Y,t,min(T-t+1,chunk_size));
                 Y_temp(isnan(Y_temp)) = 0;
                 if ~ismatrix(Y_temp); Y_temp = reshape(Y_temp,d1y,[]); end
                 AY = AY + double(Y_temp)*A(:,t:min(T,t+chunk_size-1))';
