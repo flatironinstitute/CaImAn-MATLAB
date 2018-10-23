@@ -64,7 +64,6 @@ if align_flag
     
     shifts_fov = reshape(imresize(global_shift.shifts,[options.d1,options.d2]),[],2);
     shifts_components = sparse(diag(1./sum(A2)))*A2'*shifts_fov;
-    A_backup2 = A2; %store initial values in any case
     parfor i = 1:K2
        %warning('off','MATLAB:mat2cell:TrailingUnityVectorArgRemoved');
        a_temp = reshape(full(A2(:,i)),siz);
