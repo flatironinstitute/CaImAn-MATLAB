@@ -247,7 +247,12 @@ classdef CNMF < handle
 
         %% CNN classifier
         function CNNClassifier(obj,classifier)
-            [obj.keep_cnn,obj.val_cnn] = cnn_classifier(obj.A,obj.dims,classifier,obj.options.cnn_thr);            
+            try
+                [obj.keep_cnn,obj.val_cnn] = cnn_classifier(obj.A,obj.dims,classifier,obj.options.cnn_thr);
+            catch
+                obj.keep_cnn = true(size(obj.A,2),1);
+                obj.val_cnn = ones(size(obj.A,2),1);
+            end
         end
         
         %% evaluate components
