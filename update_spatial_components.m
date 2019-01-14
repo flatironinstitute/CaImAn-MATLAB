@@ -60,7 +60,7 @@ if K == 0
 end
 
 if nargin < 5 || isempty(P); P = preprocess_data(Y,1); end  % etsimate noise values if not present
-if nargin < 4 || isempty(A_); 
+if nargin < 4 || isempty(A_)
     IND = ones(d,size(C,1)); 
 else
     if islogical(A_)     % check if search locations have been provided, otherwise estimate them        
@@ -68,7 +68,7 @@ else
         if isempty(C)    
             INDav = double(IND)/diag(sum(double(IND)));          
             px = (sum(IND,2)>0);
-            f = mean(Y(~px,:));
+            [b,f] = fast_nmf(double(Y(~px,:)),[],options.nb,50);
             b = max(Y*f',0)/norm(f)^2;
             C = max(INDav'*Y - (INDav'*b)*f,0);
         end
@@ -116,7 +116,7 @@ else
 end
 f_ds = Cf_ds(end-size(f,1)+1:end,:);
 
-if strcmpi(options.spatial_method,'constrained');
+if strcmpi(options.spatial_method,'constrained')
     if spatial_parallel         % solve BPDN problem for each pixel
         Nthr = max(20*maxNumCompThreads,round(d*T/2^24));
         Nthr = min(Nthr,round(d/1e3));
@@ -177,7 +177,7 @@ elseif strcmpi(options.spatial_method,'regularized')
 end
 
 A(isnan(A))=0;
-A = sparse(A);
+A = sparse(double(A));
 A = threshold_components(A,options);  % post-processing of components
 
 fprintf('Updated spatial components \n');

@@ -10,6 +10,9 @@ end
 H = H';
 
 for iter = 1:max_iter
+    if isempty(B)
+        B = 1;
+    end
     W = max((A*(B*H'))/(H*H'),0);
     H = max((W'*W)\((W'*A)*B),0);
     %disp(iter)
@@ -18,10 +21,14 @@ end
 function [W,H] = nnsvd(A,B,k)
 
     mf = @(x,y) mat_vec(A,B,x,y);    
-    [U,S,V] = svds(mf,[size(A,1),size(B,2)],k);
+    sz = [size(A,1), size(B,2)];
+    if isempty(B)
+        sz(2) = size(A,2);
+    end
+    [U,S,V] = svds(mf,sz,k);
 
-    W = zeros(size(A,1),k);
-    H = zeros(size(B,2),k);
+    W = zeros(sz(1),k);
+    H = zeros(sz(2),k);
 
     for j = 1:k
         x = U(:,j);
@@ -46,16 +53,29 @@ function [W,H] = nnsvd(A,B,k)
         W(:,j) = sqrt(S(j,j)*sigma)*u;
         H(:,j) = sqrt(S(j,j)*sigma)*v;
     end
-    avg = mean(A,1)*mean(B,2);
+    if isempty(B)
+        avg = mean(A(:));
+    else
+        avg = mean(A,1)*mean(B,2);
+    end
     W(W==0) = avg;
     H(H==0) = avg;
     
     function y = mat_vec(A,B,x,method)
 
         if strcmp(method,'notransp')
-            y = A*(B*x);
+            if isempty(B)
+                y = A*x;
+            else
+                y = A*(B*x);
+            end
         elseif strcmp(method,'transp')
-            y = B'*(A'*x);
+            if isempty(B)
+                y = A'*x;
+            else
+                y = B'*(A'*x);
+                
+            end
         end
     end
 end

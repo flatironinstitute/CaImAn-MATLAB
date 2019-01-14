@@ -112,9 +112,10 @@ end
 if isempty(fin) || nargin < 5   % temporal background missing
     bk_pix = (sum(A,2)==0);     % pixels with no active neurons
     if isempty(b) || nargin < 3
-        fin = mean(Y(bk_pix,:));
-        fin = fin/norm(fin);
-        b = max(Y*fin',0);
+        [b,fin] = fast_nmf(double(Y(bk_pix,:)),[],options.nb,50);
+%         fin = mean(Y(bk_pix,:));
+%         fin = fin/norm(fin);
+         b = max(Y*fin',0);
     else
         fin = max(b(bk_pix,:)'*Y(bk_pix,:),0)/(b(bk_pix,:)'*b(bk_pix,:));
     end
@@ -124,9 +125,10 @@ end
 AY = mm_fun([A,double(b)],Y);
 bY = AY(size(A,2)+1:end,:);
 AY = AY(1:size(A,2),:);
+AA = sparse(double(A))'*sparse(double(A));
 
 if isempty(Cin) || nargin < 4    % estimate temporal components if missing    
-    Cin = max((A'*A)\double(AY - (A'*b)*fin),0);  
+    Cin = max(AA\double(AY - (A'*b)*fin),0);  
     ITER = max(ITER,3);
 end
 
