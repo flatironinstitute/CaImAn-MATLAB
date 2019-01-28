@@ -134,13 +134,13 @@ else
         else
             % update smin
             [smin, solution, spks, active_set] = update_smin(y-b, g, smin,...
-                solution, spks, active_set, sqrt(thresh));
+                solution, spks, active_set, sqrt(thresh), max(spks));
             b = mean(y-solution);
             
             % update b and g
             if and(optimize_g, ~g_converged);
                 g0 = g;
-                [solution, active_set, g, spks] = update_g(y-b, active_set,lam);
+                [solution, active_set, g, spks] = update_g(y-b, g0, spks, smin);
                 if abs(g-g0)/g0 < 1e-4;
                     g_converged = true;
                 end

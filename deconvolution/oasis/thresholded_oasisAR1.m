@@ -134,7 +134,7 @@ else
             % update b and g
             if and(optimize_g, ~g_converged);
                 g0 = g;
-                [solution, active_set, g, spks] = update_g(y-b, active_set);       
+                [solution, active_set, g, spks] = update_g(y-b, active_set, smin);       
                 if abs(g-g0)/g0 < 1e-4;
                     g_converged = true;
                 end
