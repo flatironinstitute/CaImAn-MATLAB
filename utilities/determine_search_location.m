@@ -95,7 +95,7 @@ else
                    ind_t = sqrt((cor*V(:,1)).^2/d11 + (cor*V(:,2)).^2/d22 + (cor*V(:,3)).^2/d33)<=dist;       % search indeces for each component
                end               
            case 'dilate'
-               A_temp = imdilate(reshape(full(A(idx,i)),siz_p),expandCore);
+               A_temp = imdilate(reshape(full(A(:,i)), [d1,d2,d3]), expandCore);
                ind_t = A_temp(:)>0;
        end
        ind_temp = sparse(idx,1,ind_t,d,1); 
