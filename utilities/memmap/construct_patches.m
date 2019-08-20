@@ -28,14 +28,14 @@ end
 
 if any(siz<=overlap); error('Size of patch must be greater than the amount of overlap'); end
 
-x_start = 1:siz(1)-overlap(1):sizY(1);
+x_start = 1:siz(1)-overlap(1):sizY(1)-overlap(1);
 x_end   = min(x_start + siz(1) - 1,sizY(1));
 if (x_end(end) - x_start(end) + 1 < min_size(1)) || (length(x_end) > 1 && (x_end(end) - x_end(end-1) < min_size(1)))    
     x_start(end) = [];
     x_end(end-1) = [];
 end
 
-y_start = 1:siz(2)-overlap(2):sizY(2);
+y_start = 1:siz(2)-overlap(2):sizY(2)-overlap(2);
 y_end   = min(y_start + siz(2) - 1,sizY(2));
 if (y_end(end) - y_start(end) + 1 < min_size(2)) || (length(y_end) > 1 && (y_end(end) - y_end(end-1) < min_size(2)))    
     y_start(end) = [];
@@ -43,7 +43,7 @@ if (y_end(end) - y_start(end) + 1 < min_size(2)) || (length(y_end) > 1 && (y_end
 end
 
 if dimY == 3
-    z_start = 1:siz(3)-overlap(3):sizY(3);
+    z_start = 1:siz(3)-overlap(3):sizY(3)-overlap(3);
     z_end   = min(z_start + siz(3) - 1,sizY(3));
     if z_end(end) - z_start(end) + 1 < min_size(3)
         z_start(end) = [];
