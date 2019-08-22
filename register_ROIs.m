@@ -58,7 +58,7 @@ siz = [options.d1,options.d2,options.d3];
 options_mc.correct_bidir = false;
 if align_flag
     options_mc.upd_template = false;
-    options_mc.boundary = 'zero';
+    options_mc.boundary = 'copy';
     [~,global_shift] = normcorre(template2,options_mc,template1);
     %global_shift(1).diff = 0*global_shift(1).diff;
     
