@@ -1,12 +1,9 @@
-[![Join the chat at https://gitter.im/epnev/ca_source_extraction](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/epnev/ca_source_extraction?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
 CaImAn-MATLAB
 ======
-<img src="https://github.com/simonsfoundation/CaImAn/blob/master/docs/LOGOS/Caiman_logo_FI.png" width="500" align="right">
-
 A Computational toolbox for large scale **Ca**lcium **Im**aging data **An**alysis.
-The code implements the CNMF algorithm [[1]](#neuron) for simultaneous source extraction and spike inference from large scale calcium imaging movies. Many more features are included (see below). The code is suitable for the analysis of somatic imaging data. Improved implementation for the analysis of dendritic/axonal imaging data will be added in the future. 
+The code implements the CNMF algorithm [[1]](#neuron) for simultaneous source extraction and spike inference from large scale calcium imaging movies. Many more features are included (see below). The code is suitable for the analysis of somatic imaging data.
 
+This code is no longer maintained and is left available and unsupported, for any purpose users may be able to make of it. For any concerns relating to the code, you may be able to get some extremely limited support from the current maintainers of the python software package. Please do not file issues against this package as they will likely never be addressed (or seen). This package is not looking for a new maintainer; it is most appropriate to leave it as a historical archive.
 
 ## Features and methods included
 
@@ -31,9 +28,9 @@ The code implements the CNMF algorithm [[1]](#neuron) for simultaneous source ex
 
     * Fast parallelizable non-rigid motion correction using the NoRMCorre algorithm [[5]](#normcorre). Separate standalone package can be found [here](https://github.com/simonsfoundation/NoRMCorre). It will be included in this package in the future.
     
-New: Renaming to CaImAn-MATLAB
+2018: Renamed to CaImAn-MATLAB
 ======
-We moved the code into the Flatiron Institute github account and renamed the repository to CaImAn-MATLAB to bring it more in touch with the [CaImAn](https://github.com/simonsfoundation/CaImAn) Python package. Everything else is the same. The old link ```https://github.com/epnev/ca_source_extraction``` redirects here.
+We moved the code into the Flatiron Institute github account and renamed the repository to CaImAn-MATLAB to bring it more in touch with the [CaImAn](https://github.com/flatironinstitute/CaImAn) Python package. Everything else is the same. The old link ```https://github.com/epnev/ca_source_extraction``` redirects here.
 
 # Citation
 
@@ -72,11 +69,11 @@ The best way to start is by looking at the various demos.
 
 # Python
 
-A complete analysis Python pipeline including motion correction, source extraction and activity deconvolution is performed through the package [CaImAn](https://github.com/simonsfoundation/caiman). This package also includes method for online processing of calcium imaging data and elements of behavioral analysis in head fixed mice. 
+A complete analysis Python pipeline including motion correction, source extraction and activity deconvolution is performed through the package [CaImAn](https://github.com/flatironinstitute/caiman). This package also includes methods for online processing of calcium imaging data and elements of behavioral analysis in head fixed mice. 
 
 Usage and Documentation
 =======
-Check the demo scripts and the [wiki](https://github.com/epnev/ca_source_extraction/wiki) to get started.
+Check the demo scripts and the [wiki](https://github.com/flatironinstitute/CaImAn-MATLAB/wiki) to get started.
 
 Dependencies
 ========
@@ -99,7 +96,7 @@ Depending on the settings the following packages may also be required
 
 # Developers
 
-This package is mainly developed and maintained by [Eftychios A. Pnevmatikakis](https://github.com/epnev) (Flatiron Institute, Simons Foundation) with help from a lot of [contributors](https://github.com/flatironinstitute/CaImAn-MATLAB/graphs/contributors).
+This package was mainly developed and maintained by [Eftychios A. Pnevmatikakis](https://github.com/epnev) (Flatiron Institute, Simons Foundation) with help from a lot of [contributors](https://github.com/flatironinstitute/CaImAn-MATLAB/graphs/contributors).
 
 # Acknowledgements
 
