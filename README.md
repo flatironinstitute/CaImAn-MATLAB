@@ -107,11 +107,6 @@ Special thanks to the following people for letting us use their datasets for our
 * Diego Pacheco Pinedo, Mala Murthy, Princeton University
 * Clay Lacefied, Randy Bruno, Columbia University
 
-
-Questions, comments, issues
-=======
-Please use the gitter chat room (use the button above) for questions and comments and create an issue for any bugs you might encounter.
-
 License
 =======
 
